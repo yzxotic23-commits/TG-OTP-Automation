@@ -303,6 +303,16 @@ def push_status_instant(
 
 
 def _load_gspread():
+    import warnings
+
+    warnings.filterwarnings("ignore", category=FutureWarning, module=r"google\.auth")
+    warnings.filterwarnings("ignore", category=FutureWarning, module=r"google\.oauth2")
+    try:
+        from urllib3.exceptions import NotOpenSSLWarning
+    except ImportError:
+        pass
+    else:
+        warnings.filterwarnings("ignore", category=NotOpenSSLWarning)
     try:
         import gspread
         from google.oauth2.service_account import Credentials

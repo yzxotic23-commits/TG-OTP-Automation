@@ -36,6 +36,21 @@ from telegram.ext import (
 
 logger = logging.getLogger(__name__)
 
+
+def _configure_runtime_warnings() -> None:
+    """Redam peringatan google-auth (Python 3.9 EOL) dan urllib3/LibreSSL di macOS."""
+    import warnings
+
+    warnings.filterwarnings("ignore", category=FutureWarning, module=r"google\.auth")
+    warnings.filterwarnings("ignore", category=FutureWarning, module=r"google\.oauth2")
+    try:
+        from urllib3.exceptions import NotOpenSSLWarning
+    except ImportError:
+        pass
+    else:
+        warnings.filterwarnings("ignore", category=NotOpenSSLWarning)
+
+
 # Pola OTP (placeholder {d} = jumlah digit, di-compile per panjang kode)
 _STRICT_PATTERN_TEMPLATES: tuple[str, ...] = (
     r"(?i)login\s*code\s*(?:is\s*)?[:\s]*(\d{{{d}}})\b",
@@ -1317,6 +1332,142 @@ def build_session_disconnected_html(
         user_name=account_staff_display_name(acc, accounts_doc),
         account_id=acc_id,
     )
+
+
+def build_sessions_disconnected_batch_html(
+    items: list[tuple[dict[str, Any], str]],
+    accounts_doc: dict[str, Any],
+) -> str:
+    lines: list[str] = [
+        "🚨 <b>Sessions Disconnected</b>",
+        "━━━━━━━━━━━━━━━━━━",
+        f"<b>{len(items)}</b> akun tidak bisa reconnect setelah gangguan jaringan.",
+        "",
+    ]
+    for acc, profile in items[:12]:
+        acc_id = str(acc.get("id") or "?")
+        pool = account_pool(acc)
+        prof = profile or str(acc.get("detected_profile") or acc.get("profile_hint") or acc_id)
+        lines.append(
+            f"· <b>{html.escape(acc_id)}</b> — {html.escape(prof)} "
+            f"<i>({html.escape(pool_account_type_label(pool))})</i>"
+        )
+    if len(items) > 12:
+        lines.append(f"· <b>… +{len(items) - 12} lagi</b>")
+    lines.append("")
+    lines.append("<i>Putus WiFi singkat biasanya auto-reconnect tanpa notifikasi.</i>")
+    return "\n".join(lines)
+
+
+_disconnect_last_alert: dict[str, float] = {}
+_disconnect_batch_queue: list[dict[str, Any]] = []
+_disconnect_batch_lock: asyncio.Lock | None = None
+_disconnect_batch_flush_task: asyncio.Task[None] | None = None
+
+
+def _disconnect_watch_config() -> tuple[int, int, int, int, int]:
+    grace = _env_int("TELEGRAM_DISCONNECT_GRACE_SEC", 90, minimum=0)
+    attempts = _env_int("TELEGRAM_DISCONNECT_RECONNECT_ATTEMPTS", 5, minimum=1)
+    delay = _env_int("TELEGRAM_DISCONNECT_RECONNECT_DELAY_SEC", 15, minimum=3)
+    cooldown = _env_int("TELEGRAM_DISCONNECT_ALERT_COOLDOWN_SEC", 900, minimum=60)
+    batch_min = _env_int("TELEGRAM_DISCONNECT_BATCH_MIN", 3, minimum=2)
+    return grace, attempts, delay, cooldown, batch_min
+
+
+async def _try_reconnect_listener_client(
+    cl: TelegramClient,
+    attempts: int,
+    delay_sec: int,
+    tag: str,
+    acc_id: str,
+) -> bool:
+    for attempt in range(attempts):
+        try:
+            if not cl.is_connected():
+                await cl.connect()
+            if not await cl.is_user_authorized():
+                return False
+            await asyncio.wait_for(cl.get_me(), timeout=45)
+            return True
+        except Exception as e:
+            print(
+                f"  [{tag}] {acc_id} reconnect {attempt + 1}/{attempts}: {type(e).__name__}: {e}",
+                flush=True,
+            )
+        if attempt + 1 < attempts:
+            await asyncio.sleep(delay_sec)
+    return False
+
+
+async def _enqueue_disconnect_alert(
+    acc_info: dict[str, Any],
+    profile: str,
+    tag: str,
+    token: str,
+    accounts_doc: dict[str, Any],
+    pool_name: str,
+) -> None:
+    global _disconnect_batch_flush_task
+    if _disconnect_batch_lock is None:
+        return
+    entry = {
+        "acc": acc_info,
+        "profile": profile,
+        "tag": tag,
+        "pool_name": pool_name,
+    }
+    async with _disconnect_batch_lock:
+        _disconnect_batch_queue.append(entry)
+        need_task = _disconnect_batch_flush_task is None or _disconnect_batch_flush_task.done()
+        if need_task:
+            window = _env_int("TELEGRAM_DISCONNECT_BATCH_WINDOW_SEC", 45, minimum=5)
+            _disconnect_batch_flush_task = asyncio.create_task(
+                _flush_disconnect_alerts(token, accounts_doc, window)
+            )
+
+
+async def _flush_disconnect_alerts(
+    token: str,
+    accounts_doc: dict[str, Any],
+    window_sec: int,
+) -> None:
+    await asyncio.sleep(window_sec)
+    if _disconnect_batch_lock is None:
+        return
+    async with _disconnect_batch_lock:
+        batch = list(_disconnect_batch_queue)
+        _disconnect_batch_queue.clear()
+
+    if not batch:
+        return
+
+    batch_min = _env_int("TELEGRAM_DISCONNECT_BATCH_MIN", 3, minimum=2)
+    if len(batch) >= batch_min:
+        items = [(e["acc"], str(e["profile"])) for e in batch]
+        msg = build_sessions_disconnected_batch_html(items, accounts_doc)
+        send_login_status_message(token, msg, accounts_doc)
+        print(f"  [LISTEN] batch disconnect alert: {len(batch)} akun", flush=True)
+    else:
+        for e in batch:
+            acc_info = e["acc"]
+            profile = str(e["profile"])
+            alert = build_session_disconnected_html(acc_info, accounts_doc, profile=profile)
+            send_login_status_message(token, alert, accounts_doc)
+
+    for e in batch:
+        acc_info = e["acc"]
+        acc_id = str(acc_info.get("id", "?"))
+        pool_name = str(e["pool_name"])
+        profile = str(e["profile"])
+        _queue_sheet_status(
+            acc_id,
+            pool_name,
+            "disconnected",
+            profile,
+            phone=str(acc_info.get("phone") or ""),
+            session_user="Disconnected",
+            session_friday="Disconnected",
+        )
 
 
 def notify_system_account_status(
@@ -3963,28 +4114,65 @@ async def run_listener_async() -> int:
         print("ERROR: Tidak ada listener yang berhasil start.", file=sys.stderr)
         return 2
 
-    # --- Wrap setiap client dengan disconnect detector ---
+    global _disconnect_batch_lock, _disconnect_batch_flush_task
+    _disconnect_batch_lock = asyncio.Lock()
+    _disconnect_batch_flush_task = None
+    _disconnect_batch_queue.clear()
+    grace, reconnect_attempts, reconnect_delay, alert_cooldown, batch_min = _disconnect_watch_config()
+    suppress_alerts = os.environ.get("TELEGRAM_DISCONNECT_ALERT", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+    print(
+        f"  Disconnect policy: grace {grace}s · reconnect {reconnect_attempts}x/"
+        f"{reconnect_delay}s · alert cooldown {alert_cooldown}s · batch ≥{batch_min}",
+        flush=True,
+    )
+
+    # --- Wrap setiap client: tunggu grace + reconnect sebelum kirim alert Telegram ---
     async def _watch_client(cl: TelegramClient, acc_info: dict[str, Any]) -> None:
         acc_id = str(acc_info.get("id", "?"))
         profile = str(acc_info.get("detected_profile") or acc_info.get("profile_hint") or acc_id)
-        try:
-            await cl.run_until_disconnected()
-        except Exception:
-            pass
         pool_name = "shooter" if account_pool(acc_info) == "shooter" else "gcs"
         tag = "SHOOTER" if pool_name == "shooter" else "GCS"
-        alert = build_session_disconnected_html(acc_info, accounts_doc, profile=profile)
-        print(f"⚠ [{tag}] DISCONNECTED: {acc_id} ({profile})")
-        _queue_sheet_status(
-            acc_id,
-            pool_name,
-            "disconnected",
-            profile,
-            phone=str(acc_info.get("phone") or ""),
-            session_user="Disconnected",
-            session_friday="Disconnected",
-        )
-        send_login_status_message(token, alert, accounts_doc)
+
+        while True:
+            try:
+                await cl.run_until_disconnected()
+            except Exception:
+                pass
+
+            print(f"  [{tag}] {acc_id} — koneksi putus, coba reconnect...", flush=True)
+
+            if grace > 0:
+                await asyncio.sleep(grace)
+
+            if await _try_reconnect_listener_client(
+                cl, reconnect_attempts, reconnect_delay, tag, acc_id
+            ):
+                print(f"  [{tag}] ✓ {acc_id} — kembali online", flush=True)
+                continue
+
+            print(f"⚠ [{tag}] DISCONNECTED: {acc_id} ({profile})", flush=True)
+
+            if not suppress_alerts:
+                now = time.time()
+                last = _disconnect_last_alert.get(acc_id, 0.0)
+                if now - last >= alert_cooldown:
+                    _disconnect_last_alert[acc_id] = now
+                    await _enqueue_disconnect_alert(
+                        acc_info, profile, tag, token, accounts_doc, pool_name
+                    )
+                else:
+                    left = int(alert_cooldown - (now - last))
+                    print(
+                        f"  [{tag}] {acc_id} — notifikasi diskip (cooldown {left}s)",
+                        flush=True,
+                    )
+
+            await asyncio.sleep(reconnect_delay)
 
     await asyncio.gather(*(_watch_client(cl, acc_info) for cl, acc_info in clients))
     return 0
@@ -4478,6 +4666,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    _configure_runtime_warnings()
     logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s %(message)s", level=logging.INFO)
     load_dotenv(project_root() / ".env")
     if sys.platform == "win32" and sys.version_info < (3, 14):
