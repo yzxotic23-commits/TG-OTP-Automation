@@ -1,0 +1,77 @@
+====================================================
+  FRIDAY BOT — COMMAND (SIMPLE)
+====================================================
+
+PowerShell (Windows):
+  .\run_local.ps1      → bot + listen (2 jendela, production)
+  .\run_sync.ps1       → sync sekali (import + login baru)
+  .\run_sync.ps1 health → audit manual
+  .\setup.ps1          → setup laptop baru
+
+2 terminal WAJIB jalan terus + sync sesuai kebutuhan:
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  1. BOT (biarkan jalan)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  python telegram_otp_allinone.py bot
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  2. LISTEN (biarkan jalan — update Sheet otomatis)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  python telegram_otp_allinone.py listen
+
+  Saat deteksi Banned / Frozen / Expired / Disconnected:
+    → Google Sheet langsung update (1 baris, tidak overwrite semua)
+    → TELEGRAM_SYNC_INSTANT_PUSH=1 di .env
+    → Notifikasi langsung ke forum topic System Status
+
+  TIDAK perlu sync setiap 10 menit.
+
+  Production .env (topic only, tanpa preview DM):
+    TELEGRAM_LOGIN_STATUS_CHAT_ID=-1003994531684
+    TELEGRAM_LOGIN_STATUS_THREAD_ID=1322
+    (TELEGRAM_STATUS_PREVIEW_* — dikomentari / tidak dipakai)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  3. SYNC (hanya saat perlu — sekali jalan lalu exit)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Import Sheet + login akun baru + import ulang setelah login sukses:
+    python telegram_otp_allinone.py sync
+    (1) Sheet → JSON  (2) login baru  (3) Sheet → JSON lagi + profile
+
+  Hanya pull dari Sheet:
+    python telegram_otp_allinone.py sync pull
+
+  Audit manual semua akun (health + push):
+    python telegram_otp_allinone.py sync health
+
+  Full sekali (pull+login+health+push):
+    python telegram_otp_allinone.py sync all
+
+  Loop berkala (TIDAK disarankan — limit API / overwrite):
+    python telegram_otp_allinone.py sync loop
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  4. SESSIONS (cek / terminate device asing)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  python telegram_otp_allinone.py sync sessions --pool gcs --id STMY
+  python telegram_otp_allinone.py sync sessions --pool all --id all --kill others
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  GOOGLE SHEET
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Group: Main = GCS | Other = Shooter
+  User: owner shooter (baris Other)
+  Account Status / Session Friday: script isi (saat ada masalah)
+
+====================================================
