@@ -1,0 +1,582 @@
+{
+  "api_id": 22760019,
+  "api_hash": "f8e9147732572969861ede58aa96bdc1",
+  "shooter_users": [
+    "ALDO",
+    "EUDORA",
+    "FANIE",
+    "INDRI",
+    "KAREN",
+    "KELLY",
+    "LIHYUN",
+    "RINTO",
+    "RIZKYR",
+    "SHEVA",
+    "VENAN",
+    "VENNUS",
+    "WAI",
+    "WIDYA"
+  ],
+  "shooter_accounts": [
+    {
+      "id": "SH_VENNUS_01",
+      "owner": "VENNUS",
+      "phone": "+601162276700",
+      "profile_hint": "Y",
+      "session": "telegram_session/shooter/SH_VENNUS_01",
+      "enabled": true
+    },
+    {
+      "id": "SH_VENNUS_02",
+      "owner": "VENNUS",
+      "phone": "+601137311419",
+      "profile_hint": "F",
+      "session": "telegram_session/shooter/SH_VENNUS_02",
+      "enabled": true
+    },
+    {
+      "id": "SH_VENNUS_03",
+      "owner": "VENNUS",
+      "phone": "+601137311350",
+      "profile_hint": "V",
+      "session": "telegram_session/shooter/SH_VENNUS_03",
+      "enabled": true
+    },
+    {
+      "id": "SH_VENNUS_04",
+      "owner": "VENNUS",
+      "phone": "+601161758496",
+      "profile_hint": "G",
+      "session": "telegram_session/shooter/SH_VENNUS_04",
+      "enabled": true
+    },
+    {
+      "id": "SH_VENNUS_05",
+      "owner": "VENNUS",
+      "phone": "+601161758869",
+      "profile_hint": "G",
+      "session": "telegram_session/shooter/SH_VENNUS_05",
+      "enabled": true
+    },
+    {
+      "id": "SH_EUDORA_01",
+      "owner": "EUDORA",
+      "phone": "+601161759548",
+      "profile_hint": "R",
+      "session": "telegram_session/shooter/SH_EUDORA_01",
+      "enabled": true
+    },
+    {
+      "id": "SH_EUDORA_02",
+      "owner": "EUDORA",
+      "phone": "+601161759626",
+      "profile_hint": "B",
+      "session": "telegram_session/shooter/SH_EUDORA_02",
+      "enabled": true
+    },
+    {
+      "id": "SH_EUDORA_03",
+      "owner": "EUDORA",
+      "phone": "+601161759849",
+      "profile_hint": "H",
+      "session": "telegram_session/shooter/SH_EUDORA_03",
+      "enabled": true
+    },
+    {
+      "id": "SH_EUDORA_04",
+      "owner": "EUDORA",
+      "phone": "+601161759932",
+      "profile_hint": "B",
+      "session": "telegram_session/shooter/SH_EUDORA_04",
+      "enabled": true
+    },
+    {
+      "id": "SH_EUDORA_05",
+      "owner": "EUDORA",
+      "phone": "+601161760219",
+      "profile_hint": "H",
+      "session": "telegram_session/shooter/SH_EUDORA_05",
+      "enabled": true
+    },
+    {
+      "id": "SH_FANIE_01",
+      "owner": "FANIE",
+      "phone": "+601137306717",
+      "profile_hint": "g",
+      "session": "telegram_session/shooter/SH_FANIE_01",
+      "enabled": true
+    },
+    {
+      "id": "SH_FANIE_02",
+      "owner": "FANIE",
+      "phone": "+601137306404",
+      "profile_hint": "y",
+      "session": "telegram_session/shooter/SH_FANIE_02",
+      "enabled": true
+    },
+    {
+      "id": "SH_FANIE_03",
+      "owner": "FANIE",
+      "phone": "+601137306104",
+      "profile_hint": "h",
+      "session": "telegram_session/shooter/SH_FANIE_03",
+      "enabled": true
+    },
+    {
+      "id": "SH_FANIE_04",
+      "owner": "FANIE",
+      "phone": "+601137305786",
+      "profile_hint": "f",
+      "session": "telegram_session/shooter/SH_FANIE_04",
+      "enabled": true
+    },
+    {
+      "id": "SH_FANIE_05",
+      "owner": "FANIE",
+      "phone": "+601137305286",
+      "profile_hint": "g",
+      "session": "telegram_session/shooter/SH_FANIE_05",
+      "enabled": true
+    },
+    {
+      "id": "SH_WAI_01",
+      "owner": "WAI",
+      "phone": "+601137304929",
+      "profile_hint": "t",
+      "session": "telegram_session/shooter/SH_WAI_01",
+      "enabled": true
+    },
+    {
+      "id": "SH_WAI_02",
+      "owner": "WAI",
+      "phone": "+601137310036",
+      "profile_hint": "SOMELL",
+      "session": "telegram_session/shooter/SH_WAI_02",
+      "enabled": true
+    },
+    {
+      "id": "SH_WAI_03",
+      "owner": "WAI",
+      "phone": "+601137309963",
+      "profile_hint": "g",
+      "session": "telegram_session/shooter/SH_WAI_03",
+      "enabled": true
+    },
+    {
+      "id": "SH_WAI_04",
+      "owner": "WAI",
+      "phone": "+601137309821",
+      "profile_hint": "f",
+      "session": "telegram_session/shooter/SH_WAI_04",
+      "enabled": true
+    },
+    {
+      "id": "SH_WAI_05",
+      "owner": "WAI",
+      "phone": "+601137309524",
+      "profile_hint": "f",
+      "session": "telegram_session/shooter/SH_WAI_05",
+      "enabled": true
+    },
+    {
+      "id": "SH_LIHYUN_01",
+      "owner": "LIHYUN",
+      "phone": "+601161754778",
+      "profile_hint": "H",
+      "session": "telegram_session/shooter/SH_LIHYUN_01",
+      "enabled": true
+    },
+    {
+      "id": "SH_LIHYUN_02",
+      "owner": "LIHYUN",
+      "phone": "+601162277537",
+      "profile_hint": "H",
+      "session": "telegram_session/shooter/SH_LIHYUN_02",
+      "enabled": true
+    },
+    {
+      "id": "SH_LIHYUN_03",
+      "owner": "LIHYUN",
+      "phone": "+601161754146",
+      "profile_hint": "G",
+      "session": "telegram_session/shooter/SH_LIHYUN_03",
+      "enabled": true
+    },
+    {
+      "id": "SH_LIHYUN_04",
+      "owner": "LIHYUN",
+      "phone": "+601162278074",
+      "profile_hint": "G",
+      "session": "telegram_session/shooter/SH_LIHYUN_04",
+      "enabled": true
+    },
+    {
+      "id": "SH_LIHYUN_05",
+      "owner": "LIHYUN",
+      "phone": "+601161760648",
+      "profile_hint": "G",
+      "session": "telegram_session/shooter/SH_LIHYUN_05",
+      "enabled": true
+    },
+    {
+      "id": "SH_SHEVA_01",
+      "owner": "SHEVA",
+      "phone": "+601137311457",
+      "profile_hint": "Celline",
+      "session": "telegram_session/shooter/SH_SHEVA_01",
+      "enabled": true
+    },
+    {
+      "id": "SH_SHEVA_02",
+      "owner": "SHEVA",
+      "phone": "+601161758292",
+      "profile_hint": "Sellina",
+      "session": "telegram_session/shooter/SH_SHEVA_02",
+      "enabled": true
+    },
+    {
+      "id": "SH_SHEVA_03",
+      "owner": "SHEVA",
+      "phone": "+601161758583",
+      "profile_hint": "Harlisa",
+      "session": "telegram_session/shooter/SH_SHEVA_03",
+      "enabled": true
+    },
+    {
+      "id": "SH_SHEVA_04",
+      "owner": "SHEVA",
+      "phone": "+601161759790",
+      "profile_hint": "Laura",
+      "session": "telegram_session/shooter/SH_SHEVA_04",
+      "enabled": true
+    },
+    {
+      "id": "SH_SHEVA_05",
+      "owner": "SHEVA",
+      "phone": "+601161760178",
+      "profile_hint": "Jesica",
+      "session": "telegram_session/shooter/SH_SHEVA_05",
+      "enabled": true
+    },
+    {
+      "id": "SH_KELLY_01",
+      "owner": "KELLY",
+      "phone": "+601161760192",
+      "profile_hint": "Nana",
+      "session": "telegram_session/shooter/SH_KELLY_01",
+      "enabled": true
+    },
+    {
+      "id": "SH_KELLY_02",
+      "owner": "KELLY",
+      "phone": "+601162278101",
+      "profile_hint": "Fishy",
+      "session": "telegram_session/shooter/SH_KELLY_02",
+      "enabled": true
+    },
+    {
+      "id": "SH_KELLY_03",
+      "owner": "KELLY",
+      "phone": "+601162278175",
+      "profile_hint": "J",
+      "session": "telegram_session/shooter/SH_KELLY_03",
+      "enabled": true
+    },
+    {
+      "id": "SH_KELLY_04",
+      "owner": "KELLY",
+      "phone": "+601162277538",
+      "profile_hint": "Jolina",
+      "session": "telegram_session/shooter/SH_KELLY_04",
+      "enabled": true
+    },
+    {
+      "id": "SH_KELLY_05",
+      "owner": "KELLY",
+      "phone": "+601161754934",
+      "profile_hint": "Gabby",
+      "session": "telegram_session/shooter/SH_KELLY_05",
+      "enabled": true
+    },
+    {
+      "id": "SH_INDRI_01",
+      "owner": "INDRI",
+      "phone": "+60145619910",
+      "profile_hint": "f",
+      "session": "telegram_session/shooter/SH_INDRI_01",
+      "enabled": true
+    },
+    {
+      "id": "SH_INDRI_02",
+      "owner": "INDRI",
+      "phone": "+60192723625",
+      "profile_hint": "G",
+      "session": "telegram_session/shooter/SH_INDRI_02",
+      "enabled": true
+    },
+    {
+      "id": "SH_INDRI_03",
+      "owner": "INDRI",
+      "phone": "+60145427949",
+      "profile_hint": "d",
+      "session": "telegram_session/shooter/SH_INDRI_03",
+      "enabled": true
+    },
+    {
+      "id": "SH_INDRI_04",
+      "owner": "INDRI",
+      "phone": "+60129544075",
+      "profile_hint": "Lina",
+      "session": "telegram_session/shooter/SH_INDRI_04",
+      "enabled": true
+    },
+    {
+      "id": "SH_INDRI_05",
+      "owner": "INDRI",
+      "phone": "+60145482358",
+      "profile_hint": "Fbb",
+      "session": "telegram_session/shooter/SH_INDRI_05",
+      "enabled": true
+    },
+    {
+      "id": "SH_WIDYA_01",
+      "owner": "WIDYA",
+      "phone": "+601162277292",
+      "profile_hint": "Cintya",
+      "session": "telegram_session/shooter/SH_WIDYA_01",
+      "enabled": true
+    },
+    {
+      "id": "SH_WIDYA_02",
+      "owner": "WIDYA",
+      "phone": "+601162276962",
+      "profile_hint": "rachel",
+      "session": "telegram_session/shooter/SH_WIDYA_02",
+      "enabled": true
+    },
+    {
+      "id": "SH_WIDYA_03",
+      "owner": "WIDYA",
+      "phone": "+601162276263",
+      "profile_hint": "Angela",
+      "session": "telegram_session/shooter/SH_WIDYA_03",
+      "enabled": true
+    },
+    {
+      "id": "SH_WIDYA_04",
+      "owner": "WIDYA",
+      "phone": "+601162276322",
+      "profile_hint": "Queenza",
+      "session": "telegram_session/shooter/SH_WIDYA_04",
+      "enabled": true
+    },
+    {
+      "id": "SH_WIDYA_05",
+      "owner": "WIDYA",
+      "phone": "+601162276248",
+      "profile_hint": "aletya",
+      "session": "telegram_session/shooter/SH_WIDYA_05",
+      "enabled": true
+    },
+    {
+      "id": "SH_RINTO_01",
+      "owner": "RINTO",
+      "phone": "+601162276458",
+      "profile_hint": "Dd",
+      "session": "telegram_session/shooter/SH_RINTO_01",
+      "enabled": true
+    },
+    {
+      "id": "SH_RINTO_02",
+      "owner": "RINTO",
+      "phone": "+601162276115",
+      "profile_hint": "G",
+      "session": "telegram_session/shooter/SH_RINTO_02",
+      "enabled": true
+    },
+    {
+      "id": "SH_RINTO_03",
+      "owner": "RINTO",
+      "phone": "+601162276194",
+      "profile_hint": "U",
+      "session": "telegram_session/shooter/SH_RINTO_03",
+      "enabled": true
+    },
+    {
+      "id": "SH_RINTO_04",
+      "owner": "RINTO",
+      "phone": "+601162276884",
+      "profile_hint": "U",
+      "session": "telegram_session/shooter/SH_RINTO_04",
+      "enabled": true
+    },
+    {
+      "id": "SH_RINTO_05",
+      "owner": "RINTO",
+      "phone": "+601162276265",
+      "profile_hint": "G",
+      "session": "telegram_session/shooter/SH_RINTO_05",
+      "enabled": true
+    },
+    {
+      "id": "SH_ALDO_01",
+      "owner": "ALDO",
+      "phone": "+601162276196",
+      "profile_hint": "H",
+      "session": "telegram_session/shooter/SH_ALDO_01",
+      "enabled": true
+    },
+    {
+      "id": "SH_ALDO_02",
+      "owner": "ALDO",
+      "phone": "+601162276451",
+      "profile_hint": "h",
+      "session": "telegram_session/shooter/SH_ALDO_02",
+      "enabled": true
+    },
+    {
+      "id": "SH_ALDO_03",
+      "owner": "ALDO",
+      "phone": "+601162276176",
+      "profile_hint": "Y",
+      "session": "telegram_session/shooter/SH_ALDO_03",
+      "enabled": true
+    },
+    {
+      "id": "SH_ALDO_04",
+      "owner": "ALDO",
+      "phone": "+601162277046",
+      "profile_hint": "h",
+      "session": "telegram_session/shooter/SH_ALDO_04",
+      "enabled": true
+    },
+    {
+      "id": "SH_ALDO_05",
+      "owner": "ALDO",
+      "phone": "+601162277148",
+      "profile_hint": "lintun",
+      "session": "telegram_session/shooter/SH_ALDO_05",
+      "enabled": true
+    },
+    {
+      "id": "SH_KAREN_01",
+      "owner": "KAREN",
+      "phone": "+60135394613",
+      "profile_hint": "gina",
+      "session": "telegram_session/shooter/SH_KAREN_01",
+      "enabled": true
+    },
+    {
+      "id": "SH_KAREN_02",
+      "owner": "KAREN",
+      "phone": "+60145181374",
+      "profile_hint": "aurel",
+      "session": "telegram_session/shooter/SH_KAREN_02",
+      "enabled": true
+    },
+    {
+      "id": "SH_KAREN_03",
+      "owner": "KAREN",
+      "phone": "+60164066937",
+      "profile_hint": "H",
+      "session": "telegram_session/shooter/SH_KAREN_03",
+      "enabled": true
+    },
+    {
+      "id": "SH_KAREN_04",
+      "owner": "KAREN",
+      "phone": "+60145626084",
+      "profile_hint": "jennie",
+      "session": "telegram_session/shooter/SH_KAREN_04",
+      "enabled": true
+    },
+    {
+      "id": "SH_KAREN_05",
+      "owner": "KAREN",
+      "phone": "+60134091088",
+      "profile_hint": "dessy",
+      "session": "telegram_session/shooter/SH_KAREN_05",
+      "enabled": true
+    },
+    {
+      "id": "SH_RIZKYR_01",
+      "owner": "RIZKYR",
+      "phone": "+601162276035",
+      "profile_hint": "Steven",
+      "session": "telegram_session/shooter/SH_RIZKYR_01",
+      "enabled": true
+    },
+    {
+      "id": "SH_RIZKYR_02",
+      "owner": "RIZKYR",
+      "phone": "+601162276205",
+      "profile_hint": "Richard",
+      "session": "telegram_session/shooter/SH_RIZKYR_02",
+      "enabled": true
+    },
+    {
+      "id": "SH_RIZKYR_03",
+      "owner": "RIZKYR",
+      "phone": "+601162276380",
+      "profile_hint": "Asran Name",
+      "session": "telegram_session/shooter/SH_RIZKYR_03",
+      "enabled": true
+    },
+    {
+      "id": "SH_RIZKYR_04",
+      "owner": "RIZKYR",
+      "phone": "+601162276321",
+      "profile_hint": "Jimmy",
+      "session": "telegram_session/shooter/SH_RIZKYR_04",
+      "enabled": true
+    },
+    {
+      "id": "SH_RIZKYR_05",
+      "owner": "RIZKYR",
+      "phone": "+601162276410",
+      "profile_hint": "Rico",
+      "session": "telegram_session/shooter/SH_RIZKYR_05",
+      "enabled": true
+    },
+    {
+      "id": "SH_VENAN_01",
+      "owner": "VENAN",
+      "phone": "+601162275984",
+      "profile_hint": "Bb",
+      "session": "telegram_session/shooter/SH_VENAN_01",
+      "enabled": true
+    },
+    {
+      "id": "SH_VENAN_02",
+      "owner": "VENAN",
+      "phone": "+601162276788",
+      "profile_hint": "G",
+      "session": "telegram_session/shooter/SH_VENAN_02",
+      "enabled": true
+    },
+    {
+      "id": "SH_VENAN_03",
+      "owner": "VENAN",
+      "phone": "+601162276079",
+      "profile_hint": "H",
+      "session": "telegram_session/shooter/SH_VENAN_03",
+      "enabled": true
+    },
+    {
+      "id": "SH_VENAN_04",
+      "owner": "VENAN",
+      "phone": "+601162276188",
+      "profile_hint": "Fuq",
+      "session": "telegram_session/shooter/SH_VENAN_04",
+      "enabled": true
+    },
+    {
+      "id": "SH_VENAN_05",
+      "owner": "VENAN",
+      "phone": "+601162276233",
+      "profile_hint": "G",
+      "session": "telegram_session/shooter/SH_VENAN_05",
+      "enabled": true
+    }
+  ]
+}

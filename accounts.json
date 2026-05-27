@@ -1,0 +1,1786 @@
+{
+  "default_account": "geri_work",
+  "forum": {
+    "chat_id": "-1003994531684",
+    "topics": {
+      "MYR": {
+        "thread_id": 4
+      },
+      "SGD": {
+        "thread_id": 2
+      },
+      "USC": {
+        "thread_id": 5
+      },
+      "SYSTEM": {
+        "thread_id": 1322
+      }
+    }
+  },
+  "brands": {
+    "STMY": {
+      "currency": "MYR",
+      "label": "STMY",
+      "chat_group_id": ""
+    },
+    "SBMY": {
+      "currency": "MYR",
+      "label": "SBMY",
+      "chat_group_id": ""
+    },
+    "JMMY": {
+      "currency": "MYR",
+      "label": "JMMY",
+      "chat_group_id": ""
+    },
+    "M24SG": {
+      "currency": "SGD",
+      "label": "M24SG",
+      "chat_group_id": ""
+    },
+    "WBSG": {
+      "currency": "SGD",
+      "label": "WBSG",
+      "chat_group_id": ""
+    },
+    "FWSG": {
+      "currency": "SGD",
+      "label": "FWSG",
+      "chat_group_id": ""
+    },
+    "KH778KH": {
+      "currency": "USC",
+      "label": "KH778KH",
+      "chat_group_id": ""
+    },
+    "KH888KH": {
+      "currency": "USC",
+      "label": "KH888KH",
+      "chat_group_id": ""
+    },
+    "CAM78KH": {
+      "currency": "USC",
+      "label": "CAM78KH",
+      "chat_group_id": ""
+    },
+    "CAM68KH": {
+      "currency": "USC",
+      "label": "CAM68KH",
+      "chat_group_id": ""
+    },
+    "OK188KH": {
+      "currency": "USC",
+      "label": "OK188KH",
+      "chat_group_id": ""
+    },
+    "OK888KH": {
+      "currency": "USC",
+      "label": "OK888KH",
+      "chat_group_id": ""
+    },
+    "SBKH": {
+      "currency": "USC",
+      "label": "SBKH",
+      "chat_group_id": ""
+    },
+    "SB99KH": {
+      "currency": "USC",
+      "label": "SB99KH",
+      "chat_group_id": ""
+    },
+    "17WINKH": {
+      "currency": "USC",
+      "label": "17WINKH",
+      "chat_group_id": ""
+    },
+    "17WIN168KH": {
+      "currency": "USC",
+      "label": "17WIN168KH",
+      "chat_group_id": ""
+    },
+    "UW29KH": {
+      "currency": "USC",
+      "label": "UW29KH",
+      "chat_group_id": ""
+    },
+    "UWON33": {
+      "currency": "USC",
+      "label": "UWON33",
+      "chat_group_id": ""
+    }
+  },
+  "otp_accounts": [
+    {
+      "id": "STMY",
+      "profile_hint": "STMY Dara STARMAX",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855712565990",
+      "password": "MYR889900",
+      "session": "telegram_session/STMY",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "STMY_LINA",
+      "profile_hint": "STMY LINA STARMAX",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855712564280",
+      "password": "MYR889900",
+      "session": "telegram_session/STMY_LINA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "STMY_ALICIA",
+      "profile_hint": "STMY ALICIA",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855968194945",
+      "password": "MYR889900",
+      "session": "telegram_session/STMY_ALICIA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "STMY_RAISA",
+      "profile_hint": "STMY Raisa STARMAX",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855713713580",
+      "password": "MYR889900",
+      "session": "telegram_session/STMY_RAISA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "STMY_OFFICIAL",
+      "profile_hint": "STMY OFFICIAL TEAM",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855964808966",
+      "password": "MYR889900",
+      "session": "telegram_session/STMY_OFFICIAL",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "STMY_RICO",
+      "profile_hint": "STMY Rico",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855713481930",
+      "password": "MYR889900",
+      "session": "telegram_session/STMY_RICO",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "STMY_MANAGER",
+      "profile_hint": "STMY Manager",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+601137396992",
+      "password": "MYR889900",
+      "session": "telegram_session/FWMY_MANAGER",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "JMMY_RICHARD",
+      "profile_hint": "JMMY Ruby",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85566441757",
+      "password": "MYR889900",
+      "session": "telegram_session/JMMY_RICHARD",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "JMMY_HARIS",
+      "profile_hint": "JMMY Haris",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855968735505",
+      "password": "MYR889900",
+      "session": "telegram_session/JMMY_HARIS",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "JMMY_STEVEN",
+      "profile_hint": "JMMY Steven",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855962578051",
+      "password": "MYR889900",
+      "session": "telegram_session/JMMY_STEVEN",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBMY_JAYSON",
+      "profile_hint": "SBMY Jayson",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855712199436",
+      "password": "MYR889900",
+      "session": "telegram_session/SBMY_JAYSON",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBMY_BEN",
+      "profile_hint": "SBMY Ben",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+601156907088",
+      "password": "MYR889900",
+      "session": "telegram_session/SBMY_BEN",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBMY_6",
+      "profile_hint": "SBMY 6",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855967433094",
+      "password": "MYR889900",
+      "session": "telegram_session/SBMY_6",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBMY_KENNY",
+      "profile_hint": "SBMY Kenny",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855717096338",
+      "password": "MYR889900",
+      "session": "telegram_session/SBMY_KENNY",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBMY_8",
+      "profile_hint": "SBMY 8",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+601156792378",
+      "password": "MYR889900",
+      "session": "telegram_session/SBMY_8",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "M24SG_MASTER",
+      "profile_hint": "M24SG Master",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855966086418",
+      "password": "SGDSNR8899",
+      "session": "telegram_session/M24SG_MASTER",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "M24SG_MANTOU",
+      "profile_hint": "M24SG Mantou",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855968773457",
+      "password": "SGDSNR8899",
+      "session": "telegram_session/M24SG_MANTOU",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "M24SG_JENNIFER",
+      "profile_hint": "M24SG Jennifer",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855968878506",
+      "password": "SGDSNR8899",
+      "session": "telegram_session/M24SG_JENNIFER",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "WBSG_MIA",
+      "profile_hint": "WBSG Mia",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855312909010",
+      "password": "SGDSNR8899",
+      "session": "telegram_session/WBSG_MIA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "WBSG_KELLY",
+      "profile_hint": "WBSG Kelly",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855715404965",
+      "password": "SGDSNR8899",
+      "session": "telegram_session/WBSG_KELLY",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "WBSG_EDDIE",
+      "profile_hint": "WBSG Eddie",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855885617477",
+      "password": "SGDSNR8899",
+      "session": "telegram_session/WBSG_EDDIE",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "WBSG_CARINA",
+      "profile_hint": "WBSG Carina",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855888735976",
+      "password": "SGDSNR8899",
+      "session": "telegram_session/WBSG_CARINA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "FWSG_JASON",
+      "profile_hint": "FWSG Jason",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855886925398",
+      "password": "SGDSNR8899",
+      "session": "telegram_session/FWSG_JASON",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "FWSG_AVICII",
+      "profile_hint": "FWSG OG AVICII",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855972399738",
+      "password": "SGDSNR8899",
+      "session": "telegram_session/FWSG_AVICII",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "FWSG_MIKA",
+      "profile_hint": "FWSG Mika",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855965458588",
+      "password": "SGDSNR8899",
+      "session": "telegram_session/FWSG_MIKA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "KH778KH_CS3",
+      "profile_hint": "KH778CS3",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855713398102",
+      "password": "778899",
+      "session": "telegram_session/KH778KH_CS3",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "KH778KH_CS4",
+      "profile_hint": "KH778CS4",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855967527667",
+      "password": "778899",
+      "session": "telegram_session/KH778KH_CS4",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "KH778KH_MEYLY",
+      "profile_hint": "KH778meyly",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855963954426",
+      "password": "778899",
+      "session": "telegram_session/KH778KH_MEYLY",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "KH778KH_OUNLEAK",
+      "profile_hint": "KH778ounleak",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855967529122",
+      "password": "778899",
+      "session": "telegram_session/KH778KH_OUNLEAK",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "KH778KH_NANA",
+      "profile_hint": "NaaNaa",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85589681882",
+      "password": "778899",
+      "session": "telegram_session/KH778KH_NANA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "KH888KH_GCS2",
+      "profile_hint": "KH888 GCS2",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855314903568",
+      "password": "778899",
+      "session": "telegram_session/KH888KH_GCS2",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "KH888KH_GCS1",
+      "profile_hint": "KH888 GCS1",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855314807143",
+      "password": "778899",
+      "session": "telegram_session/KH888KH_GCS1",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "KH888KH_GCS3",
+      "profile_hint": "KH888 GCS3",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855314461917",
+      "password": "778899",
+      "session": "telegram_session/KH888KH_GCS3",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM78KH_CS1",
+      "profile_hint": "CAM78 CS1",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855314156838",
+      "password": "778899",
+      "session": "telegram_session/CAM78KH_CS1",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM78KH_CS3",
+      "profile_hint": "CAM78 CS3",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855313450514",
+      "password": "778899",
+      "session": "telegram_session/CAM78KH_CS3",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM78KH_AHJU",
+      "profile_hint": "Ah Ju",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855313402844",
+      "password": "CAMTEAM",
+      "session": "telegram_session/CAM78KH_AHJU",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM68KH_AHPICH",
+      "profile_hint": "Ah Pich",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+601160894939",
+      "password": "778899",
+      "session": "telegram_session/CAM68KH_AHPICH",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM68KH_LITA",
+      "profile_hint": "Lita 🌸🍁",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855313309340",
+      "password": "778899",
+      "session": "telegram_session/CAM68KH_LITA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM68KH_LIIKAA",
+      "profile_hint": "Lii Kaa",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855978429683",
+      "password": "778899",
+      "session": "telegram_session/CAM68KH_LIIKAA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM68KH_ANITA",
+      "profile_hint": "អានីតា💖💖",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85568738798",
+      "password": "778899",
+      "session": "telegram_session/CAM68KH_ANITA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM68KH_SOLYDA",
+      "profile_hint": "Lii Kaa",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85568773085",
+      "password": "778899",
+      "session": "telegram_session/CAM68KH_SOLYDA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM68KH_MEYCHU",
+      "profile_hint": "Meychu",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855968779699",
+      "password": "778899",
+      "session": "telegram_session/CAM68KH_MEYCHU",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM68KH_CS1",
+      "profile_hint": "CAM68 CS 1",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85567326733",
+      "password": "778899",
+      "session": "telegram_session/CAM68KH_CS1",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM68KH_CS3",
+      "profile_hint": "CAM68 CS 3",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855885479066",
+      "password": "778899",
+      "session": "telegram_session/CAM68KH_CS3",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM68KH_SOLKOLAB",
+      "profile_hint": "Sol Kolab",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855966202972",
+      "password": "778899",
+      "session": "telegram_session/CAM68KH_SOLKOLAB",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM68KH_GCS2",
+      "profile_hint": "CAM68 GCS 2",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855962975143",
+      "password": "778899",
+      "session": "telegram_session/CAM68KH_GCS2",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM68KH_GCS3",
+      "profile_hint": "CAM68 GCS 3",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855967490285",
+      "password": "778899",
+      "session": "telegram_session/CAM68KH_GCS3",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "CAM68KH_SOKNANIN",
+      "profile_hint": "Sok Nanin",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855966202101",
+      "password": "778899",
+      "session": "telegram_session/CAM68KH_SOKNANIN",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK188KH_DAVDAV",
+      "profile_hint": "DavDaV",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85568743306",
+      "password": "778899",
+      "session": "telegram_session/OK188KH_DAVDAV",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK188KH_MONYNEATH",
+      "profile_hint": "Srey Nea❤️",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855717122709",
+      "password": "778899",
+      "session": "telegram_session/OK188KH_MONYNEATH",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK188KH_MEYLANG",
+      "profile_hint": "MeyLang😻",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85568773080",
+      "password": "778899",
+      "session": "telegram_session/OK188KH_MEYLANG",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK188KH_CS1",
+      "profile_hint": "OK188KH CS1",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855966438764",
+      "password": "778899",
+      "session": "telegram_session/OK188KH_CS1",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK188KH_CS66",
+      "profile_hint": "OK188KH CS66",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855962510775",
+      "password": "778899",
+      "session": "telegram_session/OK188KH_CS66",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK188KH_CS77",
+      "profile_hint": "OK188KH CS77",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855964527518",
+      "password": "778899",
+      "session": "telegram_session/OK188KH_CS77",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK188KH_CS88",
+      "profile_hint": "OK188KH CS88",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855963955683",
+      "password": "778899",
+      "session": "telegram_session/OK188KH_CS88",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK188KH_KIMO",
+      "profile_hint": "Srey Leap Channel",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+601160883778",
+      "password": "778899",
+      "session": "telegram_session/OK188KH_KIMO",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK188KH_CS2",
+      "profile_hint": "Ok188KH CS 2",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855967490060",
+      "password": "778899",
+      "session": "telegram_session/OK188KH_CS2",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK188KH_CS3",
+      "profile_hint": "OK188KH CS 3",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855967420433",
+      "password": "778899",
+      "session": "telegram_session/OK188KH_CS3",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK888KH_SEANYANG",
+      "profile_hint": "PECH TA (ពេជ្រតា)",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855762278872",
+      "password": "778899",
+      "session": "telegram_session/OK888KH_SEANYANG",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK888KH_MIKYURA",
+      "profile_hint": "MIK_YURA",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+60167264236",
+      "password": "778899",
+      "session": "telegram_session/OK888KH_MIKYURA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK888KH_CS1",
+      "profile_hint": "OK888 CS1",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855762306022",
+      "password": "778899",
+      "session": "telegram_session/OK888KH_CS1",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK888KH_CS2",
+      "profile_hint": "OK888 CS2",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855762232026",
+      "password": "778899",
+      "session": "telegram_session/OK888KH_CS2",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK888KH_CS3",
+      "profile_hint": "OK888 CS3",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855762304543",
+      "password": "778899",
+      "session": "telegram_session/OK888KH_CS3",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK888KH_OUKSAMEAS",
+      "profile_hint": "ouksa meas",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85599271349",
+      "password": "778899",
+      "session": "telegram_session/OK888KH_OUKSAMEAS",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "OK888KH_MEASOUKSA2",
+      "profile_hint": "MEAS_OUKSA2",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85577736579",
+      "password": "778899",
+      "session": "telegram_session/OK888KH_MEASOUKSA2",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBKH_CS2",
+      "profile_hint": "SEABETKHCS2",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855964562362",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SBKH_CS2",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBKH_CS5",
+      "profile_hint": "SEABETKHCS5",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85599996707",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SBKH_CS5",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBKH_CS99",
+      "profile_hint": "SEABETCS99",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85514979572",
+      "password": "WFHWFH88",
+      "session": "telegram_session/SBKH_CS99",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBKH_MIEMIE",
+      "profile_hint": "Mie Mie",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85514703789",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SBKH_MIEMIE",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBKH_TIYNITT",
+      "profile_hint": "Tiy Nitt",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85511358464",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SBKH_TIYNITT",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBKH_CS6",
+      "profile_hint": "SEABETKH CS6",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85517550463",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SBKH_CS6",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBKH_CS03",
+      "profile_hint": "SBKH CS03",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85585976017",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SBKH_CS03",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBKH_LIIKAA",
+      "profile_hint": "Lii Kaa",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85592500964",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SBKH_LIIKAA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBKH_OFFICIAL",
+      "profile_hint": "SBKH Official",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855967545240",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SBKH_OFFICIAL",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SBKH_CS01",
+      "profile_hint": "SEABETKHCS01",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855767573893",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SBKH_CS01",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SB99KH_MENGMENG",
+      "profile_hint": "Mengmeng",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855314497908",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SB99KH_MENGMENG",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SB99KH_YOYO",
+      "profile_hint": "Yoyo",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+601139916314",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SB99KH_YOYO",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SB99KH_CS1",
+      "profile_hint": "Seabet99KH CS1",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85592910305",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SB99KH_CS1",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SB99KH_CS3",
+      "profile_hint": "Seabet99Kh CS3",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855764911627",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SB99KH_CS3",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SB99KH_CS2",
+      "profile_hint": "Seabet99KH CS2",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855767780375",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SB99KH_CS2",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SB99KH_AHHNAM",
+      "profile_hint": "Ahh Nam",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855765846229",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SB99KH_AHHNAM",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SB99KH_CS",
+      "profile_hint": "Seabet99KH Cs",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85578653626",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SB99KH_CS",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SB99KH_HUAT",
+      "profile_hint": "SB99KH HUAT",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85592672879",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SB99KH_HUAT",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SB99KH_OUNNA",
+      "profile_hint": "Oun Na",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+60167101659",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SB99KH_OUNNA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SB99KH_OUNRY",
+      "profile_hint": "ounry",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+60199556563",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SB99KH_OUNRY",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "SB99KH_OFFICIAL",
+      "profile_hint": "Seabet99 Official",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855967546647",
+      "password": "SBKHTEAM",
+      "session": "telegram_session/SB99KH_OFFICIAL",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "UW29KH_GROUP",
+      "profile_hint": "UWKH29 Group",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85561394492",
+      "password": "565565",
+      "session": "telegram_session/UWKH_GROUP",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "UW29KH_CS00",
+      "profile_hint": "UWON29 CS00",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855762844571",
+      "password": "WFHWFH88",
+      "session": "telegram_session/UWKH_CS00",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "UW29KH_FAFA",
+      "profile_hint": "UWKH29 - FaFa",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85592846551",
+      "password": "565565",
+      "session": "telegram_session/UWKH_FAFA",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "UW29KH_B1",
+      "profile_hint": "UWKH29 B1",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855762975977",
+      "password": "565565",
+      "session": "telegram_session/UWKH_B1",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "UW29KH_CS1",
+      "profile_hint": "UWON29 CS1",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85561925191",
+      "password": "565565",
+      "session": "telegram_session/UWKH_CS1",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "UW29KH_CS2",
+      "profile_hint": "UWKH29 CS2",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85592319233",
+      "password": "565565",
+      "session": "telegram_session/UWKH_CS2",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "UWON33_CS4",
+      "profile_hint": "UWON33CS4",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855883704862",
+      "password": "565565",
+      "session": "telegram_session/UWON33_CS4",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "UWON33_CS5",
+      "profile_hint": "UWON33CS5",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855962940208",
+      "password": "565565",
+      "session": "telegram_session/UWON33_CS5",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "UWON33_CS6",
+      "profile_hint": "UWON33 CS6",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85517951052",
+      "password": "565565",
+      "session": "telegram_session/UWON33_CS6",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "UWON33_CS7",
+      "profile_hint": "UWON33CS7",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855883789891",
+      "password": "565565",
+      "session": "telegram_session/UWON33_CS7",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "UWON33_CS1",
+      "profile_hint": "UWON33CS1",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855962428247",
+      "password": "565565",
+      "session": "telegram_session/UWON33_CS1",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "UWON33_CS2",
+      "profile_hint": "UWON33CS2",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855962424547",
+      "password": "565565",
+      "session": "telegram_session/UWON33_CS2",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "UWON33_CS3",
+      "profile_hint": "UWON33CS3",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855962442542",
+      "password": "565565",
+      "session": "telegram_session/UWON33_CS3",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "17WINKH_VIP1",
+      "profile_hint": "17WINKH | VIP 1",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855962514230",
+      "password": "1234",
+      "session": "telegram_session/17WINKH_VIP1",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "17WINKH_VIP2",
+      "profile_hint": "17WINKH | VIP 2",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855967641277",
+      "password": "1234",
+      "session": "telegram_session/17WINKH_VIP2",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "17WINKH_VIP3",
+      "profile_hint": "17WINKH | VIP 3",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855968013760",
+      "password": "1234",
+      "session": "telegram_session/17WINKH_VIP3",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "17WINKH_VIP4",
+      "profile_hint": "17WINKH | VIP 4",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855967544874",
+      "password": "1234",
+      "session": "telegram_session/17WINKH_VIP4",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "17WINKH_MEYMEY",
+      "profile_hint": "CS_MeyMey",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855967479382",
+      "password": "1234",
+      "session": "telegram_session/17WINKH_MEYMEY",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "17WINKH_ADMIN",
+      "profile_hint": "17WINKH Group Admin",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855968726685",
+      "password": "1234",
+      "session": "telegram_session/17WINKH_ADMIN",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "17WIN168KH_CS1",
+      "profile_hint": "17WIN168 CS 1",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85577296257",
+      "password": "1234",
+      "session": "telegram_session/17WIN168KH_CS1",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "17WIN168KH_CS2",
+      "profile_hint": "17WIN168 CS 2",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855968010662",
+      "password": "1234",
+      "session": "telegram_session/17WIN168KH_CS2",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "17WIN168KH_CS3",
+      "profile_hint": "17WIN168 CS3",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85585979278",
+      "password": "1234",
+      "session": "telegram_session/17WIN168KH_CS3",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "17WIN168KH_CS4",
+      "profile_hint": "17WIN168 CS 4",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+855968723625",
+      "password": "1234",
+      "session": "telegram_session/17WIN168KH_CS4",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    },
+    {
+      "id": "17WIN168KH_CS",
+      "profile_hint": "17WIN168 CS",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "phone": "+85592993117",
+      "password": "1234",
+      "session": "telegram_session/17WIN168KH_CS",
+      "notify_account": "geri_work",
+      "peer_ids": [
+        777000
+      ],
+      "enabled": true
+    }
+  ],
+  "accounts": [
+    {
+      "id": "geri_work",
+      "chat_id": "7012261869",
+      "label": "Geri",
+      "telegram_user_id": "7012261869",
+      "telegram_username": "geri_work"
+    },
+    {
+      "id": "rizkyr",
+      "chat_id": "8652491745",
+      "label": "Zero Logic",
+      "telegram_username": "mikirkids28",
+      "telegram_user_id": "8652491745",
+      "shooter_owner": "RIZKYR"
+    },
+    {
+      "id": "karen",
+      "chat_id": "8969314056",
+      "label": "alice",
+      "telegram_username": "aliceownland",
+      "telegram_user_id": "8969314056",
+      "shooter_owner": "KAREN"
+    },
+    {
+      "id": "widya",
+      "chat_id": "6176682827",
+      "label": "Widya",
+      "telegram_username": "Loranssv",
+      "telegram_user_id": "6176682827",
+      "shooter_owner": "WIDYA"
+    },
+    {
+      "id": "dmnictoretto",
+      "chat_id": "",
+      "label": "Toretto"
+    },
+    {
+      "id": "begundal6",
+      "chat_id": "5113771246",
+      "label": "Rinto A",
+      "telegram_user_id": "5113771246",
+      "shooter_owner": "RINTO",
+      "telegram_username": "begundal6"
+    },
+    {
+      "id": "venan",
+      "chat_id": "6751215026",
+      "label": "Venan",
+      "shooter_owner": "VENAN",
+      "telegram_user_id": "6751215026",
+      "telegram_username": "dmnictoretto"
+    },
+    {
+      "id": "indri",
+      "chat_id": "8813940240",
+      "label": "Madam2099",
+      "shooter_owner": "INDRI",
+      "telegram_user_id": "8813940240",
+      "telegram_username": "Madam_2099"
+    },
+    {
+      "id": "aldo",
+      "chat_id": "",
+      "label": "Aldo",
+      "shooter_owner": "ALDO"
+    },
+    {
+      "id": "eudora",
+      "chat_id": "6777946761",
+      "label": "Eudora",
+      "shooter_owner": "EUDORA",
+      "telegram_user_id": "6777946761",
+      "telegram_username": "Ben_SBMY"
+    },
+    {
+      "id": "fanie",
+      "chat_id": "6777946761",
+      "label": "Fanie",
+      "shooter_owner": "FANIE",
+      "telegram_user_id": "6777946761",
+      "telegram_username": "Ben_SBMY"
+    },
+    {
+      "id": "kelly",
+      "chat_id": "7013630549",
+      "label": "SBMY Gary",
+      "shooter_owner": "KELLY",
+      "telegram_user_id": "7013630549",
+      "telegram_username": "Ken0000046"
+    },
+    {
+      "id": "lihyun",
+      "chat_id": "7226070528",
+      "label": "SBMY Kiraa",
+      "shooter_owner": "LIHYUN",
+      "telegram_user_id": "7226070528",
+      "telegram_username": "Ohlina01"
+    },
+    {
+      "id": "sheva",
+      "chat_id": "6777946761",
+      "label": "Sheva",
+      "shooter_owner": "SHEVA",
+      "telegram_user_id": "6777946761",
+      "telegram_username": "Ben_SBMY"
+    },
+    {
+      "id": "vennus",
+      "chat_id": "7499120645",
+      "label": "SBMY Zoey",
+      "shooter_owner": "VENNUS",
+      "telegram_user_id": "7499120645",
+      "telegram_username": "Zoey0910"
+    },
+    {
+      "id": "wai",
+      "chat_id": "6777946761",
+      "label": "Wai",
+      "shooter_owner": "WAI",
+      "telegram_user_id": "6777946761",
+      "telegram_username": "Ben_SBMY"
+    },
+    {
+      "id": "jun",
+      "chat_id": "6193965098",
+      "label": "Jun",
+      "shooter_owner": "JUN",
+      "telegram_user_id": "6193965098",
+      "telegram_username": "JunWork16"
+    }
+  ]
+}
