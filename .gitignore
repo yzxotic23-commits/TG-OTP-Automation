@@ -2,12 +2,3 @@
 __pycache__/
 *.pyc
 .venv/
-
-# Rahasia & runtime (jangan push ke GitHub)
-.env
-tg-otp-automation*.json
-google-credentials.json
-*.lock
-*.session-journal
-state.json
-sheet_status_queue.jsonl
