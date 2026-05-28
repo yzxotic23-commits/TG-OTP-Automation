@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import difflib
 import html
+import inspect
 import json
 import logging
 import os
@@ -1227,22 +1228,12 @@ def format_phone_display(phone: str) -> str:
 
 
 def account_staff_display_name(acc: dict[str, Any], accounts_doc: dict[str, Any]) -> str:
-    """Shooter → owner; GCS → label staff dari notify_account."""
-    pool = account_pool(acc)
-    if pool == "shooter":
-        owner = str(acc.get("owner") or "").strip()
-        if owner:
-            return owner[0].upper() + owner[1:].lower() if len(owner) > 1 else owner.upper()
-        return "—"
-    notify = str(acc.get("notify_account") or "").strip()
-    if notify:
-        for row in accounts_doc.get("accounts", []):
-            if not isinstance(row, dict):
-                continue
-            if str(row.get("id", "")).strip().lower() == notify.lower():
-                label = str(row.get("label") or "").strip()
-                return label or notify
-        return notify
+    """User notifikasi dari owner/user Sheet; jika kosong tampilkan '-'."""
+    # Shooter + GCS: utamakan data user/owner dari Sheet.
+    for key in ("user_name", "user", "owner"):
+        val = str(acc.get(key) or "").strip()
+        if val:
+            return val
     return "—"
 
 
@@ -3060,6 +3051,14 @@ def run_bot() -> int:
         asyncio.get_event_loop()
     except RuntimeError:
         asyncio.set_event_loop(asyncio.new_event_loop())
+    # Cegah instance bot ganda di mesin yang sama (penyebab 409 paling umum).
+    bot_lock = FileLock(str(project_root() / ".bot_polling.lock"), timeout=0)
+    try:
+        bot_lock.acquire()
+    except FileLockTimeout:
+        logger.error("Bot sudah berjalan di mesin ini. Stop instance lain dulu.")
+        return 1
+
     app = Application.builder().token(token).build()
     app.add_handler(MessageHandler(filters.ChatType.PRIVATE, guard_staff_private_dm), group=-1)
     app.add_handler(CommandHandler("start", cmd_start))
@@ -3079,9 +3078,15 @@ def run_bot() -> int:
         group=2,
     )
     app.add_error_handler(bot_on_error)
-    logger.info("Bot polling berjalan...")
-    app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
-    return 0
+    try:
+        logger.info("Bot polling berjalan...")
+        app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
+        return 0
+    finally:
+        try:
+            bot_lock.release()
+        except Exception:
+            pass
 
 
 def run_notify(message: str, account: str | None, broadcast: bool) -> int:
@@ -3844,7 +3849,11 @@ async def _listen_start_account(
     try:
         await client.start(**kw) if kw else await client.start()
     except Exception as e:
-        user_st = _classify_account_sheet_status(e)
+        err_text = str(e).lower()
+        if "database is locked" in err_text:
+            user_st = "Pending Login"
+        else:
+            user_st = _classify_account_sheet_status(e)
         profile_hint = str(acc.get("profile_hint") or acc_id)
         expired.append(listener_account_display_name(acc, acc_id, profile_hint))
         print(f"  [{tag}] ✗ {acc_id} — {user_st}", flush=True)
@@ -3868,8 +3877,9 @@ async def _listen_start_account(
             await client.disconnect()
         except Exception:
             pass
-        if session_file.is_file():
-            session_file.unlink(missing_ok=True)
+        # Untuk lock SQLite, jangan paksa hapus session agar tidak menimbulkan error berantai.
+        if "database is locked" not in err_text:
+            _safe_unlink_session_file(session_file)
         return
 
     verified = False
@@ -3916,8 +3926,7 @@ async def _listen_start_account(
             await client.disconnect()
         except Exception:
             pass
-        if session_file.is_file():
-            session_file.unlink(missing_ok=True)
+        _safe_unlink_session_file(session_file)
         return
 
     profile_name = profile_name_from_me(me, acc_id)
@@ -4217,6 +4226,16 @@ def _classify_account_sheet_status(exc: BaseException) -> str:
         return "Expired"
 
 
+def _safe_unlink_session_file(session_file: Path) -> None:
+    """Best-effort hapus session tanpa membuat listener crash."""
+    try:
+        if session_file.is_file():
+            session_file.unlink(missing_ok=True)
+    except OSError:
+        # Session bisa sedang di-lock SQLite. Abaikan agar proses lanjut.
+        pass
+
+
 def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str]:
     """Return (session_user, session_friday) untuk satu akun."""
     if not _session_file_ready(acc):
@@ -4248,7 +4267,11 @@ def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str]:
         friday_st = "Pending Login"
     finally:
         try:
-            client.disconnect()
+            result = client.disconnect()
+            if inspect.isawaitable(result):
+                loop = getattr(client, "loop", None)
+                if loop is not None and not loop.is_running() and not loop.is_closed():
+                    loop.run_until_complete(result)
         except Exception:
             pass
         try:
@@ -4257,6 +4280,9 @@ def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str]:
             _shutil.rmtree(tmp_dir, ignore_errors=True)
         except Exception:
             pass
+    # Jangan pernah push "Unknown" ke Sheet saat sync health.
+    if str(user_st).strip().lower() == "unknown":
+        user_st = "Disconnected"
     return user_st, friday_st
 
 
@@ -4314,7 +4340,7 @@ def run_health_check(pool: str = "all", target_id: str = "all") -> int:
         print(f"Tidak ada akun untuk health-check (pool={pool}, id={target_id}).", file=sys.stderr)
         return 2
 
-    print("\n── Health-check (temp copy — listen boleh jalan) ──")
+    print("\n-- Health-check (temp copy, listen boleh jalan) --")
 
     total_gcs: dict[str, int] = {}
     total_sh: dict[str, int] = {}
@@ -4370,7 +4396,7 @@ def _run_sync_pull_after_login(root: Path) -> int:
     )
 
 
-def _run_sync_push(root: Path) -> int:
+def _run_sync_push(root: Path, *, verbose: bool = True) -> tuple[int, int]:
     """Tulis Account Status & Session Friday ke Google Sheet."""
     import sheets_sync
 
@@ -4381,11 +4407,12 @@ def _run_sync_push(root: Path) -> int:
         gcs = load_otp_accounts(raw_gcs, root, default_peers)
         sh = load_shooter_login_accounts(raw_sh, root, default_peers)
         n = sheets_sync.push_status_to_sheet(root, gcs_accounts=gcs, shooter_accounts=sh)
-        print(f"  ✓ {n} row(s) updated in Sheet")
-        return 0
+        if verbose:
+            print(f"  ✓ {n} row(s) updated in Sheet")
+        return 0, n
     except Exception as e:
         print(f"✗ Push failed: {e}", file=sys.stderr)
-        return 1
+        return 1, 0
 
 
 def run_sync_once(
@@ -4456,7 +4483,7 @@ def run_sync_once(
             print("\n── Push otomatis → Google Sheet ──")
         else:
             print("\n── Push: status → Google Sheet ──")
-        rc_push = _run_sync_push(root)
+        rc_push, _updated_rows = _run_sync_push(root)
         if rc_push != 0:
             return rc_push
 
@@ -4582,26 +4609,29 @@ def run_sync_live_status(
     account_id: str = "all",
 ) -> int:
     """
-    Live record status: health-check + push status ke Sheet secara berkala.
-    Fokus untuk Account Status / Session Friday (banned/frozen/expired/disconnected/pending).
+    Live record status ringan: hanya push delta ke Sheet secara berkala.
+    Tidak menjalankan health-check full scan agar terminal tetap rapi.
     """
+    if pool != "all" or account_id != "all":
+        print("⚠ live-status mengabaikan --pool/--id; mode ini push delta global.", file=sys.stderr)
+
     interval = _env_int("TELEGRAM_SYNC_STATUS_INTERVAL_SEC", 120, minimum=30)
     print("=" * 56)
-    print("  LIVE STATUS — terminal -> Google Sheet")
+    print("  LIVE STATUS (DELTA) — queue -> Google Sheet")
     print(f"  Interval: {interval}s (Ctrl+C untuk stop)")
-    print("  Update kolom: Account Status + Session Friday")
+    print("  Tanpa health-check full scan. Hanya update perubahan terbaru.")
     print("=" * 56)
 
     cycle = 0
     try:
         while True:
             cycle += 1
-            ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-            print(f"\n[Live Status #{cycle}] {ts}")
-            run_health_check(pool, account_id)
-            rc_push = _run_sync_push(project_root())
+            rc_push, updated_rows = _run_sync_push(project_root(), verbose=False)
             if rc_push != 0:
                 print(f"⚠ Push status gagal (rc={rc_push}), retry {interval}s lagi.", file=sys.stderr)
+            elif updated_rows > 0:
+                ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+                print(f"[Live Status #{cycle}] {ts} -> {updated_rows} row(s) updated")
             print(f"⏳ Tunggu {interval}s...", flush=True)
             time.sleep(interval)
     except KeyboardInterrupt:
@@ -4651,7 +4681,7 @@ def build_parser() -> argparse.ArgumentParser:
         nargs="?",
         default=None,
         choices=["once", "all", "loop", "live", "live-status", "pull", "login", "health", "push", "sessions", "init"],
-        help="(kosong)=pull+login. live=Sheet→JSON. live-status=health+push status live.",
+        help="(kosong)=pull+login. live=Sheet→JSON. live-status=push delta status (tanpa full scan).",
     )
     p_sync.add_argument("--pool", choices=["gcs", "shooter", "all"], default="all")
     p_sync.add_argument("--id", dest="account_id", default="all", help="Untuk sessions: id/brand partial.")
@@ -4734,6 +4764,12 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     _configure_runtime_warnings()
     logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s %(message)s", level=logging.INFO)
+    # Hindari spam "Task was destroyed but it is pending!" saat stop paksa di Windows.
+    logging.getLogger("asyncio").setLevel(logging.CRITICAL)
+    # Redam traceback internal Telethon yang sering muncul saat paket jaringan rusak/transient.
+    # Listener sudah punya mekanisme reconnect sendiri, jadi log detail ini hanya bikin berisik.
+    logging.getLogger("telethon.network.mtprotosender").setLevel(logging.CRITICAL)
+    logging.getLogger("telethon.extensions.binaryreader").setLevel(logging.CRITICAL)
     load_dotenv(project_root() / ".env")
     if sys.platform == "win32" and sys.version_info < (3, 14):
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())

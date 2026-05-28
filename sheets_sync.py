@@ -281,8 +281,11 @@ def classify_account_status(exc: BaseException | None = None, *, message: str = 
         return "Expired"
     if "disconnect" in combined:
         return "Disconnected"
+    if "database is locked" in combined or "sqlite" in combined:
+        return "Disconnected"
     if message:
-        return _map_script_status(message) or "Unknown"
+        # Jangan hasilkan "Unknown" agar kolom Account Status tidak terisi nilai ambigu.
+        return _map_script_status(message) or "Disconnected"
     return "Expired"
 
 
@@ -537,6 +540,11 @@ def _telegram_row_to_gcs(
         "session": (matched.get("session") if matched else None) or session_default,
         "notify_account": _resolve_notify_account_from_user(raw, row.get("user", ""), matched),
     }
+    row_user = str(row.get("user") or "").strip()
+    if row_user:
+        out["user_name"] = row_user
+    elif matched and str(matched.get("user_name") or "").strip():
+        out["user_name"] = str(matched.get("user_name") or "").strip()
     if acc_name:
         out["profile_hint"] = acc_name
     if row.get("password"):
@@ -580,6 +588,11 @@ def _telegram_row_to_shooter(row: dict[str, str], raw: dict[str, Any], existing:
         "enabled": enabled,
         "session": (matched.get("session") if matched else None) or session_default,
     }
+    row_user = str(row.get("user") or row.get("owner") or "").strip()
+    if row_user:
+        out["user_name"] = row_user
+    elif matched and str(matched.get("user_name") or "").strip():
+        out["user_name"] = str(matched.get("user_name") or "").strip()
     if acc_name:
         out["profile_hint"] = acc_name
     if row.get("device_id"):
@@ -802,10 +815,12 @@ def collect_status_by_phone(
         phone = norm_phone(str(acc.get("phone") or ""))
         if not phone:
             return
-        # Friday = apakah file session bot ada (belum tentu akun banned)
+        # Friday = apakah file session bot ada (belum tentu akun owner aktif).
         friday = _session_status(Path(acc["session"]))
+        # Account Status harus datang dari deteksi nyata (event/health),
+        # jadi di baseline tidak dipaksa Active.
         out[phone] = {
-            "session_user": "Unknown",
+            "session_user": "",
             "session_friday": friday,
             "notes": "",
             "at": now,
@@ -845,7 +860,7 @@ def collect_status_by_phone(
                     continue
                 prev = out.get(key_phone, {})
                 out[key_phone] = {
-                    "session_user": su or prev.get("session_user", "Unknown"),
+                    "session_user": su or prev.get("session_user", ""),
                     "session_friday": sf or prev.get("session_friday", ""),
                     "notes": str(ev.get("note") or prev.get("notes") or ""),
                     "at": str(ev.get("at") or now),
@@ -998,12 +1013,16 @@ def _push_telegram_acc(root: Path, by_phone: dict[str, dict[str, str]]) -> int:
         if not phone or phone not in by_phone:
             continue
         info = by_phone[phone]
-        # Account Status = laporan script (Active / Banned / Frozen / …)
-        su_val = info.get("session_user", "") or "Unknown"
+        # Account Status = laporan script/event/health (jangan dipaksa default Active/Unknown)
+        su_new = str(info.get("session_user", "") or "").strip()
+        if su_new.lower() == "unknown":
+            su_new = ""
         # Session Friday = session bot FRIDAY_BO
-        sf_val = info.get("session_friday", "") or "Pending Login"
+        sf_new = str(info.get("session_friday", "") or "").strip()
         old_su = str(line[su_col]).strip() if su_col < len(line) else ""
         old_sf = str(line[sf_col]).strip() if (sf_col is not None and sf_col < len(line)) else ""
+        su_val = su_new or old_su
+        sf_val = sf_new or old_sf or "Pending Login"
 
         if old_su == su_val and old_sf == sf_val:
             continue

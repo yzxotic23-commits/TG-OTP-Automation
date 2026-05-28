@@ -1,4 +1,41 @@
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 .venv/
+*.egg-info/
+dist/
+build/
+
+# Secrets & credentials (jangan commit)
+.env
+tg-otp-automation-*.json
+*credentials*.json
+
+# Runtime / state (berubah saat bot jalan)
+state.json
+state.json.lock
+accounts.json.lock
+shooteraccounts.json.lock
+sheet_status_queue.jsonl
+.bot_polling.lock
+
+# Telethon sessions — HARUS lokal per mesin (commit = AuthKeyDuplicated)
+telegram_session/
+*.session
+*.session-journal
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*~
+
+# Logs & diagnostics sementara
+*.log
+_diag_*.py
+_scan_*.py
+_scan_*.txt

@@ -4,9 +4,13 @@
 
 PowerShell (Windows):
   .\run_local.ps1      → bot + listen (2 jendela, production)
+  .\run_local_3.ps1    → bot + listen + live-status (3 jendela)
   .\run_sync.ps1       → sync sekali (import + login baru)
   .\run_sync.ps1 health → audit manual
   .\setup.ps1          → setup laptop baru
+
+JANGAN commit / sync lewat Git:
+  .env, telegram_session/, tg-otp-automation-*.json, *.lock, state.json
 
 2 terminal WAJIB jalan terus + sync sesuai kebutuhan:
 
