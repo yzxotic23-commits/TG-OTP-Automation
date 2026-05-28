@@ -124,6 +124,75 @@ def _normalize_owner_name(name: str) -> str:
     return re.sub(r"[^A-Z0-9]", "", g.upper())
 
 
+def _slug_user_key(v: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(v or "").strip().lower())
+
+
+def _resolve_notify_account_from_user(
+    raw: dict[str, Any],
+    row_user: str,
+    matched: dict[str, Any] | None,
+) -> str:
+    """Map kolom User Sheet -> accounts[].id (untuk notify_account GCS)."""
+    if isinstance(matched, dict):
+        keep = str(matched.get("notify_account") or "").strip()
+        if keep:
+            return keep
+
+    default_notify = str(raw.get("default_account") or "geri_work").strip() or "geri_work"
+    user_key = _slug_user_key(row_user)
+    if not user_key:
+        return default_notify
+
+    for row in raw.get("accounts", []):
+        if not isinstance(row, dict):
+            continue
+        aid = str(row.get("id") or "").strip()
+        if not aid:
+            continue
+        keys = (
+            _slug_user_key(str(row.get("id") or "")),
+            _slug_user_key(str(row.get("label") or "")),
+            _slug_user_key(str(row.get("telegram_username") or "")),
+            _slug_user_key(str(row.get("shooter_owner") or "")),
+        )
+        if user_key in keys:
+            return aid
+    return default_notify
+
+
+def _resolve_gcs_api(
+    row: dict[str, str],
+    raw: dict[str, Any],
+    existing: list[dict[str, Any]],
+    matched: dict[str, Any] | None,
+) -> tuple[str, str]:
+    api_id = str(row.get("api_id") or "").strip()
+    api_hash = str(row.get("api_hash") or "").strip()
+    if api_id and api_hash:
+        return api_id, api_hash
+
+    if isinstance(matched, dict):
+        mid = str(matched.get("api_id") or "").strip()
+        mh = str(matched.get("api_hash") or "").strip()
+        if mid and mh:
+            return mid, mh
+
+    rid = str(raw.get("api_id") or "").strip()
+    rh = str(raw.get("api_hash") or "").strip()
+    if rid and rh:
+        return rid, rh
+
+    for acc in existing:
+        if not isinstance(acc, dict):
+            continue
+        eid = str(acc.get("api_id") or "").strip()
+        eh = str(acc.get("api_hash") or "").strip()
+        if eid and eh:
+            return eid, eh
+    return "", ""
+
+
 def _credentials_path(root: Path) -> Path:
     raw = os.environ.get("GOOGLE_SHEETS_CREDENTIALS", "").strip()
     if raw:
@@ -442,14 +511,13 @@ def _telegram_row_to_gcs(
     if channel and "telegram" not in channel:
         return None
 
-    api_id = row.get("api_id") or str(raw.get("api_id") or "")
-    api_hash = row.get("api_hash") or str(raw.get("api_hash") or "")
+    matched = _find_by_phone(existing, phone)
+    api_id, api_hash = _resolve_gcs_api(row, raw, existing, matched)
     if not api_id or not api_hash:
         return None
 
     acc_name = row.get("acc_name") or row.get("profile_hint") or ""
     account_status = str(row.get("session_user") or "").strip()
-    matched = _find_by_phone(existing, phone)
     aid = str(matched.get("id") if matched else "").strip()
     if not aid:
         aid = _new_gcs_id(phone, acc_name, existing)
@@ -466,7 +534,7 @@ def _telegram_row_to_gcs(
         "api_hash": api_hash,
         "enabled": enabled,
         "session": (matched.get("session") if matched else None) or session_default,
-        "notify_account": str(raw.get("default_account") or "geri_work"),
+        "notify_account": _resolve_notify_account_from_user(raw, row.get("user", ""), matched),
     }
     if acc_name:
         out["profile_hint"] = acc_name

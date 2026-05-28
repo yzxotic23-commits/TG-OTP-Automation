@@ -4547,6 +4547,68 @@ def run_sync_daemon(
         return 0
 
 
+def run_sync_live_pull() -> int:
+    """
+    Live record ringan: hanya pull Sheet -> JSON secara berkala.
+    Dipakai untuk auto-register nomor baru tanpa restart terminal.
+    """
+    root = project_root()
+    interval = _env_int("TELEGRAM_SYNC_PULL_INTERVAL_SEC", 45, minimum=10)
+    print("=" * 52)
+    print("  LIVE PULL — Sheet -> JSON (auto register)")
+    print(f"  Interval: {interval}s (Ctrl+C untuk stop)")
+    print("  Group Main -> GCS | Other -> Shooter | dedup by phone")
+    print("=" * 52)
+
+    cycle = 0
+    try:
+        while True:
+            cycle += 1
+            ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+            print(f"\n[Live Pull #{cycle}] {ts}")
+            rc = _run_sync_pull(root, label="Live Pull: Google Sheet → JSON")
+            if rc != 0:
+                print(f"⚠ Live pull gagal (rc={rc}), retry {interval}s lagi.", file=sys.stderr)
+            print(f"⏳ Tunggu {interval}s...", flush=True)
+            time.sleep(interval)
+    except KeyboardInterrupt:
+        print(f"\n\n✓ Live pull dihentikan setelah {cycle} cycle(s).")
+        return 0
+
+
+def run_sync_live_status(
+    *,
+    pool: str = "all",
+    account_id: str = "all",
+) -> int:
+    """
+    Live record status: health-check + push status ke Sheet secara berkala.
+    Fokus untuk Account Status / Session Friday (banned/frozen/expired/disconnected/pending).
+    """
+    interval = _env_int("TELEGRAM_SYNC_STATUS_INTERVAL_SEC", 120, minimum=30)
+    print("=" * 56)
+    print("  LIVE STATUS — terminal -> Google Sheet")
+    print(f"  Interval: {interval}s (Ctrl+C untuk stop)")
+    print("  Update kolom: Account Status + Session Friday")
+    print("=" * 56)
+
+    cycle = 0
+    try:
+        while True:
+            cycle += 1
+            ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+            print(f"\n[Live Status #{cycle}] {ts}")
+            run_health_check(pool, account_id)
+            rc_push = _run_sync_push(project_root())
+            if rc_push != 0:
+                print(f"⚠ Push status gagal (rc={rc_push}), retry {interval}s lagi.", file=sys.stderr)
+            print(f"⏳ Tunggu {interval}s...", flush=True)
+            time.sleep(interval)
+    except KeyboardInterrupt:
+        print(f"\n\n✓ Live status dihentikan setelah {cycle} cycle(s).")
+        return 0
+
+
 def run_sync(
     step: str | None = None,
     *,
@@ -4560,6 +4622,10 @@ def run_sync(
         return run_sync_default(pool=pool, account_id=account_id, keep_device=keep_device)
     if step == "loop":
         return run_sync_daemon(pool=pool, account_id=account_id, keep_device=keep_device)
+    if step == "live":
+        return run_sync_live_pull()
+    if step == "live-status":
+        return run_sync_live_status(pool=pool, account_id=account_id)
     return run_sync_once(
         step,
         pool=pool,
@@ -4584,8 +4650,8 @@ def build_parser() -> argparse.ArgumentParser:
         "step",
         nargs="?",
         default=None,
-        choices=["once", "all", "loop", "pull", "login", "health", "push", "sessions", "init"],
-        help="(kosong)=pull+login. loop=loop berkala (opsional). all/once=full audit. health=cek+push.",
+        choices=["once", "all", "loop", "live", "live-status", "pull", "login", "health", "push", "sessions", "init"],
+        help="(kosong)=pull+login. live=Sheet→JSON. live-status=health+push status live.",
     )
     p_sync.add_argument("--pool", choices=["gcs", "shooter", "all"], default="all")
     p_sync.add_argument("--id", dest="account_id", default="all", help="Untuk sessions: id/brand partial.")
