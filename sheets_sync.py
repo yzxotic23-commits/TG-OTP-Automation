@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
@@ -883,6 +884,40 @@ def _col_index(headers: list[str], *names: str) -> int | None:
     return None
 
 
+def _col_to_a1(col_1based: int) -> str:
+    n = int(col_1based)
+    out = ""
+    while n > 0:
+        n, rem = divmod(n - 1, 26)
+        out = chr(65 + rem) + out
+    return out
+
+
+def _is_quota_error(exc: BaseException) -> bool:
+    msg = str(exc).lower()
+    return ("429" in msg) or ("quota" in msg and "exceed" in msg) or ("rate" in msg and "limit" in msg)
+
+
+def _batch_update_with_retry(ws, updates: list[dict[str, Any]]) -> None:
+    if not updates:
+        return
+    retries = max(0, int(os.environ.get("GOOGLE_SHEET_BATCH_RETRIES", "4").strip() or "4"))
+    base_sleep = max(0.2, float(os.environ.get("GOOGLE_SHEET_BATCH_BASE_SLEEP_SEC", "1.0").strip() or "1.0"))
+    last_err: BaseException | None = None
+    for attempt in range(retries + 1):
+        try:
+            ws.batch_update(updates, value_input_option="USER_ENTERED")
+            return
+        except Exception as e:
+            last_err = e
+            if attempt >= retries or not _is_quota_error(e):
+                raise
+            sleep_s = min(base_sleep * (2**attempt), 30.0)
+            time.sleep(sleep_s)
+    if last_err:
+        raise last_err
+
+
 def push_status_to_sheet(
     root: Path,
     status_map: dict[tuple[str, str], dict[str, str]] | None = None,
@@ -954,7 +989,7 @@ def _push_telegram_acc(root: Path, by_phone: dict[str, dict[str, str]]) -> int:
         return 0
 
     ws = wb.worksheet(_tab_telegram())
-    updated = 0
+    changed: list[dict[str, Any]] = []
 
     for r_idx, line in enumerate(lines, start=2):
         if phone_col >= len(line):
@@ -967,13 +1002,29 @@ def _push_telegram_acc(root: Path, by_phone: dict[str, dict[str, str]]) -> int:
         su_val = info.get("session_user", "") or "Unknown"
         # Session Friday = session bot FRIDAY_BO
         sf_val = info.get("session_friday", "") or "Pending Login"
+        old_su = str(line[su_col]).strip() if su_col < len(line) else ""
+        old_sf = str(line[sf_col]).strip() if (sf_col is not None and sf_col < len(line)) else ""
 
-        if su_col is not None:
-            ws.update_cell(r_idx, su_col + 1, su_val)
-        if sf_col is not None:
-            ws.update_cell(r_idx, sf_col + 1, sf_val)
-        updated += 1
+        if old_su == su_val and old_sf == sf_val:
+            continue
 
+        start_col = min(su_col, sf_col) + 1
+        end_col = max(su_col, sf_col) + 1
+        left_val = su_val if start_col == su_col + 1 else sf_val
+        right_val = sf_val if end_col == sf_col + 1 else su_val
+        rng = f"{_col_to_a1(start_col)}{r_idx}:{_col_to_a1(end_col)}{r_idx}"
+        changed.append({"range": rng, "values": [[left_val, right_val]]})
+
+    if changed:
+        batch_size = max(1, int(os.environ.get("GOOGLE_SHEET_BATCH_SIZE", "40").strip() or "40"))
+        pause_s = max(0.0, float(os.environ.get("GOOGLE_SHEET_BATCH_PAUSE_SEC", "0.25").strip() or "0.25"))
+        for i in range(0, len(changed), batch_size):
+            chunk = changed[i : i + batch_size]
+            _batch_update_with_retry(ws, chunk)
+            if pause_s > 0 and i + batch_size < len(changed):
+                time.sleep(pause_s)
+
+    updated = len(changed)
     qpath = status_queue_path(root)
     if updated and qpath.is_file():
         try:

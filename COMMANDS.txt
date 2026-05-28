@@ -55,6 +55,7 @@ PowerShell (Windows):
   Live status (tanpa restart): cek account freeze/banned/disconnect lalu push ke Sheet:
     python telegram_otp_allinone.py sync live-status
     (update kolom Account Status + Session Friday secara berkala)
+    (pakai bulk batch update — bukan update_cell 1-by-1)
 
   Audit manual semua akun (health + push):
     python telegram_otp_allinone.py sync health
