@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 
 def _configure_runtime_warnings() -> None:
-    """Redam peringatan google-auth (Python 3.9 EOL) dan urllib3/LibreSSL di macOS."""
+    """Suppress google-auth (Python 3.9 EOL) and urllib3/LibreSSL warnings on macOS."""
     import warnings
 
     warnings.filterwarnings("ignore", category=FutureWarning, module=r"google\.auth")
@@ -68,7 +68,7 @@ _STRICT_PATTERN_TEMPLATES: tuple[str, ...] = (
     r"(?i)(?:your|the)\s+code[^0-9]{{0,30}}(\d{{{d}}})\b",
 )
 
-# Proximity: kode dekat kata kunci (deteksi "pintar" tanpa loose penuh)
+# Proximity: code near keywords (smart detection without full loose mode)
 _SMART_PROXIMITY_TMPL = (
     r"(?is)(?:login|sign[-\s]?in|telegram|verification|kode\s*(?:masuk|login)|code|c[oó]digo)"
     r".{{0,120}}?(\d{{{d}}})\b"
@@ -151,7 +151,7 @@ def _json_lock(path: Path) -> FileLock:
 
 
 def _mutate_json_file(path: Path, writer: Callable[[dict[str, Any]], None]) -> bool:
-    """Baca–ubah–tulis atomik dengan lock antar-proses. False jika timeout / data rusak."""
+    """Atomic read-modify-write with cross-process lock. False on timeout / corrupt data."""
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
         with _json_lock(path):
@@ -208,7 +208,7 @@ def extract_login_code(text: str, loose: bool) -> str | None:
             if len(candidates) == 1:
                 return candidates[0].group(1)
             if len(candidates) > 1:
-                # hindari tahun 20xx / 19xx sebagai OTP
+                # avoid years 20xx / 19xx as OTP
                 filtered = [c for c in candidates if not re.match(r"^(?:19|20)\d{2}$", c.group(1))]
                 if len(filtered) == 1:
                     return filtered[0].group(1)
@@ -217,7 +217,7 @@ def extract_login_code(text: str, loose: bool) -> str | None:
 
 LOGIN_REQ_PATTERN = re.compile(r"(?i)^\s*(?:login|req|request)\s+@?([a-z0-9_.\-]+)\s*$")
 
-# Dedupe OTP per akun (memori proses); tandai hanya setelah kirim sukses
+# Dedupe OTP per account (in-process); mark only after successful send
 _last_otp_sent: dict[str, tuple[str, float]] = {}
 
 
@@ -301,7 +301,7 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def read_json_for_mutation(path: Path) -> tuple[dict[str, Any], bool]:
-    """Baca JSON untuk read-modify-write. (data, True) OK; (_, False) jangan tulis (rusak/OS error)."""
+    """Read JSON for read-modify-write. (data, True) OK; (_, False) do not write (corrupt/OS error)."""
     if not path.is_file():
         return {}, True
     try:
@@ -388,7 +388,7 @@ def upsert_account(
 
 
 def _staff_row_should_preserve_label(row: dict[str, Any]) -> bool:
-    """Jangan timpa label admin — dipakai untuk map ke owner shooter (VENAN, KAREN, …)."""
+    """Do not overwrite admin label — used to map shooter owner (VENAN, KAREN, …)."""
     if str(row.get("shooter_owner") or "").strip():
         return True
     owners = get_configured_shooter_owners()
@@ -404,7 +404,7 @@ def _staff_row_should_preserve_label(row: dict[str, Any]) -> bool:
 
 
 def infer_shooter_owner_from_staff_row(row: dict[str, Any], staff_id: str = "") -> str:
-    """Deteksi owner shooter (VENAN, RINTO, …) dari baris staff accounts.json."""
+    """Detect shooter owner (VENAN, RINTO, …) from staff row in accounts.json."""
     owners = get_configured_shooter_owners()
     if not owners:
         return ""
@@ -428,7 +428,7 @@ def infer_shooter_owner_from_staff_row(row: dict[str, Any], staff_id: str = "") 
 
 
 def _apply_staff_telegram_fields(row: dict[str, Any], user: Any, chat_id: str | None, label: str) -> None:
-    """Simpan profil Telegram (id/username); label admin tidak ditimpa jika sudah map shooter."""
+    """Save Telegram profile (id/username); admin label kept if shooter mapping exists."""
     existing = str(row.get("label") or "").strip()
     if label and not existing:
         row["label"] = label
@@ -448,7 +448,7 @@ def _apply_staff_telegram_fields(row: dict[str, Any], user: Any, chat_id: str | 
 
 
 def sync_staff_telegram_profile(user: Any, staff_id: str) -> None:
-    """Update telegram_user_id / @username saja — label admin untuk shooter tidak diubah."""
+    """Update telegram_user_id / @username only — shooter admin label unchanged."""
     if not user or not staff_id or staff_id == "__creator__":
         return
     tg_id = str(getattr(user, "id", "") or "").strip()
@@ -474,7 +474,7 @@ def sync_staff_telegram_profile(user: Any, staff_id: str) -> None:
 
 
 def staff_require_allowlist() -> bool:
-    """Hanya staff yang sudah ada di accounts.json boleh daftar via /start DM."""
+    """Only staff already in accounts.json may register via /start in DM."""
     return os.environ.get("TELEGRAM_STAFF_REQUIRE_ALLOWLIST", "1").strip().lower() in (
         "1",
         "true",
@@ -503,7 +503,7 @@ def _staff_row_matches_user_identity(
     uname: str,
     uname_id: str,
 ) -> bool:
-    """Cocokkan baris allowlist dengan nama tampilan / shooter_owner / @username."""
+    """Match allowlist row by display name / shooter_owner / @username."""
     label = str(row.get("label") or "").strip().lower()
     full = full_name.strip().lower()
     if label and full:
@@ -534,8 +534,8 @@ def register_private_staff_chat(
 ) -> tuple[str, bool]:
     """
     Daftar / update staff di accounts.json.
-    Prioritas: telegram_user_id → @username → name_hint (dari /start <nama>) → full_name → staff id → chat_id.
-    Return (staff_id, linked) — linked=False jika tidak ada di allowlist.
+    Priority: telegram_user_id → @username → name_hint (from /start <name>) → full_name → staff id → chat_id.
+    Return (staff_id, linked) — linked=False if not in allowlist.
     """
     path = accounts_json_path()
     tg_id = str(getattr(user, "id", "") or "").strip()
@@ -645,7 +645,7 @@ def register_private_staff_chat(
 
 
 def _row_telegram_usernames(row: dict[str, Any]) -> set[str]:
-    """Semua username Telegram yang dikenali untuk baris staff ini."""
+    """All Telegram usernames recognized for this staff row."""
     names: set[str] = set()
     for key in ("telegram_username", "username"):
         v = str(row.get(key) or "").strip().lower().lstrip("@")
@@ -661,7 +661,7 @@ def _row_telegram_usernames(row: dict[str, Any]) -> set[str]:
 
 
 def find_staff_row_for_user(user: Any) -> dict[str, Any] | None:
-    """Baris staff di accounts.json untuk user Telegram ini, atau None."""
+    """Staff row in accounts.json for this Telegram user, or None."""
     if not user:
         return None
     tg_id = str(getattr(user, "id", "") or "").strip()
@@ -721,8 +721,8 @@ def find_staff_row_for_user(user: Any) -> dict[str, Any] | None:
 
 def ensure_staff_linked(user: Any) -> bool:
     """
-    Auto-daftar: jika user sudah ada di accounts.json (chat_id / @username / id),
-    simpan telegram_user_id — tanpa wajib /start di DM.
+    Auto-register: if user already in accounts.json (chat_id / @username / id),
+    save telegram_user_id — no /start in DM required.
     """
     if not user or is_creator_user(user):
         return False
@@ -754,7 +754,7 @@ def ensure_staff_linked(user: Any) -> bool:
 
 def resolve_requester_staff(user: Any) -> str | None:
     """
-    Staff id dari accounts.json (karen/widya/rizkyr) atau None. Creator → __creator__.
+    Staff id from accounts.json (karen/widya/rizkyr) or None. Creator → __creator__.
     Prioritas: telegram_user_id (tetap walau @username ganti) → chat_id → @username.
     """
     if is_creator_user(user):
@@ -775,7 +775,7 @@ def effective_shooter_owner_filter(
     staff_shooter: str,
     owner_filter: str,
 ) -> str:
-    """Staff: salah ketik owner → pakai owner shooter sendiri (bukan Access Denied)."""
+    """Staff: typo owner → use own shooter owner (not Access Denied)."""
     key = str(owner_filter or "").strip().upper()
     if not key or staff == "__creator__":
         return key
@@ -787,7 +787,7 @@ def effective_shooter_owner_filter(
 
 
 def get_configured_shooter_owners() -> set[str]:
-    """Nama owner shooter (RINTO, KAREN, …) dari shooteraccounts.json."""
+    """Shooter owner name (RINTO, KAREN, …) from shooteraccounts.json."""
     try:
         doc = load_shooter_doc()
         rows = load_shooter_accounts(doc)
@@ -798,7 +798,7 @@ def get_configured_shooter_owners() -> set[str]:
 
 def resolve_shooter_owner_for_staff(staff_id: str | None, row: dict[str, Any] | None = None) -> str:
     """
-    Owner shooter untuk staff (bisa beda dari id di accounts.json, mis. begundal6 → RINTO).
+    Shooter owner for staff (may differ from accounts.json id, e.g. begundal6 → RINTO).
     """
     if not staff_id or staff_id == "__creator__":
         return ""
@@ -919,14 +919,14 @@ def build_staff_access_denied_html(
 
 
 def validate_shooter_owner_access(update: Update, owner: str) -> str | None:
-    """Return HTML error jika user tidak boleh akses owner shooter ini (login / akun orang lain)."""
+    """Return HTML error if user may not access this shooter owner (login / someone else's account)."""
     user = update.effective_user
     ensure_staff_linked(user)
     staff = resolve_requester_staff(user)
     staff_row = find_staff_row_for_user(user)
     owner_u = str(owner or "").strip().upper()
     if not owner_u:
-        return accounts_header_html("⚠️ <b>Error</b>") + "\n\nOwner tidak valid."
+        return accounts_header_html("⚠️ <b>Error</b>") + "\n\nInvalid owner."
     if staff == "__creator__":
         return None
     if staff is None:
@@ -1228,8 +1228,8 @@ def format_phone_display(phone: str) -> str:
 
 
 def account_staff_display_name(acc: dict[str, Any], accounts_doc: dict[str, Any]) -> str:
-    """User notifikasi dari owner/user Sheet; jika kosong tampilkan '-'."""
-    # Shooter + GCS: utamakan data user/owner dari Sheet.
+    """Notification user from Sheet owner/user; show '-' if empty."""
+    # Shooter + GCS: prefer user/owner from Sheet.
     for key in ("user_name", "user", "owner"):
         val = str(acc.get(key) or "").strip()
         if val:
@@ -1332,7 +1332,7 @@ def build_sessions_disconnected_batch_html(
     lines: list[str] = [
         "🚨 <b>Sessions Disconnected</b>",
         "━━━━━━━━━━━━━━━━━━",
-        f"<b>{len(items)}</b> akun tidak bisa reconnect setelah gangguan jaringan.",
+        f"<b>{len(items)}</b> account(s) could not reconnect after a network outage.",
         "",
     ]
     for acc, profile in items[:12]:
@@ -1346,7 +1346,7 @@ def build_sessions_disconnected_batch_html(
     if len(items) > 12:
         lines.append(f"· <b>… +{len(items) - 12} lagi</b>")
     lines.append("")
-    lines.append("<i>Putus WiFi singkat biasanya auto-reconnect tanpa notifikasi.</i>")
+    lines.append("<i>Brief WiFi drops usually auto-reconnect without a notification.</i>")
     return "\n".join(lines)
 
 
@@ -1486,7 +1486,7 @@ def notify_system_account_status(
 
 
 def format_otp_alert_message(code: str, password_display: str, template: str | None = None) -> str:
-    # blockquote + garis = bubble sedikit lebih lebar untuk tombol Code & 2FA
+    # blockquote + line = slightly wider bubble for Code & 2FA buttons
     default_title = "<blockquote>🔐 <b>OTP ALERT</b>\n━━━━━━━━━━━━━━━━━━</blockquote>"
     tpl = (template or "").strip() or default_title
     msg = _unescape_telegram_html(tpl)
@@ -1590,7 +1590,7 @@ def resolve_targets(raw: dict[str, Any], account_key: str | None, broadcast: boo
         return [legacy]
     if last_chat:
         return [last_chat]
-    raise ValueError("Tidak ada target chat valid")
+    raise ValueError("No valid target chat")
 
 
 def notify_targets_for_acc(accounts_doc: dict[str, Any], acc: dict[str, Any]) -> list[str]:
@@ -1603,7 +1603,7 @@ def notify_targets_for_acc(accounts_doc: dict[str, Any], acc: dict[str, Any]) ->
 
 
 def login_status_thread_id(accounts_doc: dict[str, Any] | None = None) -> int | None:
-    """Forum topic untuk notifikasi sistem (listener, disconnect, login status)."""
+    """Forum topic for system notifications (listener, disconnect, login status)."""
     raw = os.environ.get("TELEGRAM_LOGIN_STATUS_THREAD_ID", "").strip()
     if raw:
         return to_int(raw)
@@ -1648,7 +1648,7 @@ def login_status_notify_targets(
 
 
 def status_preview_chat_id(accounts_doc: dict[str, Any] | None = None) -> str | None:
-    """DM untuk preview notifikasi sebelum ke forum topic (mis. geri_work)."""
+    """DM for notification preview before forum topic (e.g. geri_work)."""
     raw = os.environ.get("TELEGRAM_STATUS_PREVIEW_CHAT_ID", "").strip()
     if raw:
         return raw
@@ -1760,7 +1760,7 @@ def load_otp_accounts(raw: dict[str, Any], root: Path, default_peers: list[int])
 
 
 def derive_otp_brand(row: dict[str, Any]) -> str:
-    """Brand untuk pengelompokan: field `brand` di JSON, atau prefiks id sebelum `_`, atau seluruh id."""
+    """Brand grouping: `brand` field in JSON, or id prefix before `_`, or full id."""
     raw_b = row.get("brand")
     if raw_b is not None and str(raw_b).strip():
         return str(raw_b).strip().upper()
@@ -1781,7 +1781,7 @@ def group_otp_rows_by_brand(rows: list[dict[str, Any]]) -> dict[str, list[dict[s
 
 
 def load_shooter_accounts(raw: dict[str, Any]) -> list[dict[str, Any]]:
-    """Akun shooter (terpisah dari GCS). Wajib field owner, mis. GERI."""
+    """Shooter account (separate from GCS). Requires owner field, e.g. GERI."""
     rows = raw.get("shooter_accounts")
     out: list[dict[str, Any]] = []
     if not isinstance(rows, list):
@@ -1813,7 +1813,7 @@ def load_shooter_accounts(raw: dict[str, Any]) -> list[dict[str, Any]]:
 def load_shooter_login_accounts(
     raw: dict[str, Any], root: Path, default_peers: list[int] | None = None
 ) -> list[dict[str, Any]]:
-    """Shooter accounts dengan kredensial Telethon (untuk login-all-shooter / listen)."""
+    """Shooter accounts with Telethon credentials (for login-all-shooter / listen)."""
     if default_peers is None:
         default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
     rows = raw.get("shooter_accounts")
@@ -1986,7 +1986,7 @@ def shooter_rows_have_brand(rows: list[dict[str, Any]]) -> bool:
 
 
 def group_shooter_rows_by_brand(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
-    """Hanya baris yang punya field brand; tanpa brand tidak dimasukkan ke sini."""
+    """Only rows with brand field; rows without brand are excluded."""
     by: dict[str, list[dict[str, Any]]] = {}
     for row in rows:
         if not shooter_row_has_brand(row):
@@ -2226,7 +2226,7 @@ def get_shooter_listen_account_by_phone(phone: str) -> dict[str, Any] | None:
 
 
 def get_shooter_listen_account_by_owner(owner: str) -> dict[str, Any] | None:
-    """Owner unik saja (mis. satu akun); kalau >1 akun return None."""
+    """Unique owner only (single account); if >1 account return None."""
     key = owner.strip().upper()
     if not key:
         return None
@@ -2242,7 +2242,7 @@ def get_shooter_listen_account_by_owner(owner: str) -> dict[str, Any] | None:
 
 def resolve_listen_account(account_key: str) -> dict[str, Any] | None:
     """
-    Cari akun untuk /login & listener.
+    Find account for /login & listener.
     Shooter → shooteraccounts.json (id SH_* / phone / owner unik).
     GCS → accounts.json (id / phone).
     """
@@ -2515,13 +2515,13 @@ def is_creator_user(user: Any) -> bool:
 
 def validate_otp_request_context(update: Update) -> str | None:
     """
-    Return pesan error HTML jika request tidak boleh.
+    Return HTML error message if request is not allowed.
     Staff: hanya group/supergroup (channel). Creator: boleh private DM juga.
     """
     chat = update.effective_chat
     user = update.effective_user
     if not chat:
-        return accounts_header_html("⚠️ <b>Error</b>") + "\n\nChat tidak valid."
+        return accounts_header_html("⚠️ <b>Error</b>") + "\n\nInvalid chat."
     if chat.type == ChatType.PRIVATE:
         if is_creator_user(user):
             return None
@@ -2890,7 +2890,7 @@ async def cmd_login(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
             if n > 1:
                 owner_hint = (
-                    f"\n\n<code>{html.escape(owner_u)}</code> punya <b>{n}</b> akun shooter — "
+                    f"\n\n<code>{html.escape(owner_u)}</code> has <b>{n}</b> shooter account(s) — "
                     "use the account id (<code>SH_KAREN_05</code>) or phone number, not just the owner name."
                 )
         await em.reply_text(
@@ -2928,7 +2928,7 @@ async def cmd_login(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def on_text_template(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.effective_chat or not update.effective_message:
         return
-    # Izinkan template dari private/group/supergroup (channel tetap diabaikan).
+    # Allow template from private/group/supergroup (channels still ignored).
     if update.effective_chat.type not in (ChatType.PRIVATE, ChatType.GROUP, ChatType.SUPERGROUP):
         return
     msg = update.effective_message
@@ -3117,7 +3117,7 @@ def _load_pool_accounts(pool: str) -> list[dict[str, Any]]:
     if pool in ("gcs", "all"):
         result += load_otp_accounts(raw_gcs, project_root(), default_peers)
     if pool in ("shooter", "all"):
-        # pakai load_shooter_login_accounts agar field `session` tersedia
+        # use load_shooter_login_accounts so `session` field is available
         result += load_shooter_login_accounts(raw_sh, project_root(), default_peers)
     return result
 
@@ -3166,8 +3166,8 @@ def _make_telethon_client(acc: dict[str, Any]) -> Any:
 
 def _make_telethon_client_temp(acc: dict[str, Any]) -> tuple[Any, Path]:
     """
-    Buat Telethon client dari SALINAN session file (temp).
-    Aman dijalankan berbarengan dengan `listen` — file original tidak disentuh.
+    Create Telethon client from a COPY of the session file (temp).
+    Safe to run alongside `listen` — original file is not touched.
     Return (client, tmp_dir) — caller wajib hapus tmp_dir setelah selesai.
     """
     import shutil
@@ -3193,14 +3193,44 @@ def _make_telethon_client_temp(acc: dict[str, Any]) -> tuple[Any, Path]:
     return client, tmp_dir
 
 
-def _session_file_ready(acc: dict[str, Any]) -> bool:
+def _session_file_path(acc: dict[str, Any]) -> Path:
     session_path: Path = acc["session"]
-    sf = (
+    return (
         Path(str(session_path) + ".session")
         if not str(session_path).endswith(".session")
         else session_path
     )
+
+
+def _session_file_ready(acc: dict[str, Any]) -> bool:
+    sf = _session_file_path(acc)
     return sf.is_file() and sf.stat().st_size >= 1024
+
+
+def _session_working(acc: dict[str, Any]) -> bool:
+    """True if .session exists and Telethon is authorized (not expired)."""
+    if not _session_file_ready(acc):
+        return False
+    client, tmp_dir = _make_telethon_client_temp(acc)
+    try:
+        client.connect()
+        if not client.is_user_authorized():
+            return False
+        me = client.get_me()
+        return bool(me)
+    except Exception:
+        return False
+    finally:
+        try:
+            client.disconnect()
+        except Exception:
+            pass
+        try:
+            import shutil as _shutil
+
+            _shutil.rmtree(tmp_dir, ignore_errors=True)
+        except Exception:
+            pass
 
 
 def run_list_sessions(pool: str, target_id: str, keep_device: str = "FRIDAY_BO") -> int:
@@ -3516,23 +3546,403 @@ def run_terminate_other_sessions(pool: str, target_id: str) -> int:
     return 0 if total_errors == 0 else 1
 
 
+_login_fail_cooldown_until: dict[str, float] = {}
+
+
+def _login_sheet_code_enabled() -> bool:
+    if not os.environ.get("GOOGLE_SHEET_ID", "").strip():
+        return False
+    return os.environ.get("TELEGRAM_LOGIN_SHEET_CODE", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def _sheet_clear_code_after_login() -> bool:
+    return os.environ.get("TELEGRAM_SHEET_CLEAR_CODE_AFTER_LOGIN", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def _make_login_code_callback(
+    root: Path,
+    account_id: str,
+    phone: str,
+    *,
+    max_otp_retries: int,
+    preset_code: str = "",
+) -> Callable[[], str]:
+    """Wait for OTP column (L) in Google Sheet; optional terminal fallback."""
+    otp_attempt = [0]
+    use_sheet = _login_sheet_code_enabled() and not preset_code
+    wait_sec = _env_int("TELEGRAM_SHEET_LOGIN_WAIT_SEC", 180, minimum=30)
+    poll_sec = max(2.0, float(os.environ.get("TELEGRAM_SHEET_LOGIN_POLL_SEC", "3").strip() or "3"))
+    fallback_tty = os.environ.get("TELEGRAM_LOGIN_SHEET_FALLBACK_TTY", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+    def _cb() -> str:
+        otp_attempt[0] += 1
+        if otp_attempt[0] > 1:
+            print(
+                f"  ⚠ Wrong code, retry {otp_attempt[0]}/{max_otp_retries} "
+                f"(update OTP column in Sheet)...",
+                flush=True,
+            )
+        if otp_attempt[0] > max_otp_retries:
+            raise RuntimeError(f"OTP failed after {max_otp_retries} attempts")
+
+        if preset_code:
+            return preset_code
+
+        if use_sheet:
+            import sheets_sync
+
+            np = sheets_sync.norm_phone(phone)
+            print(
+                f"  Waiting for OTP in Sheet ({account_id} | {phone}) "
+                f"up to {wait_sec}s...",
+                flush=True,
+            )
+            deadline = time.time() + wait_sec
+            while time.time() < deadline:
+                codes = sheets_sync.fetch_login_codes_by_phone(root)
+                code = codes.get(np, "") if np else ""
+                if code:
+                    print(f"  ✓ Sheet OTP received for {account_id}", flush=True)
+                    if _sheet_clear_code_after_login() and np:
+                        sheets_sync.clear_login_code_in_sheet(root, np)
+                    return code
+                time.sleep(poll_sec)
+            if fallback_tty:
+                return input(f"[OTP {account_id} | {phone}] Enter code: ")
+            raise RuntimeError(
+                f"Sheet OTP timeout ({wait_sec}s) — fill OTP column in Google Sheet"
+            )
+
+        return input(f"[OTP {account_id} | {phone}] Enter code: ")
+
+    return _cb
+
+
+def _apply_sheet_login_fields(acc: dict[str, Any], root: Path) -> str:
+    """Merge 2FA/password from Google Sheet into account dict (by phone)."""
+    import sheets_sync
+
+    phone = sheets_sync.norm_phone(str(acc.get("phone") or ""))
+    if phone:
+        passwords = sheets_sync.fetch_passwords_by_phone(root)
+        pw = (passwords.get(phone) or "").strip()
+        if pw:
+            acc["password"] = pw
+    return str(acc.get("password") or "").strip()
+
+
+def _make_login_password_callback(
+    root: Path,
+    account_id: str,
+    phone: str,
+    *,
+    preset_password: str = "",
+) -> Callable[[], str]:
+    """Wait for 2FA column in Google Sheet; optional terminal fallback."""
+    use_sheet = _login_sheet_code_enabled()
+    wait_sec = _env_int("TELEGRAM_SHEET_LOGIN_WAIT_SEC", 180, minimum=30)
+    poll_sec = max(2.0, float(os.environ.get("TELEGRAM_SHEET_LOGIN_POLL_SEC", "3").strip() or "3"))
+    fallback_tty = os.environ.get("TELEGRAM_LOGIN_SHEET_FALLBACK_TTY", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+    def _cb() -> str:
+        import sheets_sync
+
+        np = sheets_sync.norm_phone(phone)
+        if use_sheet and np:
+            passwords = sheets_sync.fetch_passwords_by_phone(root)
+            pw = (passwords.get(np) or preset_password or "").strip()
+            if pw:
+                print(f"  ✓ Sheet 2FA received for {account_id}", flush=True)
+                return pw
+            print(
+                f"  Waiting for 2FA in Sheet ({account_id} | {phone}) "
+                f"up to {wait_sec}s...",
+                flush=True,
+            )
+            deadline = time.time() + wait_sec
+            while time.time() < deadline:
+                passwords = sheets_sync.fetch_passwords_by_phone(root)
+                pw = (passwords.get(np) or "").strip()
+                if pw:
+                    print(f"  ✓ Sheet 2FA received for {account_id}", flush=True)
+                    return pw
+                time.sleep(poll_sec)
+            if fallback_tty:
+                import getpass
+
+                return getpass.getpass(f"[2FA {account_id} | {phone}] Password: ")
+            raise RuntimeError(
+                f"Sheet 2FA timeout ({wait_sec}s) — fill 2FA column in Google Sheet"
+            )
+
+        if preset_password:
+            return preset_password
+        import getpass
+
+        return getpass.getpass(f"[2FA {account_id} | {phone}] Password: ")
+
+    return _cb
+
+
+def _login_single_account(
+    acc: dict[str, Any],
+    json_list_key: str,
+    label: str,
+    *,
+    preset_code: str = "",
+    quiet: bool = False,
+) -> bool:
+    """Telethon login for one account; code from Sheet (poll) or preset_code."""
+    root = project_root()
+    logging.getLogger("telethon").setLevel(logging.WARNING)
+    json_path = _json_path_for_list_key(json_list_key)
+    json_label = "shooteraccounts.json" if json_list_key == "shooter_accounts" else "accounts.json"
+
+    acc_id = str(acc.get("id") or "?")
+    acc_phone = str(acc.get("phone") or "-")
+    session_path: Path = acc["session"]
+    session_path.parent.mkdir(parents=True, exist_ok=True)
+    session_file = _session_file_path(acc)
+    if _session_working(acc):
+        if not quiet:
+            print(f"  ✓ {acc_id} — session already authorized", flush=True)
+        return True
+    if session_file.is_file():
+        _safe_unlink_session_file(session_file)
+        if not quiet:
+            print(f"  ↻ {acc_id} — expired/invalid session removed, re-login", flush=True)
+
+    if not quiet:
+        print(f"\n[{label}] {acc_id} ({acc_phone})", flush=True)
+
+    kw: dict[str, Any] = {}
+    if acc.get("phone"):
+        kw["phone"] = acc["phone"]
+
+    sheet_pw = _apply_sheet_login_fields(acc, root)
+    if sheet_pw:
+        kw["password"] = sheet_pw
+    if _login_sheet_code_enabled():
+        kw["password_callback"] = _make_login_password_callback(
+            root,
+            acc_id,
+            acc_phone,
+            preset_password=sheet_pw,
+        )
+
+    max_otp_retries = _env_int("TELEGRAM_LOGIN_OTP_RETRIES", 3, minimum=1)
+    kw["code_callback"] = _make_login_code_callback(
+        root,
+        acc_id,
+        acc_phone,
+        max_otp_retries=max_otp_retries,
+        preset_code=preset_code.strip(),
+    )
+
+    conn_retries = _env_int("TELETHON_CONNECTION_RETRIES", 5, minimum=1)
+    req_retries = _env_int("TELETHON_REQUEST_RETRIES", 5, minimum=1)
+    sqlite_retries = _env_int("TELEGRAM_LOGIN_SQLITE_RETRIES", 12, minimum=1)
+
+    client: TelegramClient | None = None
+    login_ok = False
+    for attempt in range(sqlite_retries):
+        if client is not None:
+            try:
+                client.disconnect()
+            except Exception:
+                pass
+            time.sleep(0.4 * (attempt + 1))
+        if not quiet:
+            print("  Connecting to Telegram (SMS may be sent)...", flush=True)
+        client = TelegramClient(
+            str(session_path),
+            acc["api_id"],
+            acc["api_hash"],
+            device_model="FRIDAY_BO",
+            connection_retries=conn_retries,
+            request_retries=req_retries,
+        )
+        try:
+            client.start(**kw) if kw else client.start()
+            login_ok = True
+            break
+        except sqlite3.OperationalError as e:
+            if "locked" not in str(e).lower():
+                try:
+                    client.disconnect()
+                except Exception:
+                    pass
+                raise
+            try:
+                client.disconnect()
+            except Exception:
+                pass
+            client = None
+            if attempt + 1 >= sqlite_retries:
+                print(
+                    f"ERROR: SQLite session locked for {acc_id} — stop LISTEN for this account.",
+                    file=sys.stderr,
+                )
+                return False
+            time.sleep(min(3.0, 0.6 * (attempt + 1)))
+        except RuntimeError as e:
+            if not quiet:
+                print(f"SKIP: {acc_id} — {e}", file=sys.stderr)
+            try:
+                if client:
+                    client.disconnect()
+            except Exception:
+                pass
+            if session_file.is_file():
+                session_file.unlink(missing_ok=True)
+            break
+        except Exception as e:
+            if not quiet:
+                print(f"  ✗ {acc_id} login failed — {type(e).__name__}: {e}", file=sys.stderr)
+            try:
+                if client:
+                    client.disconnect()
+            except Exception:
+                pass
+            if session_file.is_file():
+                session_file.unlink(missing_ok=True)
+            break
+
+    ok = False
+    if login_ok and client:
+        try:
+            me = client.loop.run_until_complete(client.get_me())
+        except Exception:
+            me = None
+        if me:
+            profile_name = profile_name_from_me(me, acc_id)
+            if not quiet:
+                print(f"  ✓ Verified: {profile_name}")
+            update_json_profile_hint(json_path, json_list_key, acc_id, profile_name)
+            sf = session_file
+            if sf.is_file() and sf.stat().st_size >= 1024:
+                if not quiet:
+                    print(f"  ✓ Session saved: {sf.name} ({sf.stat().st_size} bytes)")
+                pool = "shooter" if json_list_key == "shooter_accounts" else "gcs"
+                ok = True
+        try:
+            client.disconnect()
+        except Exception:
+            pass
+        if ok:
+            pool_name = "shooter" if json_list_key == "shooter_accounts" else "gcs"
+            _after_login_sync_status(acc, pool_name)
+            _run_sync_push_delta(project_root(), verbose=False)
+    return ok
+
+
+def _collect_accounts_needing_session(root: Path) -> list[tuple[str, dict[str, Any], str]]:
+    """(json_list_key, account, pool_name) for accounts without .session."""
+    default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
+    out: list[tuple[str, dict[str, Any], str]] = []
+    raw_gcs = load_json(accounts_json_path())
+    for acc in load_otp_accounts(raw_gcs, root, default_peers):
+        if not _session_file_ready(acc):
+            out.append(("otp_accounts", acc, "gcs"))
+    raw_sh = load_shooter_doc()
+    for acc in load_shooter_login_accounts(raw_sh, root, default_peers):
+        if not _session_file_ready(acc):
+            out.append(("shooter_accounts", acc, "shooter"))
+    return out
+
+
+def _pending_trigger_phones_from_sheet(root: Path) -> set[str]:
+    """Phone numbers with column I (Status) = login trigger (default Pending)."""
+    import sheets_sync
+
+    return sheets_sync.fetch_phones_by_sheet_status(root)
+
+
+def _phones_registered_in_json(root: Path, phones: set[str]) -> set[str]:
+    """Subset of `phones` that exist in accounts.json or shooteraccounts.json."""
+    import sheets_sync
+
+    if not phones:
+        return set()
+    found: set[str] = set()
+    default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
+    raw_gcs = load_json(accounts_json_path())
+    for acc in load_otp_accounts(raw_gcs, root, default_peers):
+        p = sheets_sync.norm_phone(str(acc.get("phone") or ""))
+        if p in phones:
+            found.add(p)
+    raw_sh = load_shooter_doc()
+    for acc in load_shooter_login_accounts(raw_sh, root, default_peers):
+        p = sheets_sync.norm_phone(str(acc.get("phone") or ""))
+        if p in phones:
+            found.add(p)
+    return found
+
+
+def _collect_accounts_pending_login(root: Path) -> list[tuple[str, dict[str, Any], str]]:
+    """
+    Accounts where Sheet column I (Status) = Pending (login trigger).
+    Includes rows that already have .session (finalize Sheet without re-login).
+    Call _run_sync_pull first so new Sheet rows are registered in JSON.
+    """
+    import sheets_sync
+
+    trigger_phones = sheets_sync.fetch_phones_by_sheet_status(root)
+    if not trigger_phones:
+        return []
+
+    default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
+    out: list[tuple[str, dict[str, Any], str]] = []
+    seen: set[str] = set()
+
+    def _add(json_key: str, acc: dict[str, Any], pool: str) -> None:
+        phone = sheets_sync.norm_phone(str(acc.get("phone") or ""))
+        if not phone or phone not in trigger_phones or phone in seen:
+            return
+        seen.add(phone)
+        out.append((json_key, acc, pool))
+
+    raw_gcs = load_json(accounts_json_path())
+    for acc in load_otp_accounts(raw_gcs, root, default_peers):
+        _add("otp_accounts", acc, "gcs")
+    raw_sh = load_shooter_doc()
+    for acc in load_shooter_login_accounts(raw_sh, root, default_peers):
+        _add("shooter_accounts", acc, "shooter")
+    return out
+
+
 def _run_login_all(accounts: list[dict[str, Any]], json_list_key: str, label: str) -> int:
     if not accounts:
         print(f"No valid {label} accounts found.", file=sys.stderr)
         return 2
 
-    logging.getLogger("telethon").setLevel(logging.WARNING)
-    json_path = _json_path_for_list_key(json_list_key)
-
-    need_login: list[tuple[int, dict[str, Any]]] = []
+    need_login: list[dict[str, Any]] = []
     already_ok: list[str] = []
-    for i, acc in enumerate(accounts, start=1):
-        session_path: Path = acc["session"]
-        session_file = Path(str(session_path) + ".session") if not str(session_path).endswith(".session") else session_path
-        if session_file.is_file() and session_file.stat().st_size >= 1024:
-            already_ok.append(str(acc.get("id", f"acc{i}")))
+    for acc in accounts:
+        if _session_file_ready(acc):
+            already_ok.append(str(acc.get("id") or ""))
         else:
-            need_login.append((i, acc))
+            need_login.append(acc)
 
     print(f"[{label}] Total: {len(accounts)} | Already logged in: {len(already_ok)} | Need login: {len(need_login)}")
     if already_ok:
@@ -3547,145 +3957,23 @@ def _run_login_all(accounts: list[dict[str, Any]], json_list_key: str, label: st
     if not need_login:
         print(f"\nAll {label} accounts already have a session.")
         return 0
-    print(
-        "\nTip: stop `listen` first to avoid database locked errors.",
-        flush=True,
-    )
-    conn_retries = _env_int("TELETHON_CONNECTION_RETRIES", 5, minimum=1)
-    req_retries = _env_int("TELETHON_REQUEST_RETRIES", 5, minimum=1)
-    sqlite_retries = _env_int("TELEGRAM_LOGIN_SQLITE_RETRIES", 12, minimum=1)
-    max_otp_retries = _env_int("TELEGRAM_LOGIN_OTP_RETRIES", 3, minimum=1)
+    if _login_sheet_code_enabled():
+        print(
+            "\nOTP: fill OTP column in Google Sheet when SMS arrives "
+            "(no terminal typing needed).",
+            flush=True,
+        )
+    else:
+        print("\nTip: stop `listen` first to avoid database locked errors.", flush=True)
+
     results_ok: list[str] = []
     results_fail: list[str] = []
-    results_skip: list[str] = []
-
-    for idx, (i, acc) in enumerate(need_login, start=1):
-        acc_id = str(acc.get("id") or f"acc{i}")
-        acc_phone = str(acc.get("phone") or "-")
-        session_path: Path = acc["session"]
-        session_path.parent.mkdir(parents=True, exist_ok=True)
-        session_file = Path(str(session_path) + ".session") if not str(session_path).endswith(".session") else session_path
-        print(f"\n[{idx}/{len(need_login)}] {acc_id} ({acc_phone})", flush=True)
-
-        kw: dict[str, Any] = {}
-        if acc["phone"]:
-            kw["phone"] = acc["phone"]
-        if acc["password"]:
-            kw["password"] = acc["password"]
-
-        otp_attempt = [0]
-        def _code_cb(_id: str = acc_id, _ph: str = acc_phone) -> str:
-            otp_attempt[0] += 1
-            if otp_attempt[0] > 1:
-                print(f"  ⚠ Previous OTP was wrong, retrying ({otp_attempt[0]}/{max_otp_retries})...")
-            if otp_attempt[0] > max_otp_retries:
-                raise RuntimeError(f"OTP failed after {max_otp_retries} attempts")
-            return input(f"[OTP {_id} | {_ph}] Enter code: ")
-
-        kw["code_callback"] = _code_cb
-
-        client: TelegramClient | None = None
-        login_ok = False
-        for attempt in range(sqlite_retries):
-            if client is not None:
-                try:
-                    client.disconnect()
-                except Exception:
-                    pass
-                time.sleep(0.4 * (attempt + 1))
-            print("  Connecting to Telegram...", flush=True)
-            client = TelegramClient(
-                str(session_path),
-                acc["api_id"],
-                acc["api_hash"],
-                device_model="FRIDAY_BO",
-                connection_retries=conn_retries,
-                request_retries=req_retries,
-            )
-            try:
-                client.start(**kw) if kw else client.start()
-                login_ok = True
-                break
-            except sqlite3.OperationalError as e:
-                if "locked" not in str(e).lower():
-                    try:
-                        client.disconnect()
-                    except Exception:
-                        pass
-                    raise
-                try:
-                    client.disconnect()
-                except Exception:
-                    pass
-                client = None
-                if attempt + 1 >= sqlite_retries:
-                    print(
-                        f"ERROR: SQLite session still locked for {acc_id} after {sqlite_retries} attempts.\n"
-                        "  → Stop all `listen` processes, close any DB preview tools, then retry login-all.",
-                        file=sys.stderr,
-                    )
-                    return 2
-                wait_s = min(3.0, 0.6 * (attempt + 1))
-                print(
-                    f"  (session locked, waiting {wait_s:.1f}s, retry {attempt + 2}/{sqlite_retries} — make sure listen is not running)",
-                    flush=True,
-                )
-                time.sleep(wait_s)
-            except RuntimeError as e:
-                if "OTP failed" in str(e):
-                    print(f"SKIP: {acc_id} — OTP wrong {max_otp_retries}x, skipping.", file=sys.stderr)
-                else:
-                    print(f"SKIP: {acc_id} — {e}", file=sys.stderr)
-                try:
-                    if client:
-                        client.disconnect()
-                except Exception:
-                    pass
-                if session_file.is_file():
-                    session_file.unlink(missing_ok=True)
-                break
-            except Exception as e:
-                err_name = type(e).__name__
-                print(f"  ✗ {acc_id} login failed — {err_name}: {e}", file=sys.stderr)
-                try:
-                    if client:
-                        client.disconnect()
-                except Exception:
-                    pass
-                if session_file.is_file():
-                    session_file.unlink(missing_ok=True)
-                    print(f"  ↳ Session file removed (retry later)")
-                break
-
-        if login_ok and client:
-            try:
-                me = client.loop.run_until_complete(client.get_me())
-            except Exception:
-                me = None
-
-            if me:
-                profile_name = profile_name_from_me(me, acc_id)
-                print(f"  ✓ Verified: {profile_name}")
-                if update_json_profile_hint(json_path, json_list_key, acc_id, profile_name):
-                    print(f"  ✓ Profile synced → {json_label}")
-
-                sf = Path(str(session_path) + ".session") if not str(session_path).endswith(".session") else session_path
-                if sf.is_file() and sf.stat().st_size >= 1024:
-                    print(f"  ✓ Session saved: {sf.name} ({sf.stat().st_size} bytes)")
-                    results_ok.append(acc_id)
-                else:
-                    print(f"  ✗ Session file invalid after login!", file=sys.stderr)
-                    results_fail.append(acc_id)
-            else:
-                print(f"  ✗ Login appeared successful but get_me() failed — session removed.", file=sys.stderr)
-                if session_file.is_file():
-                    session_file.unlink(missing_ok=True)
-                results_fail.append(acc_id)
-            try:
-                client.disconnect()
-            except Exception:
-                pass
-        elif not login_ok:
+    for idx, acc in enumerate(need_login, start=1):
+        acc_id = str(acc.get("id") or f"acc{idx}")
+        print(f"\n[{idx}/{len(need_login)}]", end=" ", flush=True)
+        if _login_single_account(acc, json_list_key, label):
+            results_ok.append(acc_id)
+        else:
             results_fail.append(acc_id)
         time.sleep(0.25)
 
@@ -3721,7 +4009,7 @@ def run_login_all_shooter() -> int:
     accounts = load_shooter_login_accounts(raw, root)
     if not accounts:
         print(
-            "Tidak ada shooter_accounts valid (butuh id, owner, phone, api_id, api_hash).",
+            "No valid shooter_accounts (need id, owner, phone, api_id, api_hash).",
             file=sys.stderr,
         )
         return 2
@@ -3752,7 +4040,6 @@ async def _listen_start_account(
     pool = account_pool(acc)
     list_key = "shooter_accounts" if pool == "shooter" else "otp_accounts"
     json_path = _json_path_for_list_key(list_key)
-    login_cmd = "login-all-shooter" if pool == "shooter" else "login-all"
     acc_id = str(acc.get("id", "?"))
 
     session_path: Path = acc["session"]
@@ -3840,8 +4127,8 @@ async def _listen_start_account(
     if acc.get("password"):
         kw["password"] = acc["password"]
 
-    def _no_interactive_code(_aid: str = acc_id, _cmd: str = login_cmd):
-        raise RuntimeError(f"[{_aid}] Session expired, jalankan {_cmd}.")
+    def _no_interactive_code(_aid: str = acc_id):
+        raise RuntimeError(f"[{_aid}] Session expired — fill OTP column in Sheet (LIVE-LOGIN).")
 
     kw["code_callback"] = lambda: _no_interactive_code()
 
@@ -3877,7 +4164,7 @@ async def _listen_start_account(
             await client.disconnect()
         except Exception:
             pass
-        # Untuk lock SQLite, jangan paksa hapus session agar tidak menimbulkan error berantai.
+        # For SQLite lock, do not force-delete session to avoid cascading errors.
         if "database is locked" not in err_text:
             _safe_unlink_session_file(session_file)
         return
@@ -3993,7 +4280,7 @@ async def _listen_hot_reload_loop(
     listen_shooter: bool,
     listen_kw: dict[str, Any],
 ) -> None:
-    """Deteksi akun baru dari JSON (hasil sync live) tanpa restart listen."""
+    """Detect new accounts from JSON (live sync) without restarting listen."""
     interval = _listen_hot_reload_interval_sec()
     print(
         f"  Hot-reload: check for new accounts every {interval}s (TELEGRAM_LISTEN_HOT_RELOAD=0 to disable)",
@@ -4058,7 +4345,7 @@ async def _watch_client_loop(
     acc_info: dict[str, Any],
     listen_kw: dict[str, Any],
 ) -> None:
-    """Monitor disconnect/reconnect untuk satu client listener."""
+    """Monitor disconnect/reconnect for one listener client."""
     accounts_doc = listen_kw["accounts_doc"]
     token = listen_kw["token"]
     acc_id = str(acc_info.get("id", "?"))
@@ -4231,7 +4518,7 @@ async def run_listener_async() -> int:
         for a in sh_active:
             print(f"    ✓ {a}")
     if all_expired:
-        print(f"  Expired : {len(all_expired)} (GCS→login-all, Shooter→login-all-shooter)")
+        print(f"  Expired : {len(all_expired)} (fill OTP column in Sheet — LIVE-LOGIN)")
         for e in all_expired:
             print(f"    ✗ {e}")
     if all_skipped:
@@ -4303,7 +4590,7 @@ def _queue_sheet_status(
     session_user: str = "",
     session_friday: str = "",
 ) -> None:
-    """Catat status ke antrian Sheet → Account Status / Session Friday."""
+    """Queue status for Sheet push → Account Status / Session Friday."""
     if not os.environ.get("GOOGLE_SHEET_ID", "").strip():
         return
     try:
@@ -4343,7 +4630,7 @@ def _safe_unlink_session_file(session_file: Path) -> None:
 
 
 def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str]:
-    """Return (session_user, session_friday) untuk satu akun."""
+    """Return (session_user, session_friday) for one account."""
     if not _session_file_ready(acc):
         return "Pending Login", "Pending Login"
 
@@ -4386,9 +4673,63 @@ def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str]:
             _shutil.rmtree(tmp_dir, ignore_errors=True)
         except Exception:
             pass
-    # Jangan pernah push "Unknown" ke Sheet saat sync health.
+    # Never push "Unknown" to Sheet during sync health.
     if str(user_st).strip().lower() == "unknown":
         user_st = "Disconnected"
+    return user_st, friday_st
+
+
+def _after_login_sync_status(acc: dict[str, Any], pool: str) -> tuple[str, str]:
+    """
+    After successful login:
+      - Column J Account Status → Active (unless health detects Banned/Frozen)
+      - Column K Session Friday → Active
+      - Column I Status → Feeding
+      - Column L OTP cleared
+    """
+    root = project_root()
+    acc_id = str(acc.get("id") or "?")
+    phone = str(acc.get("phone") or "")
+    print(f"  Recording Sheet status for {acc_id}...", flush=True)
+
+    user_st, friday_st = _health_check_one_account(acc)
+    if user_st in ("Banned", "Frozen"):
+        friday_st = user_st
+    else:
+        user_st = "Active"
+        friday_st = "Active"
+
+    _queue_sheet_status(
+        acc_id,
+        pool,
+        user_st.lower(),
+        phone=phone,
+        session_user=user_st,
+        session_friday=friday_st,
+    )
+    try:
+        import sheets_sync
+
+        if phone:
+            if sheets_sync.instant_push_enabled():
+                sheets_sync.push_status_instant(root, phone, user_st, friday_st)
+            sheets_sync.update_sheet_status_column(
+                root, phone, sheets_sync.sheet_status_after_login_value()
+            )
+            sheets_sync.clear_login_code_in_sheet(root, phone)
+    except Exception:
+        pass
+    after_status = "Feeding"
+    try:
+        import sheets_sync as _ss
+
+        after_status = _ss.sheet_status_after_login_value()
+    except Exception:
+        pass
+    print(
+        f"  Sheet: Status={after_status} | Account Status={user_st} | Session Friday={friday_st}",
+        flush=True,
+    )
     return user_st, friday_st
 
 
@@ -4397,7 +4738,7 @@ def _health_check_print_section(
     accounts: list[dict[str, Any]],
     pool_name: str,
 ) -> dict[str, int]:
-    """Cetak satu blok GCS atau Shooter; return hitungan status."""
+    """Print one GCS or Shooter block; return status counts."""
     counts: dict[str, int] = {}
     print(f"\n{'=' * 44}")
     print(f"  {title}  ({len(accounts)} account(s))")
@@ -4433,8 +4774,8 @@ def _health_check_print_section(
 
 def run_health_check(pool: str = "all", target_id: str = "all") -> int:
     """
-    Connect singkat ke tiap akun (temp session, aman dengan listen).
-    Output dipisah: GCS dan Shooter (tidak dicampur).
+    Brief connect to each account (temp session, safe with listen running).
+    Output split: GCS and Shooter (not mixed).
     """
     logging.getLogger("telethon").setLevel(logging.WARNING)
     accounts = _load_pool_accounts(pool)
@@ -4470,7 +4811,7 @@ def run_health_check(pool: str = "all", target_id: str = "all") -> int:
 
 
 def _run_sync_pull(root: Path, *, label: str = "Pull: Google Sheet → JSON") -> int:
-    """Import / update accounts.json + shooteraccounts.json dari tab Telegram Acc."""
+    """Import / update accounts.json + shooteraccounts.json from Telegram Acc tab."""
     import sheets_sync
 
     print(f"\n── {label} ──")
@@ -4495,7 +4836,7 @@ def _run_sync_pull(root: Path, *, label: str = "Pull: Google Sheet → JSON") ->
 
 
 def _run_sync_pull_after_login(root: Path) -> int:
-    """Setelah login sukses: merge lagi dari Sheet + profile_hint dari Telegram."""
+    """After successful login: merge from Sheet again + profile_hint from Telegram."""
     return _run_sync_pull(
         root,
         label="Re-import Sheet → JSON (after successful login)",
@@ -4503,7 +4844,7 @@ def _run_sync_pull_after_login(root: Path) -> int:
 
 
 def _run_sync_push(root: Path, *, verbose: bool = True) -> tuple[int, int]:
-    """Tulis Account Status & Session Friday ke Google Sheet (full baseline + queue)."""
+    """Write Account Status & Session Friday to Google Sheet (full baseline + queue)."""
     import sheets_sync
 
     try:
@@ -4522,7 +4863,7 @@ def _run_sync_push(root: Path, *, verbose: bool = True) -> tuple[int, int]:
 
 
 def _run_sync_push_delta(root: Path, *, verbose: bool = True) -> tuple[int, int, int]:
-    """Push delta dari antrian saja — tanpa full scan baseline (hemat API)."""
+    """Push queue delta only — no full baseline scan (saves API calls)."""
     import sheets_sync
 
     try:
@@ -4587,15 +4928,23 @@ def run_sync_once(
             return 1
 
     if step in ("all", "login"):
-        login_hdr = "2/4 Login" if step == "all" else "Login"
-        print(f"\n── {login_hdr}: new accounts only (no .session yet) ──")
-        print("  (Already logged-in accounts are skipped automatically.)\n")
-        rc_gcs = run_login_all()
-        rc_sh = run_login_all_shooter()
-        if rc_gcs != 0 or rc_sh != 0:
-            print("⚠ Some logins failed — check output above.", file=sys.stderr)
-        if _run_sync_pull_after_login(root) != 0:
-            return 1
+        if _login_sheet_code_enabled():
+            print(
+                "\n── Login: skipped (Sheet mode) ──\n"
+                "  Production uses LIVE-LOGIN: set Status=Pending, fill OTP column in Google Sheet.\n"
+                "  No terminal login-all required.\n",
+                flush=True,
+            )
+        else:
+            login_hdr = "2/4 Login" if step == "all" else "Login"
+            print(f"\n── {login_hdr}: new accounts only (no .session yet) ──")
+            print("  (Already logged-in accounts are skipped automatically.)\n")
+            rc_gcs = run_login_all()
+            rc_sh = run_login_all_shooter()
+            if rc_gcs != 0 or rc_sh != 0:
+                print("⚠ Some logins failed — check output above.", file=sys.stderr)
+            if _run_sync_pull_after_login(root) != 0:
+                return 1
 
     health_on = os.environ.get("TELEGRAM_SYNC_HEALTH_CHECK", "1").strip().lower() not in (
         "0", "false", "no", "off",
@@ -4609,7 +4958,7 @@ def run_sync_once(
         if step == "health":
             return 0
 
-    # Push otomatis setelah health (termasuk `sync health`) — tidak perlu `sync push` terpisah
+    # Auto push after health (including `sync health`) — no separate `sync push` needed
     if step in ("all", "push", "health"):
         if step == "all":
             print("\n── 4/4 Push: status → Google Sheet ──")
@@ -4637,34 +4986,20 @@ def run_sync_default(
     account_id: str = "all",
     keep_device: str = "FRIDAY_BO",
 ) -> int:
-    """
-    Default `sync`:
-      1) Pull Sheet → JSON (akun baru masuk accounts.json / shooteraccounts.json)
-      2) Login akun yang belum punya .session
-      3) Pull lagi (merge Sheet + profile dari login sukses)
-    Google Sheet status hanya di-update saat listen deteksi masalah (instant push).
-    """
+    """Default `sync`: pull Sheet → JSON only (login/status via production live services)."""
     root = project_root()
-    print("\n── Sync: import Sheet → login new → re-import ──")
-    print("  (No bulk health/push — avoids API limits & overwriting Sheet.)\n")
+    print("\n── Sync: import Sheet → JSON ──")
+    print("  (No terminal login — use production LIVE-PULL + LIVE-LOGIN + LIVE-STATUS.)\n")
     rc = 0
-    if _run_sync_pull(root, label="1/3 Import Sheet → JSON") != 0:
-        rc = 1
-    print("\n── 2/3 Login: new accounts (no .session yet) ──")
-    print("  (Already logged-in accounts are skipped automatically.)\n")
-    if run_login_all() != 0:
-        rc = 1
-    if run_login_all_shooter() != 0:
-        rc = 1
-    if _run_sync_pull_after_login(root) != 0:
+    if _run_sync_pull(root, label="Import Sheet → JSON") != 0:
         rc = 1
     print(
         "\n✓ Done.\n"
-        "  · New Sheet accounts are in JSON (before & after login).\n"
-        "  · Profile hints from Telegram are saved after successful login.\n"
-        "  · Sheet Account Status / Session Friday change only when listen detects issues.\n"
-        "  Manual audit: python telegram_otp_allinone.py sync health\n"
-        "  Listen hot-reload adds new accounts automatically (TELEGRAM_LISTEN_HOT_RELOAD=1)."
+        "  New number in Sheet → LIVE-PULL registers JSON.\n"
+        "  Set Status=Pending + fill OTP column → LIVE-LOGIN creates .session + updates J/K.\n"
+        "  LISTEN hot-reload picks up account for daily OTP (/login).\n"
+        "  LIVE-STATUS flushes status queue (Banned/Frozen/Disconnected…).\n"
+        "  Start: .\\start_production.ps1 (5 windows)."
     )
     return rc
 
@@ -4676,7 +5011,7 @@ def run_sync_daemon(
     keep_device: str = "FRIDAY_BO",
 ) -> int:
     """
-    Loop berkala (opsional, tidak disarankan) — bisa limit API & overwrite Sheet.
+    Optional periodic loop (not recommended) — may hit API limits & overwrite Sheet.
   """
     interval = _env_int("TELEGRAM_SYNC_INTERVAL_SEC", 600, minimum=60)
     print("=" * 50)
@@ -4708,10 +5043,166 @@ def run_sync_daemon(
         return 0
 
 
+def _live_login_skip_pull() -> bool:
+    return os.environ.get("TELEGRAM_LIVE_LOGIN_SKIP_PULL", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def run_sync_live_login() -> int:
+    """Live login: Status=Pending -> send SMS -> wait for OTP column in Sheet."""
+    if not os.environ.get("GOOGLE_SHEET_ID", "").strip():
+        print("GOOGLE_SHEET_ID not set — live-login disabled.", file=sys.stderr)
+        return 2
+    root = project_root()
+    interval_idle = _env_int("TELEGRAM_SYNC_LOGIN_INTERVAL_SEC", 60, minimum=20)
+    interval_busy = _env_int("TELEGRAM_SYNC_LOGIN_FAST_INTERVAL_SEC", 20, minimum=10)
+    fail_cooldown = _env_int("TELEGRAM_SHEET_LOGIN_FAIL_COOLDOWN_SEC", 600, minimum=60)
+
+    trigger = os.environ.get("TELEGRAM_SHEET_LOGIN_TRIGGER_STATUS", "Pending").strip() or "Pending"
+    print("=" * 56)
+    print("  LIVE LOGIN — Sheet-triggered (no terminal login-all)")
+    print(f"  Idle interval: {interval_idle}s | Busy: {interval_busy}s (Ctrl+C to stop)")
+    print(f"  Trigger: column I Status = {trigger!r}")
+    print(
+        "  Flow: Pending -> JSON -> login -> OTP + 2FA columns -> Active J/K"
+    )
+    print("=" * 56)
+
+    cycle = 0
+    try:
+        while True:
+            cycle += 1
+            ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+            print(f"\n[Live Login #{cycle}] {ts}")
+
+            import sheets_sync
+
+            pending_phones = _pending_trigger_phones_from_sheet(root)
+            if not pending_phones:
+                print(f"  No rows with Status={trigger!r}.", flush=True)
+                time.sleep(interval_idle)
+                continue
+
+            # New Sheet row: pull first so phone is added to JSON before login runs.
+            do_pull = not _live_login_skip_pull() or bool(pending_phones)
+            if do_pull:
+                if _run_sync_pull(
+                    root,
+                    label="Live Login: Sheet -> JSON (auto-register if new)",
+                ) != 0:
+                    print(f"⚠ Pull failed, retry in {interval_idle}s.", file=sys.stderr)
+                    time.sleep(interval_idle)
+                    continue
+
+            pending = _collect_accounts_pending_login(root)
+            registered = _phones_registered_in_json(root, pending_phones)
+            missing = pending_phones - registered
+            if missing:
+                sample = ", ".join(sorted(missing)[:5])
+                extra = f" (+{len(missing) - 5} more)" if len(missing) > 5 else ""
+                print(
+                    f"  ⚠ Pending in Sheet but not in JSON: {sample}{extra}",
+                    flush=True,
+                )
+                print(
+                    "    Fix row: Phone, Group (Main/Other), Channel; GCS needs api_id in accounts.json.",
+                    flush=True,
+                )
+
+            sleep_s = interval_busy if pending else interval_idle
+            if not pending:
+                time.sleep(sleep_s)
+                continue
+
+            codes = sheets_sync.fetch_login_codes_by_phone(root)
+            now = time.time()
+            picked: tuple[str, dict[str, Any], str] | None = None
+            preset = ""
+
+            for json_key, acc, _pool in pending:
+                acc_id = str(acc.get("id") or "")
+                if not acc_id:
+                    continue
+                until = _login_fail_cooldown_until.get(acc_id, 0.0)
+                if now < until:
+                    continue
+                phone = sheets_sync.norm_phone(str(acc.get("phone") or ""))
+                code = codes.get(phone, "") if phone else ""
+                if code:
+                    picked = (json_key, acc, _pool)
+                    preset = code
+                    break
+
+            if not picked:
+                for json_key, acc, pool in pending:
+                    acc_id = str(acc.get("id") or "")
+                    if not acc_id:
+                        continue
+                    if now < _login_fail_cooldown_until.get(acc_id, 0.0):
+                        continue
+                    picked = (json_key, acc, pool)
+                    preset = ""
+                    break
+
+            if not picked:
+                print("  All pending accounts in cooldown.", flush=True)
+                time.sleep(sleep_s)
+                continue
+
+            json_key, acc, pool = picked
+            acc_id = str(acc.get("id") or "?")
+            label = "SHOOTER" if pool == "shooter" else "GCS"
+            phone = str(acc.get("phone") or "")
+            if _session_working(acc):
+                print(
+                    f"  -> Finalize {acc_id} ({label}) — session OK, updating Sheet only",
+                    flush=True,
+                )
+                pool_name = "shooter" if pool == "shooter" else "gcs"
+                _after_login_sync_status(acc, pool_name)
+                _run_sync_push_delta(root, verbose=False)
+                _run_sync_pull_after_login(root)
+                print(f"  ✓ {acc_id} Sheet updated (Active / Feeding).", flush=True)
+                print(f"⏳ Waiting {sleep_s}s...", flush=True)
+                time.sleep(sleep_s)
+                continue
+
+            _apply_sheet_login_fields(acc, root)
+            has_2fa = bool(str(acc.get("password") or "").strip())
+            otp_hint = " (OTP in Sheet)" if preset else " — waiting OTP column"
+            fa_hint = " + 2FA in Sheet" if has_2fa else " (fill 2FA column if account has 2FA)"
+            print(f"  -> Login {acc_id} ({label}){otp_hint}{fa_hint}", flush=True)
+
+            ok = _login_single_account(
+                acc,
+                json_key,
+                label,
+                preset_code=preset,
+                quiet=False,
+            )
+            if ok:
+                print(f"  ✓ {acc_id} session ready — LISTEN hot-reload will pick it up.", flush=True)
+                _login_fail_cooldown_until.pop(acc_id, None)
+                _run_sync_pull_after_login(root)
+            else:
+                _login_fail_cooldown_until[acc_id] = now + fail_cooldown
+                print(f"  ✗ {acc_id} failed — cooldown {fail_cooldown}s", file=sys.stderr)
+
+            print(f"⏳ Waiting {sleep_s}s...", flush=True)
+            time.sleep(sleep_s)
+    except KeyboardInterrupt:
+        print(f"\n\n✓ Live login stopped after {cycle} cycle(s).")
+        return 0
+
+
 def run_sync_live_pull() -> int:
     """
     Live record ringan: hanya pull Sheet -> JSON secara berkala.
-    Dipakai untuk auto-register nomor baru tanpa restart terminal.
+    Auto-register new phone numbers from Sheet without restarting the terminal.
     """
     root = project_root()
     interval = _env_int("TELEGRAM_SYNC_PULL_INTERVAL_SEC", 45, minimum=10)
@@ -4743,8 +5234,8 @@ def run_sync_live_status(
     account_id: str = "all",
 ) -> int:
     """
-    Live record status ringan: hanya push delta ke Sheet secara berkala.
-    Tidak menjalankan health-check full scan agar terminal tetap rapi.
+    Lightweight live status: push queue delta to Sheet periodically.
+    No full health-check scan (keeps the terminal quiet).
     """
     if pool != "all" or account_id != "all":
         print("⚠ live-status ignores --pool/--id; this mode pushes global delta.", file=sys.stderr)
@@ -4794,6 +5285,8 @@ def run_sync(
         return run_sync_daemon(pool=pool, account_id=account_id, keep_device=keep_device)
     if step == "live":
         return run_sync_live_pull()
+    if step == "live-login":
+        return run_sync_live_login()
     if step == "live-status":
         return run_sync_live_status(pool=pool, account_id=account_id)
     return run_sync_once(
@@ -4820,8 +5313,11 @@ def build_parser() -> argparse.ArgumentParser:
         "step",
         nargs="?",
         default=None,
-        choices=["once", "all", "loop", "live", "live-status", "pull", "login", "health", "push", "sessions", "init"],
-        help="(default)=pull+login. live=Sheet→JSON. live-status=push delta status (no full scan).",
+        choices=[
+            "once", "all", "loop", "live", "live-login", "live-status",
+            "pull", "login", "health", "push", "sessions", "init",
+        ],
+        help="live=Sheet->JSON. live-login=Sheet OTP column->session. live-status=delta push.",
     )
     p_sync.add_argument("--pool", choices=["gcs", "shooter", "all"], default="all")
     p_sync.add_argument("--id", dest="account_id", default="all", help="For sessions: id/brand partial.")
@@ -4904,10 +5400,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     _configure_runtime_warnings()
     logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s %(message)s", level=logging.INFO)
-    # Hindari spam "Task was destroyed but it is pending!" saat stop paksa di Windows.
+    # Avoid spam "Task was destroyed but it is pending!" on forced stop on Windows.
     logging.getLogger("asyncio").setLevel(logging.CRITICAL)
     # Redam traceback internal Telethon yang sering muncul saat paket jaringan rusak/transient.
-    # Listener sudah punya mekanisme reconnect sendiri, jadi log detail ini hanya bikin berisik.
+    # Listener has its own reconnect; detailed logs here are just noise.
     logging.getLogger("telethon.network.mtprotosender").setLevel(logging.CRITICAL)
     logging.getLogger("telethon.extensions.binaryreader").setLevel(logging.CRITICAL)
     load_dotenv(project_root() / ".env")

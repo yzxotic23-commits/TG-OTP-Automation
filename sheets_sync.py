@@ -1,6 +1,6 @@
 """
 Google Sheets ↔ accounts.json / shooteraccounts.json
-Tab utama: "Telegram Acc" (format operasional kamu).
+Main tab: "Telegram Acc" (operational sheet format).
 """
 from __future__ import annotations
 
@@ -22,8 +22,9 @@ _HEADER_ALIASES: dict[str, frozenset[str]] = {
     "acc_name": frozenset({"acc_name", "accname", "account_name", "profile_hint", "profile", "name"}),
     "phone": frozenset({"phone", "phone_number", "number"}),
     "telco": frozenset({"telco"}),
-    "status": frozenset({"status", "state", "feeding_status"}),
-    # Kolom Sheet "Account Status" (bukan "Session User")
+    # Column I: Status (Feeding / Active / Ready / Pending) — Pending triggers LIVE-LOGIN
+    "status": frozenset({"status", "state", "feeding_status", "feeding"}),
+    # Column J: Account Status (not "Session User")
     "session_user": frozenset({
         "session_user",
         "sessionuser",
@@ -37,14 +38,53 @@ _HEADER_ALIASES: dict[str, frozenset[str]] = {
     "profile_hint": frozenset({"profile_hint"}),
     "api_id": frozenset({"api_id", "apiid"}),
     "api_hash": frozenset({"api_hash", "apihash"}),
-    "password": frozenset({"password", "2fa", "twofa"}),
+    # 2FA / cloud password (any column; header e.g. "2FA")
+    "password": frozenset({
+        "password",
+        "2fa",
+        "twofa",
+        "two_fa",
+        "2fa_password",
+        "twofa_password",
+        "cloud_password",
+        "cloud_pass",
+        "telegram_2fa",
+        "telegram_password",
+    }),
     "brand": frozenset({"brand"}),
     "owner": frozenset({"owner"}),
     "enabled": frozenset({"enabled", "active"}),
     "notify_account": frozenset({"notify_account", "notify"}),
     "session": frozenset({"session", "session_path"}),
     "notes": frozenset({"notes", "note", "remark", "remarks"}),
+    # Staff fills this while backend waits during Telethon login (sync live-login / login-all)
+    "login_code": frozenset({
+        "login_code",
+        "logincode",
+        "login_otp",
+        "telethon_code",
+        "otp_code",
+        "otp",
+        "code",
+        "verification_code",
+    }),
 }
+
+
+def _normalize_sheet_status_value(raw: str) -> str:
+    return re.sub(r"\s+", " ", str(raw or "").strip().lower())
+
+
+def sheet_status_is_login_trigger(raw: str) -> bool:
+    """Column I (Status) = Pending triggers LIVE-LOGIN."""
+    trigger = os.environ.get("TELEGRAM_SHEET_LOGIN_TRIGGER_STATUS", "Pending").strip()
+    return _normalize_sheet_status_value(raw) == _normalize_sheet_status_value(trigger)
+
+
+def sheet_status_after_login_value() -> str:
+    """Column I value after successful login (default Feeding)."""
+    return os.environ.get("TELEGRAM_SHEET_STATUS_AFTER_LOGIN", "Feeding").strip() or "Feeding"
+
 
 _OWNER_FIX: dict[str, str] = {
     "venus": "VENNUS",
@@ -102,7 +142,7 @@ def norm_phone(raw: str) -> str:
 
 def _pool_from_group(group_val: str) -> str | None:
     """
-    Kolom Group di Sheet:
+    Sheet Group column:
       Main  → GCS (otp_accounts)
       Other → Shooter (shooter_accounts)
     """
@@ -115,7 +155,7 @@ def _pool_from_group(group_val: str) -> str | None:
 
 
 def _normalize_owner_name(name: str) -> str:
-    """Owner shooter dari kolom User (Venus → VENNUS, …)."""
+    """Shooter owner from User column (Venus → VENNUS, …)."""
     g = str(name or "").strip()
     if not g:
         return ""
@@ -134,7 +174,7 @@ def _resolve_notify_account_from_user(
     row_user: str,
     matched: dict[str, Any] | None,
 ) -> str:
-    """Map kolom User Sheet -> accounts[].id (untuk notify_account GCS)."""
+    """Map Sheet User column -> accounts[].id (GCS notify_account)."""
     if isinstance(matched, dict):
         keep = str(matched.get("notify_account") or "").strip()
         if keep:
@@ -223,7 +263,7 @@ def _tab_shooter() -> str:
 
 
 def use_telegram_acc_format() -> bool:
-    """True = pakai tab Telegram Acc (default jika GOOGLE_SHEET_ID di-set)."""
+    """True = use Telegram Acc tab (default when GOOGLE_SHEET_ID is set)."""
     v = os.environ.get("GOOGLE_SHEET_USE_TELEGRAM_ACC", "1").strip().lower()
     return v not in ("0", "false", "no", "off")
 
@@ -242,7 +282,7 @@ def instant_push_enabled() -> bool:
 
 
 def _should_instant_push(session_user: str) -> bool:
-    """Langsung ke Sheet untuk masalah akun — Active cukup di cycle sync."""
+    """Push to Sheet immediately for account issues; Active can wait for sync cycle."""
     su = _map_script_status(session_user)
     return su in (
         "Banned",
@@ -255,7 +295,7 @@ def _should_instant_push(session_user: str) -> bool:
 
 def classify_account_status(exc: BaseException | None = None, *, message: str = "") -> str:
     """
-    Status akun Telegram untuk kolom Account Status (bukan Session Friday).
+    Telegram account status for Account Status column (not Session Friday).
   """
     if exc is not None:
         name = type(exc).__name__.lower()
@@ -284,7 +324,7 @@ def classify_account_status(exc: BaseException | None = None, *, message: str = 
     if "database is locked" in combined or "sqlite" in combined:
         return "Disconnected"
     if message:
-        # Jangan hasilkan "Unknown" agar kolom Account Status tidak terisi nilai ambigu.
+        # Avoid "Unknown" in Account Status column.
         return _map_script_status(message) or "Disconnected"
     return "Expired"
 
@@ -301,10 +341,10 @@ def queue_status(
     session_friday: str = "",
 ) -> None:
     """
-    Antrian untuk push ke Sheet.
-    session_user  → kolom Account Status (Active/Banned/Frozen/…)
-    session_friday → kolom Session Friday (session bot FRIDAY_BO saja)
-    `status` = fallback untuk session_user jika session_user kosong.
+    Queue entry for Sheet push.
+    session_user  → Account Status column (Active/Banned/Frozen/…)
+    session_friday → Session Friday column (FRIDAY_BO bot session only)
+    `status` = fallback for session_user when session_user is empty.
     """
     path = status_queue_path(root)
     su = _map_script_status(session_user or status)
@@ -360,7 +400,7 @@ def push_status_instant(
     session_user: str,
     session_friday: str = "",
 ) -> bool:
-    """Update satu baris di tab Telegram Acc (by Phone Number)."""
+    """Update one row in Telegram Acc tab (by phone number)."""
     if not _sheet_id() or not use_telegram_acc_format():
         return False
     np = norm_phone(phone)
@@ -392,7 +432,7 @@ def _load_gspread():
     except ImportError as e:
         raise RuntimeError(
             "Install: pip install gspread google-auth\n"
-            "Lalu share Google Sheet ke email service account (Editor)."
+            "Then share the Google Sheet with the service account email (Editor)."
         ) from e
     return gspread, Credentials
 
@@ -404,11 +444,146 @@ def open_workbook(root: Path):
         raise FileNotFoundError(f"Credentials not found: {cred_path}")
     sid = _sheet_id()
     if not sid:
-        raise ValueError("Set GOOGLE_SHEET_ID in .env (ID dari URL Google Sheet).")
+        raise ValueError("Set GOOGLE_SHEET_ID in .env (ID from the Google Sheet URL).")
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
     creds = Credentials.from_service_account_file(str(cred_path), scopes=scopes)
     gc = gspread.authorize(creds)
     return gc.open_by_key(sid)
+
+
+def _extract_login_code(raw: str) -> str:
+    """Telegram login codes are numeric (usually 5 digits)."""
+    digits = re.sub(r"\D", "", str(raw or ""))
+    if 5 <= len(digits) <= 8:
+        return digits
+    if 4 <= len(digits) <= 9:
+        return digits
+    return ""
+
+
+def fetch_phones_by_sheet_status(root: Path, *status_values: str) -> set[str]:
+    """
+    Phone numbers where column I (Status) matches (default: Pending).
+    Empty status_values → use Pending from env / default.
+    """
+    if not _sheet_id() or not use_telegram_acc_format():
+        return set()
+    targets = {_normalize_sheet_status_value(s) for s in status_values if str(s).strip()}
+    if not targets:
+        raw_trigger = os.environ.get("TELEGRAM_SHEET_LOGIN_TRIGGER_STATUS", "Pending").strip()
+        targets = {_normalize_sheet_status_value(raw_trigger)}
+    try:
+        wb = open_workbook(root)
+        headers, lines = _read_tab_raw(wb, _tab_telegram())
+        if not headers:
+            return set()
+        out: set[str] = set()
+        for line in lines:
+            if not any(str(c).strip() for c in line):
+                continue
+            row = _row_dict(headers, line)
+            st = _normalize_sheet_status_value(row.get("status", ""))
+            if st not in targets:
+                continue
+            phone = norm_phone(row.get("phone", ""))
+            if phone:
+                out.add(phone)
+        return out
+    except Exception:
+        return set()
+
+
+def fetch_passwords_by_phone(root: Path) -> dict[str, str]:
+    """
+    Read tab Telegram Acc: phone -> 2FA (header: 2FA / Password / Cloud Password).
+    Does not mutate JSON.
+    """
+    if not _sheet_id() or not use_telegram_acc_format():
+        return {}
+    try:
+        wb = open_workbook(root)
+        headers, lines = _read_tab_raw(wb, _tab_telegram())
+        if not headers:
+            return {}
+        out: dict[str, str] = {}
+        for line in lines:
+            if not any(str(c).strip() for c in line):
+                continue
+            row = _row_dict(headers, line)
+            phone = norm_phone(row.get("phone", ""))
+            pw = str(row.get("password") or "").strip()
+            if phone and pw:
+                out[phone] = pw
+        return out
+    except Exception:
+        return {}
+
+
+def fetch_login_codes_by_phone(root: Path) -> dict[str, str]:
+    """
+    Read tab Telegram Acc: phone -> OTP (header: OTP / Login Code).
+    Does not mutate JSON.
+    """
+    if not _sheet_id() or not use_telegram_acc_format():
+        return {}
+    try:
+        wb = open_workbook(root)
+        headers, lines = _read_tab_raw(wb, _tab_telegram())
+        if not headers:
+            return {}
+        out: dict[str, str] = {}
+        for line in lines:
+            if not any(str(c).strip() for c in line):
+                continue
+            row = _row_dict(headers, line)
+            phone = norm_phone(row.get("phone", ""))
+            code = _extract_login_code(row.get("login_code", ""))
+            if phone and code:
+                out[phone] = code
+        return out
+    except Exception:
+        return {}
+
+
+def _update_sheet_cell_by_phone(
+    root: Path,
+    phone: str,
+    column_key: str,
+    value: str,
+) -> bool:
+    """Update satu sel di tab Telegram Acc (by phone). column_key = alias canonical (_HEADER_ALIASES)."""
+    np = norm_phone(phone)
+    if not np or not _sheet_id() or not use_telegram_acc_format():
+        return False
+    try:
+        wb = open_workbook(root)
+        headers, lines = _read_tab_raw(wb, _tab_telegram())
+        col = _col_index(headers, column_key)
+        phone_col = _col_index(headers, "phone")
+        if col is None or phone_col is None:
+            return False
+        ws = wb.worksheet(_tab_telegram())
+        for r_idx, line in enumerate(lines, start=2):
+            if phone_col >= len(line):
+                continue
+            if norm_phone(str(line[phone_col])) != np:
+                continue
+            cell = f"{_col_to_a1(col + 1)}{r_idx}"
+            _batch_update_with_retry(ws, [{"range": cell, "values": [[value]]}])
+            return True
+    except Exception:
+        return False
+    return False
+
+
+def update_sheet_status_column(root: Path, phone: str, status_value: str) -> bool:
+    """Update column I (Status): Pending -> Feeding after successful login."""
+    return _update_sheet_cell_by_phone(root, phone, "status", status_value)
+
+
+def clear_login_code_in_sheet(root: Path, phone: str) -> bool:
+    """Clear OTP column after successful login."""
+    return _update_sheet_cell_by_phone(root, phone, "login_code", "")
 
 
 def _read_tab_raw(wb, tab_name: str) -> tuple[list[str], list[list[str]]]:
@@ -595,6 +770,8 @@ def _telegram_row_to_shooter(row: dict[str, str], raw: dict[str, Any], existing:
         out["user_name"] = str(matched.get("user_name") or "").strip()
     if acc_name:
         out["profile_hint"] = acc_name
+    if row.get("password"):
+        out["password"] = row["password"]
     if row.get("device_id"):
         out["remark"] = str(row.get("device_id") or "")
     return out
@@ -805,8 +982,8 @@ def collect_status_by_phone(
     """
     phone → {session_user, session_friday, …}
 
-    Account Status = status akun (Active / Banned / Frozen / Expired / …)
-    Session Friday = session bot FRIDAY_BO saja (Active / Disconnected / Pending Login)
+    Account Status = account state (Active / Banned / Frozen / Expired / …)
+    Session Friday = FRIDAY_BO bot session only (Active / Disconnected / Pending Login)
     """
     out: dict[str, dict[str, str]] = {}
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
@@ -815,10 +992,9 @@ def collect_status_by_phone(
         phone = norm_phone(str(acc.get("phone") or ""))
         if not phone:
             return
-        # Friday = apakah file session bot ada (belum tentu akun owner aktif).
+        # Friday = whether the bot session file exists (owner account may still be inactive).
         friday = _session_status(Path(acc["session"]))
-        # Account Status harus datang dari deteksi nyata (event/health),
-        # jadi di baseline tidak dipaksa Active.
+        # Account Status comes from real detection (event/health), not forced Active in baseline.
         out[phone] = {
             "session_user": "",
             "session_friday": friday,
@@ -923,7 +1099,7 @@ def collect_status_from_queue(
 
 
 def _trim_status_queue(root: Path, phones: set[str]) -> None:
-    """Hapus entri antrian untuk phone yang sudah sukses di-push ke Sheet."""
+    """Remove queue entries for phones successfully pushed to Sheet."""
     if not phones:
         return
     qpath = status_queue_path(root)
@@ -957,7 +1133,7 @@ def collect_status_map(
     gcs_accounts: list[dict[str, Any]],
     shooter_accounts: list[dict[str, Any]],
 ) -> dict[tuple[str, str], dict[str, str]]:
-    """Legacy: pool+id → status (untuk tab GCS/Shooter lama)."""
+    """Legacy: pool+id → status (old GCS/Shooter tabs)."""
     out: dict[tuple[str, str], dict[str, str]] = {}
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     for acc in gcs_accounts:
@@ -1073,9 +1249,9 @@ def push_status_delta(
     shooter_accounts: list[dict[str, Any]] | None = None,
 ) -> tuple[int, int]:
     """
-    Push hanya perubahan dari antrian (live-status).
+    Push queue changes only (live-status).
     Returns (updated_rows, queued_phones).
-    Tidak buka Google Sheet jika antrian kosong.
+    Does not open Google Sheet when the queue is empty.
     """
     if gcs_accounts is None or shooter_accounts is None:
         return 0, 0
@@ -1120,7 +1296,7 @@ def _push_telegram_acc(
         if not phone or phone not in by_phone:
             continue
         info = by_phone[phone]
-        # Account Status = laporan script/event/health (jangan dipaksa default Active/Unknown)
+        # Account Status = script/event/health report (do not force default Active/Unknown)
         su_new = str(info.get("session_user", "") or "").strip()
         if su_new.lower() == "unknown":
             su_new = ""

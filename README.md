@@ -1,19 +1,19 @@
 # Telegram BOT OTP
 
-Bot Telegram untuk meneruskan kode login OTP ke chat yang ditentukan.
+Telegram bot that forwards Telegram login OTP codes to configured chats.
 
 ---
 
-## Quick Start (PC Baru)
+## Quick Start (New PC)
 
-### 1. Setup (sekali saja)
+### 1. Setup (once)
 
 ```powershell
 cd "E:\Telegram BOT OTP"
 powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 
-### 2. Salin file sensitif secara manual (jangan lewat Git)
+### 2. Copy sensitive files manually (do not use Git)
 
 ```
 .env
@@ -23,69 +23,90 @@ tg-otp-automation-*.json
 telegram_session\**\*.session
 ```
 
-> `telegram_session/` **tidak** boleh di-sync antar Mac/Windows lewat Git.
+> Do **not** sync `telegram_session/` across Mac/Windows via Git.
 
-### 3. Login akun (jika belum ada `.session`)
+### 3. New account login (production flow)
+
+1. Add a row in Google Sheet (Phone, Group, User, …).
+2. **LIVE-PULL** syncs Sheet → JSON.
+3. Set **column I (Status) = `Pending`** to trigger login.
+4. When SMS arrives, fill **OTP column** (header `OTP`). Put **2FA** in its column if the account uses 2FA.
+5. After success: **J & K = Active**, **I = Feeding**.
+
+Emergency terminal login (optional):
 
 ```powershell
 .\.venv\Scripts\python.exe telegram_otp_allinone.py login-all
 .\.venv\Scripts\python.exe telegram_otp_allinone.py login-all-shooter
 ```
 
-### 4. Jalankan production (4 jendela PowerShell terpisah)
+### 4. Run production (5 separate PowerShell windows)
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\start_production.ps1
 ```
 
-Script ini akan:
-- Stop proses OTP lama (bot/listen/live-pull/live-status) jika masih jalan
-- Buka **4 jendela PowerShell eksternal** (bukan terminal Cursor): BOT, LISTEN, LIVE-PULL, LIVE-STATUS
+This script will:
+- Stop old OTP processes (bot/listen/live-*) if still running
+- Open **5 external PowerShell windows**: BOT, LISTEN, LIVE-PULL, LIVE-LOGIN, LIVE-STATUS
+- Handle new sessions via Sheet column **L (OTP)** — no typing in the terminal
 
 ---
 
-## Perintah Bot di Telegram
+## Google Sheet columns (tab `Telegram Acc`)
 
-| Perintah | Fungsi |
-|----------|--------|
-| `/start` | Mulai bot |
-| `/ping` | Cek bot aktif |
-| `/accounts` | Lihat semua brand |
-| `/login STMY_LINA` | Request kode OTP |
+| Col | Header | Role |
+|-----|--------|------|
+| I | Status | Staff sets **Pending** to trigger LIVE-LOGIN |
+| J | Account Status | Script writes **Active** (or Banned/Frozen) after login |
+| K | Session Friday | Script writes **Active** after login |
+| L | 2FA | Cloud / 2FA password (if the Telegram account has 2FA enabled) |
+| M | OTP | Staff fills SMS code during login |
 
 ---
 
-## Script PowerShell
+## Bot commands (Telegram)
 
-| Script | Fungsi |
-|--------|--------|
-| `setup.ps1` | Setup pertama kali + helper venv (bisa di-dot-source) |
-| `start_production.ps1` | Stop proses lama + start BOT + LISTEN + LIVE-PULL + LIVE-STATUS |
+| Command | Function |
+|---------|----------|
+| `/start` | Register / link staff |
+| `/ping` | Check bot is alive |
+| `/accounts` | List GCS brands |
+| `/login STMY_LINA` | Request OTP for an account |
 
-## Sync manual (jendela PowerShell biasa)
+---
+
+## PowerShell scripts
+
+| Script | Function |
+|--------|----------|
+| `setup.ps1` | First-time setup + venv helpers |
+| `start_production.ps1` | Stop old processes + start all 5 live services |
+
+## Manual sync (any PowerShell window)
 
 ```powershell
 .\.venv\Scripts\python.exe telegram_otp_allinone.py sync
 .\.venv\Scripts\python.exe telegram_otp_allinone.py sync health
 ```
 
-Jangan pakai `sync loop`.
+Do not use `sync loop`.
 
 ---
 
 ## Troubleshooting
 
-| Masalah | Solusi |
-|---------|--------|
-| `409 Conflict` | Jangan start bot 2x; tutup jendela BOT lama; jalankan `start_production.ps1` sekali |
-| `AuthKeyDuplicatedError` | Session dipakai di 2 mesin; login ulang; `listen` hanya di 1 PC |
-| OTP tidak muncul | Pastikan jendela LISTEN jalan & sudah `/login` |
-| `database is locked` | Tutup LISTEN, lalu `login-all` |
+| Issue | Fix |
+|-------|-----|
+| `409 Conflict` | Do not start the bot twice; close old BOT window; run `start_production.ps1` once |
+| `AuthKeyDuplicatedError` | Session used on 2 machines; re-login; run `listen` on one PC only |
+| OTP not delivered | Ensure LISTEN window is running and staff used `/login` |
+| `database is locked` | Stop LISTEN, then retry login |
 
 ---
 
-## Keamanan Git
+## Git safety
 
-Jangan commit: `.env`, `telegram_session/`, `tg-otp-automation-*.json`, `*.lock`, `state.json`.
+Do not commit: `.env`, `telegram_session/`, `tg-otp-automation-*.json`, `*.lock`, `state.json`.
 
-Variabel opsional: lihat `.env.example`.
+Optional variables: see `.env.example`.

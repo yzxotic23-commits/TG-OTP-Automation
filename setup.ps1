@@ -103,7 +103,7 @@ function Install-ProjectRequirements {
 
 function Stop-OtpProductionProcesses {
     param([string]$ProjectRoot)
-    $pattern = [regex]::Escape($ProjectRoot) + '.*telegram_otp_allinone\.py (bot|listen|sync live-status|sync live)'
+    $pattern = [regex]::Escape($ProjectRoot) + '.*telegram_otp_allinone\.py (bot|listen|sync live-status|sync live-login|sync live)'
     $procs = Get-CimInstance Win32_Process -Filter "Name='python.exe'" -ErrorAction SilentlyContinue |
         Where-Object { $_.CommandLine -match $pattern }
     $rootPids = @()
@@ -229,7 +229,7 @@ if ($MyInvocation.InvocationName -ne '.' -and $PSCommandPath -eq $MyInvocation.M
     Write-Host "     .\.venv\Scripts\python.exe telegram_otp_allinone.py login-all" -ForegroundColor White
     Write-Host "     .\.venv\Scripts\python.exe telegram_otp_allinone.py login-all-shooter" -ForegroundColor White
     Write-Host ""
-    Write-Host '  2. Start production (4 separate PowerShell windows):' -ForegroundColor White
+    Write-Host '  2. Start production (5 separate PowerShell windows):' -ForegroundColor White
     Write-Host "     powershell -ExecutionPolicy Bypass -File .\start_production.ps1" -ForegroundColor White
     Write-Host ""
     Write-Host "  Manual sync (this window, one-off):" -ForegroundColor White

@@ -1,45 +1,58 @@
 ====================================================
-  FRIDAY BOT — COMMAND (SIMPLE)
+  FRIDAY BOT — COMMANDS (SIMPLE)
 ====================================================
 
 PowerShell (Windows):
-  .\setup.ps1              → setup laptop baru (sekali)
-  .\start_production.ps1   → stop lama + buka 4 jendela (BOT+LISTEN+LIVE-PULL+LIVE-STATUS)
+  .\setup.ps1              → one-time setup on a new laptop
+  .\start_production.ps1   → stop old processes + open 5 windows (BOT+LISTEN+LIVE-PULL+LIVE-LOGIN+LIVE-STATUS)
 
-JANGAN commit / sync lewat Git:
+Do NOT commit / sync via Git:
   .env, telegram_session/, tg-otp-automation-*.json, *.lock, state.json
 
-JANGAN start production 2x (penyebab 409 Conflict).
-JANGAN jalankan bot dari terminal Cursor — pakai start_production.ps1.
+Do NOT start production twice (causes 409 Conflict).
+Do NOT run the bot from the Cursor terminal — use start_production.ps1.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  PRODUCTION (4 jendela PowerShell terpisah)
+  PRODUCTION (5 separate PowerShell windows)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   powershell -ExecutionPolicy Bypass -File .\start_production.ps1
 
-  Jendela 1 = BOT
-  Jendela 2 = LISTEN
-  Jendela 3 = LIVE-PULL   (Sheet -> JSON, auto register)
-  Jendela 4 = LIVE-STATUS (queue -> Sheet, delta push)
+  Window 1 = BOT
+  Window 2 = LISTEN
+  Window 3 = LIVE-PULL    (Sheet -> JSON, auto register)
+  Window 4 = LIVE-LOGIN   (Sheet OTP column -> .session)
+  Window 5 = LIVE-STATUS  (queue -> Sheet, delta push)
+
+  Google Sheet columns (tab "Telegram Acc"):
+    I  Status          — set Pending to trigger login
+    J  Account Status  — script writes Active after success
+    K  Session Friday  — script writes Active after success
+    L  OTP             — staff fills SMS code during login
+    M  2FA             — cloud / 2FA password (if Telegram account has 2FA)
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  SYNC MANUAL (sekali jalan, jendela ini)
+  MANUAL SYNC (one-off, in any PowerShell window)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   .\.venv\Scripts\python.exe telegram_otp_allinone.py sync
   .\.venv\Scripts\python.exe telegram_otp_allinone.py sync health
 
-  JANGAN: sync loop
+  Do NOT use: sync loop
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  LOGIN SESSION (jika belum ada .session)
+  NEW SESSION LOGIN (no terminal typing)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  .\.venv\Scripts\python.exe telegram_otp_allinone.py login-all
-  .\.venv\Scripts\python.exe telegram_otp_allinone.py login-all-shooter
+  1) Add row in Google Sheet (Phone, Group, User, …)
+  2) Set column I Status = Pending
+     (LIVE-LOGIN auto-registers JSON if phone not there yet, then login)
+  3) LIVE-PULL also syncs all rows every ~45s (optional backup)
+  4) Wait for SMS → fill OTP column (M); 2FA in column L if needed
+  5) LIVE-LOGIN + LIVE-STATUS update J/K automatically
 
-  Atau via bot: /login <account_id>
+  Emergency manual only: login-all / login-all-shooter
+  Daily OTP for staff: /login <account_id> in the bot

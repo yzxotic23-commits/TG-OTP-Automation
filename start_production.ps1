@@ -1,6 +1,6 @@
 # ============================================================
-# START_PRODUCTION.PS1 - Stop old processes, open 4 PowerShell windows
-# BOT + LISTEN + LIVE-PULL + LIVE-STATUS (not Cursor terminal)
+# START_PRODUCTION.PS1 - Stop old processes, open 5 PowerShell windows
+# BOT + LISTEN + LIVE-PULL + LIVE-LOGIN + LIVE-STATUS (not Cursor terminal)
 # Run: powershell -ExecutionPolicy Bypass -File .\start_production.ps1
 # ============================================================
 $ErrorActionPreference = "Stop"
@@ -81,7 +81,7 @@ if ($sessionCount -eq 0) {
 
 # --- Open 4 external PowerShell windows ---
 Write-Host ""
-Write-Host "[4/4] Opening 4 PowerShell windows (BOT, LISTEN, LIVE-PULL, LIVE-STATUS)..." -ForegroundColor Yellow
+Write-Host "[4/4] Opening 5 PowerShell windows (BOT, LISTEN, LIVE-PULL, LIVE-LOGIN, LIVE-STATUS)..." -ForegroundColor Yellow
 
 $script = Join-Path $root "telegram_otp_allinone.py"
 
@@ -114,19 +114,22 @@ Start-OtpServiceWindow -WindowTitle "OTP - LISTEN" -PythonArgs @("listen")
 Start-Sleep -Seconds 2
 Start-OtpServiceWindow -WindowTitle "OTP - LIVE-PULL" -PythonArgs @("sync", "live")
 Start-Sleep -Seconds 2
+Start-OtpServiceWindow -WindowTitle "OTP - LIVE-LOGIN" -PythonArgs @("sync", "live-login")
+Start-Sleep -Seconds 2
 Start-OtpServiceWindow -WindowTitle "OTP - LIVE-STATUS" -PythonArgs @("sync", "live-status")
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  Production running (4 separate windows)" -ForegroundColor Green
+Write-Host "  Production running (5 separate windows)" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  1 = BOT          (/login, /accounts, /ping)" -ForegroundColor White
 Write-Host "  2 = LISTEN       (OTP + status to Sheet)" -ForegroundColor White
 Write-Host "  3 = LIVE-PULL    (Sheet -> JSON, auto register)" -ForegroundColor White
-Write-Host "  4 = LIVE-STATUS  (queue -> Sheet, delta push)" -ForegroundColor White
+Write-Host "  4 = LIVE-LOGIN   (Sheet OTP column -> .session)" -ForegroundColor White
+Write-Host "  5 = LIVE-STATUS  (queue -> Sheet, delta push)" -ForegroundColor White
 Write-Host ""
 Write-Host "  Close a PowerShell window to stop that service." -ForegroundColor Yellow
-Write-Host "  Do NOT run this script again while all 4 windows are open." -ForegroundColor Red
+Write-Host "  Do NOT run this script again while all 5 windows are open." -ForegroundColor Red
 Write-Host "  Do NOT start the bot from Cursor terminal (avoids 409 Conflict)." -ForegroundColor Red
 Write-Host ""
