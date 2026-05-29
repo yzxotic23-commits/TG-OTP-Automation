@@ -367,7 +367,7 @@ def push_status_instant(
     if not np:
         return False
     su = _map_script_status(session_user)
-    sf = _map_script_status(session_friday) if session_friday else "Pending Login"
+    sf = _map_script_status(session_friday) if session_friday else ""
     by_phone = {np: {"session_user": su, "session_friday": sf}}
     try:
         return _push_telegram_acc(root, by_phone) > 0
@@ -872,6 +872,86 @@ def collect_status_by_phone(
     return out
 
 
+def collect_status_from_queue(
+    root: Path,
+    gcs_accounts: list[dict[str, Any]] | None = None,
+    shooter_accounts: list[dict[str, Any]] | None = None,
+) -> dict[str, dict[str, str]]:
+    """Gabung antrian sheet_status_queue.jsonl — latest per phone, tanpa baseline full scan."""
+    qpath = status_queue_path(root)
+    if not qpath.is_file():
+        return {}
+
+    aid_to_phone: dict[str, str] = {}
+    if gcs_accounts is not None and shooter_accounts is not None:
+        for acc in gcs_accounts + shooter_accounts:
+            phone = norm_phone(str(acc.get("phone") or ""))
+            aid = str(acc.get("id") or "")
+            if phone and aid:
+                aid_to_phone[aid] = phone
+
+    out: dict[str, dict[str, str]] = {}
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+    try:
+        for line in qpath.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            ev = json.loads(line)
+            phone = norm_phone(str(ev.get("phone") or ""))
+            aid = str(ev.get("account_id") or "")
+            pool = str(ev.get("pool") or "")
+            su = _map_script_status(str(ev.get("session_user") or ev.get("status") or ""))
+            sf = _map_script_status(str(ev.get("session_friday") or ""))
+            if not su and not sf:
+                continue
+            key_phone = phone or aid_to_phone.get(aid, "")
+            if not key_phone:
+                continue
+            prev = out.get(key_phone, {})
+            out[key_phone] = {
+                "session_user": su or prev.get("session_user", ""),
+                "session_friday": sf or prev.get("session_friday", ""),
+                "notes": str(ev.get("note") or prev.get("notes") or ""),
+                "at": str(ev.get("at") or now),
+                "account_id": aid or prev.get("account_id", ""),
+                "pool": pool or prev.get("pool", ""),
+            }
+    except (OSError, json.JSONDecodeError):
+        pass
+    return out
+
+
+def _trim_status_queue(root: Path, phones: set[str]) -> None:
+    """Hapus entri antrian untuk phone yang sudah sukses di-push ke Sheet."""
+    if not phones:
+        return
+    qpath = status_queue_path(root)
+    if not qpath.is_file():
+        return
+    kept: list[str] = []
+    try:
+        for line in qpath.read_text(encoding="utf-8").splitlines():
+            raw = line.strip()
+            if not raw:
+                continue
+            try:
+                ev = json.loads(raw)
+            except json.JSONDecodeError:
+                kept.append(raw)
+                continue
+            p = norm_phone(str(ev.get("phone") or ""))
+            if p and p in phones:
+                continue
+            kept.append(raw)
+        if kept:
+            qpath.write_text("\n".join(kept) + "\n", encoding="utf-8")
+        else:
+            qpath.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
 def collect_status_map(
     root: Path,
     gcs_accounts: list[dict[str, Any]],
@@ -944,7 +1024,7 @@ def push_status_to_sheet(
         if gcs_accounts is None or shooter_accounts is None:
             return 0
         by_phone = collect_status_by_phone(root, gcs_accounts, shooter_accounts)
-        return _push_telegram_acc(root, by_phone)
+        return _push_telegram_acc(root, by_phone, delta_only=False)
 
     if not status_map:
         return 0
@@ -986,7 +1066,33 @@ def push_status_to_sheet(
     return updated
 
 
-def _push_telegram_acc(root: Path, by_phone: dict[str, dict[str, str]]) -> int:
+def push_status_delta(
+    root: Path,
+    *,
+    gcs_accounts: list[dict[str, Any]] | None = None,
+    shooter_accounts: list[dict[str, Any]] | None = None,
+) -> tuple[int, int]:
+    """
+    Push hanya perubahan dari antrian (live-status).
+    Returns (updated_rows, queued_phones).
+    Tidak buka Google Sheet jika antrian kosong.
+    """
+    if gcs_accounts is None or shooter_accounts is None:
+        return 0, 0
+    by_phone = collect_status_from_queue(root, gcs_accounts, shooter_accounts)
+    queued = len(by_phone)
+    if not by_phone:
+        return 0, 0
+    updated = _push_telegram_acc(root, by_phone, delta_only=True)
+    return updated, queued
+
+
+def _push_telegram_acc(
+    root: Path,
+    by_phone: dict[str, dict[str, str]],
+    *,
+    delta_only: bool = False,
+) -> int:
     if not by_phone:
         return 0
     wb = open_workbook(root)
@@ -1000,11 +1106,12 @@ def _push_telegram_acc(root: Path, by_phone: dict[str, dict[str, str]]) -> int:
     if phone_col is None:
         return 0
     if su_col is None:
-        print('  ⚠ Kolom "Account Status" tidak ditemukan di Sheet.', file=sys.stderr, flush=True)
+        print('  ⚠ Column "Account Status" not found in Sheet.', file=sys.stderr, flush=True)
         return 0
 
     ws = wb.worksheet(_tab_telegram())
     changed: list[dict[str, Any]] = []
+    updated_phones: set[str] = set()
 
     for r_idx, line in enumerate(lines, start=2):
         if phone_col >= len(line):
@@ -1021,8 +1128,27 @@ def _push_telegram_acc(root: Path, by_phone: dict[str, dict[str, str]]) -> int:
         sf_new = str(info.get("session_friday", "") or "").strip()
         old_su = str(line[su_col]).strip() if su_col < len(line) else ""
         old_sf = str(line[sf_col]).strip() if (sf_col is not None and sf_col < len(line)) else ""
+
+        if delta_only:
+            if not su_new and not sf_new:
+                continue
+            row_changed = False
+            if su_new and su_col is not None and old_su != su_new:
+                changed.append(
+                    {"range": f"{_col_to_a1(su_col + 1)}{r_idx}", "values": [[su_new]]}
+                )
+                row_changed = True
+            if sf_new and sf_col is not None and old_sf != sf_new:
+                changed.append(
+                    {"range": f"{_col_to_a1(sf_col + 1)}{r_idx}", "values": [[sf_new]]}
+                )
+                row_changed = True
+            if row_changed:
+                updated_phones.add(phone)
+            continue
+
         su_val = su_new or old_su
-        sf_val = sf_new or old_sf or "Pending Login"
+        sf_val = sf_new or old_sf
 
         if old_su == su_val and old_sf == sf_val:
             continue
@@ -1033,6 +1159,7 @@ def _push_telegram_acc(root: Path, by_phone: dict[str, dict[str, str]]) -> int:
         right_val = sf_val if end_col == sf_col + 1 else su_val
         rng = f"{_col_to_a1(start_col)}{r_idx}:{_col_to_a1(end_col)}{r_idx}"
         changed.append({"range": rng, "values": [[left_val, right_val]]})
+        updated_phones.add(phone)
 
     if changed:
         batch_size = max(1, int(os.environ.get("GOOGLE_SHEET_BATCH_SIZE", "40").strip() or "40"))
@@ -1043,19 +1170,15 @@ def _push_telegram_acc(root: Path, by_phone: dict[str, dict[str, str]]) -> int:
             if pause_s > 0 and i + batch_size < len(changed):
                 time.sleep(pause_s)
 
-    updated = len(changed)
-    qpath = status_queue_path(root)
-    if updated and qpath.is_file():
-        try:
-            qpath.unlink(missing_ok=True)
-        except OSError:
-            pass
+    updated = len(updated_phones)
+    if updated_phones:
+        _trim_status_queue(root, updated_phones)
     return updated
 
 
 def ensure_sheet_tabs(root: Path) -> None:
     if use_telegram_acc_format():
-        print(f'  Tab "{_tab_telegram()}" sudah ada di Sheet kamu — tidak perlu dibuat ulang.')
+        print(f'  Tab "{_tab_telegram()}" already exists in your Sheet — no need to recreate.')
         return
     wb = open_workbook(root)
     headers_gcs = ["id", "phone", "profile_hint", "api_id", "api_hash", "password", "brand", "enabled", "status", "notes"]

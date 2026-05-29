@@ -163,10 +163,10 @@ def _mutate_json_file(path: Path, writer: Callable[[dict[str, Any]], None]) -> b
             tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             tmp.replace(path)
     except FileLockTimeout:
-        logger.error("Timeout lock file JSON (proses lain memegang?): %s", path)
+        logger.error("JSON file lock timeout (another process holding it?): %s", path)
         return False
     except OSError as e:
-        logger.error("Gagal tulis JSON %s: %s", path, e)
+        logger.error("Failed to write JSON %s: %s", path, e)
         return False
     return True
 
@@ -288,14 +288,14 @@ def load_json(path: Path) -> dict[str, Any]:
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as e:
-        logger.warning("load_json tidak bisa baca %s: %s", path, e)
+        logger.warning("load_json cannot read %s: %s", path, e)
         return {}
     if not text.strip():
         return {}
     try:
         raw = json.loads(text)
     except json.JSONDecodeError as e:
-        logger.error("load_json JSON tidak valid %s: %s", path, e)
+        logger.error("load_json invalid JSON %s: %s", path, e)
         return {}
     return raw if isinstance(raw, dict) else {}
 
@@ -307,17 +307,17 @@ def read_json_for_mutation(path: Path) -> tuple[dict[str, Any], bool]:
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as e:
-        logger.error("Tidak bisa baca %s: %s", path, e)
+        logger.error("Cannot read %s: %s", path, e)
         return {}, False
     if not text.strip():
         return {}, True
     try:
         raw = json.loads(text)
     except json.JSONDecodeError as e:
-        logger.error("JSON rusak, lewati penulisan agar tidak menghapus data: %s: %s", path, e)
+        logger.error("Corrupt JSON, skip write to avoid data loss: %s: %s", path, e)
         return {}, False
     if not isinstance(raw, dict):
-        logger.error("Bukan object JSON di %s, lewati penulisan.", path)
+        logger.error("Not a JSON object in %s, skip write.", path)
         return {}, False
     return raw, True
 
@@ -329,7 +329,7 @@ def write_last_private_chat(path: Path, chat_id: str, account_hint: str) -> None
         data["updated_at"] = datetime.now(timezone.utc).isoformat()
 
     if not _mutate_json_file(path, writer):
-        logger.warning("write_last_private_chat gagal: %s", path)
+        logger.warning("write_last_private_chat failed: %s", path)
 
 
 def read_last_chat_id(path: Path) -> str | None:
@@ -384,7 +384,7 @@ def upsert_account(
             data["default_account"] = account_id
 
     if not _mutate_json_file(path, writer):
-        logger.warning("upsert_account gagal: %s", path)
+        logger.warning("upsert_account failed: %s", path)
 
 
 def _staff_row_should_preserve_label(row: dict[str, Any]) -> bool:
@@ -470,7 +470,7 @@ def sync_staff_telegram_profile(user: Any, staff_id: str) -> None:
             return
 
     if not _mutate_json_file(path, writer):
-        logger.warning("sync_staff_telegram_profile gagal: %s", staff_id)
+        logger.warning("sync_staff_telegram_profile failed: %s", staff_id)
 
 
 def staff_require_allowlist() -> bool:
@@ -640,7 +640,7 @@ def register_private_staff_chat(
         linked = True
 
     if not _mutate_json_file(path, writer):
-        logger.warning("register_private_staff_chat gagal: %s", path)
+        logger.warning("register_private_staff_chat failed: %s", path)
     return resolved_id, linked
 
 
@@ -747,7 +747,7 @@ def ensure_staff_linked(user: Any) -> bool:
 
     path = accounts_json_path()
     if not _mutate_json_file(path, writer):
-        logger.warning("ensure_staff_linked gagal: %s", aid)
+        logger.warning("ensure_staff_linked failed: %s", aid)
         return False
     return True
 
@@ -1437,7 +1437,7 @@ async def _flush_disconnect_alerts(
         items = [(e["acc"], str(e["profile"])) for e in batch]
         msg = build_sessions_disconnected_batch_html(items, accounts_doc)
         send_login_status_message(token, msg, accounts_doc)
-        print(f"  [LISTEN] batch disconnect alert: {len(batch)} akun", flush=True)
+        print(f"  [LISTEN] batch disconnect alert: {len(batch)} account(s)", flush=True)
     else:
         for e in batch:
             acc_info = e["acc"]
@@ -2425,7 +2425,7 @@ def set_login_request(
         data.pop("login_request", None)
 
     if not _mutate_json_file(path, writer):
-        logger.warning("set_login_request gagal: %s", path)
+        logger.warning("set_login_request failed: %s", path)
 
 
 def get_active_login_request(account_id: str) -> dict[str, Any] | None:
@@ -2472,7 +2472,7 @@ def clear_login_request(account_id: str) -> None:
         data.pop("login_request", None)
 
     if not _mutate_json_file(path, writer):
-        logger.warning("clear_login_request gagal: %s", path)
+        logger.warning("clear_login_request failed: %s", path)
 
 
 def account_id_from_user(user) -> str:
@@ -3045,7 +3045,7 @@ def run_bot() -> int:
     logging.getLogger("httpcore").setLevel(logging.WARNING)
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     if not token:
-        print("TELEGRAM_BOT_TOKEN kosong di .env", file=sys.stderr)
+        print("TELEGRAM_BOT_TOKEN is empty in .env", file=sys.stderr)
         return 2
     try:
         asyncio.get_event_loop()
@@ -3056,7 +3056,7 @@ def run_bot() -> int:
     try:
         bot_lock.acquire()
     except FileLockTimeout:
-        logger.error("Bot sudah berjalan di mesin ini. Stop instance lain dulu.")
+        logger.error("Bot is already running on this machine. Stop the other instance first.")
         return 1
 
     app = Application.builder().token(token).build()
@@ -3079,7 +3079,7 @@ def run_bot() -> int:
     )
     app.add_error_handler(bot_on_error)
     try:
-        logger.info("Bot polling berjalan...")
+        logger.info("Bot polling started...")
         app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
         return 0
     finally:
@@ -3092,7 +3092,7 @@ def run_bot() -> int:
 def run_notify(message: str, account: str | None, broadcast: bool) -> int:
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     if not token:
-        print("TELEGRAM_BOT_TOKEN kosong", file=sys.stderr)
+        print("TELEGRAM_BOT_TOKEN is empty", file=sys.stderr)
         return 2
     raw = load_json(accounts_json_path())
     try:
@@ -3654,7 +3654,7 @@ def _run_login_all(accounts: list[dict[str, Any]], json_list_key: str, label: st
                     pass
                 if session_file.is_file():
                     session_file.unlink(missing_ok=True)
-                    print(f"  ↳ Session file dihapus (agar bisa retry nanti)")
+                    print(f"  ↳ Session file removed (retry later)")
                 break
 
         if login_ok and client:
@@ -3674,7 +3674,7 @@ def _run_login_all(accounts: list[dict[str, Any]], json_list_key: str, label: st
                     print(f"  ✓ Session saved: {sf.name} ({sf.stat().st_size} bytes)")
                     results_ok.append(acc_id)
                 else:
-                    print(f"  ✗ Session file invalid setelah login!", file=sys.stderr)
+                    print(f"  ✗ Session file invalid after login!", file=sys.stderr)
                     results_fail.append(acc_id)
             else:
                 print(f"  ✗ Login appeared successful but get_me() failed — session removed.", file=sys.stderr)
@@ -3791,7 +3791,7 @@ async def _listen_start_account(
         if not code:
             return
         if is_recent_otp_duplicate(str(_acc["id"]), code):
-            logger.info("[%s] %s OTP duplikat, lewati.", _tag, _acc["id"])
+            logger.info("[%s] %s duplicate OTP, skipped.", _tag, _acc["id"])
             return
         req = get_active_login_request(str(_acc["id"]))
         if require_req and not req:
@@ -3973,13 +3973,150 @@ async def _listen_start_account(
     clients.append((client, acc))
 
 
+def _listen_hot_reload_enabled() -> bool:
+    return os.environ.get("TELEGRAM_LISTEN_HOT_RELOAD", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def _listen_hot_reload_interval_sec() -> int:
+    return _env_int("TELEGRAM_LISTEN_RELOAD_INTERVAL_SEC", 45, minimum=15)
+
+
+async def _listen_hot_reload_loop(
+    *,
+    root: Path,
+    default_peers: list[int],
+    listen_shooter: bool,
+    listen_kw: dict[str, Any],
+) -> None:
+    """Deteksi akun baru dari JSON (hasil sync live) tanpa restart listen."""
+    interval = _listen_hot_reload_interval_sec()
+    print(
+        f"  Hot-reload: check for new accounts every {interval}s (TELEGRAM_LISTEN_HOT_RELOAD=0 to disable)",
+        flush=True,
+    )
+    while True:
+        await asyncio.sleep(interval)
+        clients: list[tuple[TelegramClient, dict[str, Any]]] = listen_kw["clients"]
+        active_ids = {str(acc.get("id") or "") for _, acc in clients}
+
+        try:
+            accounts_doc = load_json(accounts_json_path())
+            brands_cfg = load_brands_config(accounts_doc)
+            listen_kw["accounts_doc"] = accounts_doc
+            listen_kw["brands_cfg"] = brands_cfg
+            gcs_accounts = load_otp_accounts(accounts_doc, root, default_peers)
+            shooter_accounts: list[dict[str, Any]] = []
+            if listen_shooter:
+                shooter_doc = load_shooter_doc()
+                shooter_accounts = load_shooter_login_accounts(shooter_doc, root, default_peers)
+        except Exception as e:
+            print(f"  [Hot-reload] failed to read JSON: {e}", flush=True)
+            continue
+
+        candidates: list[tuple[str, dict[str, Any]]] = [
+            ("GCS", acc) for acc in gcs_accounts
+        ] + [("SHOOTER", acc) for acc in shooter_accounts]
+        new_started = 0
+        for tag, acc in candidates:
+            acc_id = str(acc.get("id") or "")
+            if not acc_id or acc_id in active_ids:
+                continue
+            if not _session_file_ready(acc):
+                continue
+            n_before = len(clients)
+            hr_skipped: list[str] = []
+            hr_expired: list[str] = []
+            hr_active: list[str] = []
+            hr_sync: list[str] = []
+            await _listen_start_account(
+                acc,
+                tag=tag,
+                skipped=hr_skipped,
+                expired=hr_expired,
+                active=hr_active,
+                profile_synced=hr_sync,
+                **listen_kw,
+            )
+            if len(clients) > n_before:
+                cl, acc_info = clients[-1]
+                asyncio.create_task(_watch_client_loop(cl, acc_info, listen_kw))
+                active_ids.add(acc_id)
+                new_started += 1
+                print(f"  [Hot-reload] +{acc_id} ({tag}) added to listener", flush=True)
+
+        if new_started:
+            print(f"  [Hot-reload] {new_started} new account(s) active (total {len(clients)})", flush=True)
+
+
+async def _watch_client_loop(
+    cl: TelegramClient,
+    acc_info: dict[str, Any],
+    listen_kw: dict[str, Any],
+) -> None:
+    """Monitor disconnect/reconnect untuk satu client listener."""
+    accounts_doc = listen_kw["accounts_doc"]
+    token = listen_kw["token"]
+    acc_id = str(acc_info.get("id", "?"))
+    profile = str(acc_info.get("detected_profile") or acc_info.get("profile_hint") or acc_id)
+    pool_name = "shooter" if account_pool(acc_info) == "shooter" else "gcs"
+    tag = "SHOOTER" if pool_name == "shooter" else "GCS"
+    grace, reconnect_attempts, reconnect_delay, alert_cooldown, batch_min = _disconnect_watch_config()
+    suppress_alerts = os.environ.get("TELEGRAM_DISCONNECT_ALERT", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+    while True:
+        try:
+            await cl.run_until_disconnected()
+        except Exception:
+            pass
+
+        print(f"  [{tag}] {acc_id} — connection lost, reconnecting...", flush=True)
+
+        if grace > 0:
+            await asyncio.sleep(grace)
+
+        if await _try_reconnect_listener_client(
+            cl, reconnect_attempts, reconnect_delay, tag, acc_id
+        ):
+            print(f"  [{tag}] ✓ {acc_id} — back online", flush=True)
+            continue
+
+        print(f"⚠ [{tag}] DISCONNECTED: {acc_id} ({profile})", flush=True)
+
+        if not suppress_alerts:
+            now = time.time()
+            last = _disconnect_last_alert.get(acc_id, 0.0)
+            if now - last >= alert_cooldown:
+                _disconnect_last_alert[acc_id] = now
+                await _enqueue_disconnect_alert(
+                    acc_info, profile, tag, token, accounts_doc, pool_name
+                )
+            else:
+                left = int(alert_cooldown - (now - last))
+                print(
+                    f"  [{tag}] {acc_id} — alert skipped (cooldown {left}s)",
+                    flush=True,
+                )
+
+        await asyncio.sleep(reconnect_delay)
+
+
 async def run_listener_async() -> int:
     root = project_root()
     accounts_doc = load_json(accounts_json_path())
     brands_cfg = load_brands_config(accounts_doc)
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     if not token:
-        print("TELEGRAM_BOT_TOKEN kosong", file=sys.stderr)
+        print("TELEGRAM_BOT_TOKEN is empty", file=sys.stderr)
         return 2
     default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
     gcs_accounts = load_otp_accounts(accounts_doc, root, default_peers)
@@ -4120,7 +4257,7 @@ async def run_listener_async() -> int:
         send_login_status_message(token, summary_msg, accounts_doc)
 
     if not clients:
-        print("ERROR: Tidak ada listener yang berhasil start.", file=sys.stderr)
+        print("ERROR: No listener started successfully.", file=sys.stderr)
         return 2
 
     global _disconnect_batch_lock, _disconnect_batch_flush_task
@@ -4128,62 +4265,31 @@ async def run_listener_async() -> int:
     _disconnect_batch_flush_task = None
     _disconnect_batch_queue.clear()
     grace, reconnect_attempts, reconnect_delay, alert_cooldown, batch_min = _disconnect_watch_config()
-    suppress_alerts = os.environ.get("TELEGRAM_DISCONNECT_ALERT", "1").strip().lower() in (
-        "0",
-        "false",
-        "no",
-        "off",
-    )
     print(
         f"  Disconnect policy: grace {grace}s · reconnect {reconnect_attempts}x/"
         f"{reconnect_delay}s · alert cooldown {alert_cooldown}s · batch ≥{batch_min}",
         flush=True,
     )
 
-    # --- Wrap setiap client: tunggu grace + reconnect sebelum kirim alert Telegram ---
-    async def _watch_client(cl: TelegramClient, acc_info: dict[str, Any]) -> None:
-        acc_id = str(acc_info.get("id", "?"))
-        profile = str(acc_info.get("detected_profile") or acc_info.get("profile_hint") or acc_id)
-        pool_name = "shooter" if account_pool(acc_info) == "shooter" else "gcs"
-        tag = "SHOOTER" if pool_name == "shooter" else "GCS"
+    tasks: list[asyncio.Task[None]] = [
+        asyncio.create_task(_watch_client_loop(cl, acc_info, listen_kw))
+        for cl, acc_info in clients
+    ]
+    if _listen_hot_reload_enabled():
+        tasks.append(
+            asyncio.create_task(
+                _listen_hot_reload_loop(
+                    root=root,
+                    default_peers=default_peers,
+                    listen_shooter=listen_shooter,
+                    listen_kw=listen_kw,
+                )
+            )
+        )
+    else:
+        print("  Hot-reload: OFF (set TELEGRAM_LISTEN_HOT_RELOAD=1 for auto new accounts)", flush=True)
 
-        while True:
-            try:
-                await cl.run_until_disconnected()
-            except Exception:
-                pass
-
-            print(f"  [{tag}] {acc_id} — koneksi putus, coba reconnect...", flush=True)
-
-            if grace > 0:
-                await asyncio.sleep(grace)
-
-            if await _try_reconnect_listener_client(
-                cl, reconnect_attempts, reconnect_delay, tag, acc_id
-            ):
-                print(f"  [{tag}] ✓ {acc_id} — kembali online", flush=True)
-                continue
-
-            print(f"⚠ [{tag}] DISCONNECTED: {acc_id} ({profile})", flush=True)
-
-            if not suppress_alerts:
-                now = time.time()
-                last = _disconnect_last_alert.get(acc_id, 0.0)
-                if now - last >= alert_cooldown:
-                    _disconnect_last_alert[acc_id] = now
-                    await _enqueue_disconnect_alert(
-                        acc_info, profile, tag, token, accounts_doc, pool_name
-                    )
-                else:
-                    left = int(alert_cooldown - (now - last))
-                    print(
-                        f"  [{tag}] {acc_id} — notifikasi diskip (cooldown {left}s)",
-                        flush=True,
-                    )
-
-            await asyncio.sleep(reconnect_delay)
-
-    await asyncio.gather(*(_watch_client(cl, acc_info) for cl, acc_info in clients))
+    await asyncio.gather(*tasks)
     return 0
 
 
@@ -4337,10 +4443,10 @@ def run_health_check(pool: str = "all", target_id: str = "all") -> int:
     sh_list = [a for a in accounts if account_pool(a) == "shooter"]
 
     if not gcs_list and not sh_list:
-        print(f"Tidak ada akun untuk health-check (pool={pool}, id={target_id}).", file=sys.stderr)
+        print(f"No accounts for health-check (pool={pool}, id={target_id}).", file=sys.stderr)
         return 2
 
-    print("\n-- Health-check (temp copy, listen boleh jalan) --")
+    print("\n-- Health-check (temp copy, listen may keep running) --")
 
     total_gcs: dict[str, int] = {}
     total_sh: dict[str, int] = {}
@@ -4392,12 +4498,12 @@ def _run_sync_pull_after_login(root: Path) -> int:
     """Setelah login sukses: merge lagi dari Sheet + profile_hint dari Telegram."""
     return _run_sync_pull(
         root,
-        label="Import ulang Sheet → JSON (setelah login sukses)",
+        label="Re-import Sheet → JSON (after successful login)",
     )
 
 
 def _run_sync_push(root: Path, *, verbose: bool = True) -> tuple[int, int]:
-    """Tulis Account Status & Session Friday ke Google Sheet."""
+    """Tulis Account Status & Session Friday ke Google Sheet (full baseline + queue)."""
     import sheets_sync
 
     try:
@@ -4413,6 +4519,34 @@ def _run_sync_push(root: Path, *, verbose: bool = True) -> tuple[int, int]:
     except Exception as e:
         print(f"✗ Push failed: {e}", file=sys.stderr)
         return 1, 0
+
+
+def _run_sync_push_delta(root: Path, *, verbose: bool = True) -> tuple[int, int, int]:
+    """Push delta dari antrian saja — tanpa full scan baseline (hemat API)."""
+    import sheets_sync
+
+    try:
+        qpath = sheets_sync.status_queue_path(root)
+        if not qpath.is_file() or not qpath.read_text(encoding="utf-8").strip():
+            return 0, 0, 0
+
+        default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
+        raw_gcs = load_json(accounts_json_path())
+        raw_sh = load_shooter_doc()
+        gcs = load_otp_accounts(raw_gcs, root, default_peers)
+        sh = load_shooter_login_accounts(raw_sh, root, default_peers)
+        updated, queued = sheets_sync.push_status_delta(
+            root, gcs_accounts=gcs, shooter_accounts=sh
+        )
+        if verbose:
+            if queued:
+                print(f"  ✓ {updated}/{queued} row(s) updated from queue")
+            else:
+                print("  · queue empty, skip API")
+        return 0, updated, queued
+    except Exception as e:
+        print(f"✗ Push delta failed: {e}", file=sys.stderr)
+        return 1, 0, 0
 
 
 def run_sync_once(
@@ -4454,12 +4588,12 @@ def run_sync_once(
 
     if step in ("all", "login"):
         login_hdr = "2/4 Login" if step == "all" else "Login"
-        print(f"\n── {login_hdr}: akun baru saja (yang belum punya .session) ──")
-        print("  (Akun yang sudah login di-skip otomatis.)\n")
+        print(f"\n── {login_hdr}: new accounts only (no .session yet) ──")
+        print("  (Already logged-in accounts are skipped automatically.)\n")
         rc_gcs = run_login_all()
         rc_sh = run_login_all_shooter()
         if rc_gcs != 0 or rc_sh != 0:
-            print("⚠ Beberapa login gagal — cek output di atas.", file=sys.stderr)
+            print("⚠ Some logins failed — check output above.", file=sys.stderr)
         if _run_sync_pull_after_login(root) != 0:
             return 1
 
@@ -4468,10 +4602,10 @@ def run_sync_once(
     )
     if step in ("all", "health") and health_on:
         if step == "all":
-            print("\n── 3/4 Health-check: deteksi Active / Banned / Frozen ──")
+            print("\n── 3/4 Health-check: detect Active / Banned / Frozen ──")
         run_health_check(pool, account_id)
     elif step == "health":
-        print("Health-check dimatikan (TELEGRAM_SYNC_HEALTH_CHECK=0).", file=sys.stderr)
+        print("Health-check disabled (TELEGRAM_SYNC_HEALTH_CHECK=0).", file=sys.stderr)
         if step == "health":
             return 0
 
@@ -4480,7 +4614,7 @@ def run_sync_once(
         if step == "all":
             print("\n── 4/4 Push: status → Google Sheet ──")
         elif step == "health":
-            print("\n── Push otomatis → Google Sheet ──")
+            print("\n── Auto push → Google Sheet ──")
         else:
             print("\n── Push: status → Google Sheet ──")
         rc_push, _updated_rows = _run_sync_push(root)
@@ -4489,11 +4623,11 @@ def run_sync_once(
 
     if step == "all":
         print(
-            "\n✓ Sync selesai (pull + login + health + push). "
-            "Restart `listen` sekali jika ada akun baru."
+            "\n✓ Sync complete (pull + login + health + push). "
+            "Restart `listen` once if new accounts were added."
         )
     elif step == "health":
-        print("\n✓ Health-check + push ke Sheet selesai.")
+        print("\n✓ Health-check + push to Sheet complete.")
     return 0
 
 
@@ -4511,13 +4645,13 @@ def run_sync_default(
     Google Sheet status hanya di-update saat listen deteksi masalah (instant push).
     """
     root = project_root()
-    print("\n── Sync: import Sheet → login baru → import ulang ──")
-    print("  (Tidak ada health/push massal — hindari limit API & overwrite Sheet.)\n")
+    print("\n── Sync: import Sheet → login new → re-import ──")
+    print("  (No bulk health/push — avoids API limits & overwriting Sheet.)\n")
     rc = 0
     if _run_sync_pull(root, label="1/3 Import Sheet → JSON") != 0:
         rc = 1
-    print("\n── 2/3 Login: akun baru (belum punya .session) ──")
-    print("  (Akun yang sudah login di-skip otomatis.)\n")
+    print("\n── 2/3 Login: new accounts (no .session yet) ──")
+    print("  (Already logged-in accounts are skipped automatically.)\n")
     if run_login_all() != 0:
         rc = 1
     if run_login_all_shooter() != 0:
@@ -4525,12 +4659,12 @@ def run_sync_default(
     if _run_sync_pull_after_login(root) != 0:
         rc = 1
     print(
-        "\n✓ Selesai.\n"
-        "  · Akun baru dari Sheet sudah di JSON (sebelum & sesudah login).\n"
-        "  · Profile hint dari Telegram ikut tersimpan setelah login sukses.\n"
-        "  · Sheet kolom Account Status / Session Friday hanya berubah saat listen deteksi masalah.\n"
-        "  Audit manual: python telegram_otp_allinone.py sync health\n"
-        "  Restart `listen` jika ada akun baru."
+        "\n✓ Done.\n"
+        "  · New Sheet accounts are in JSON (before & after login).\n"
+        "  · Profile hints from Telegram are saved after successful login.\n"
+        "  · Sheet Account Status / Session Friday change only when listen detects issues.\n"
+        "  Manual audit: python telegram_otp_allinone.py sync health\n"
+        "  Listen hot-reload adds new accounts automatically (TELEGRAM_LISTEN_HOT_RELOAD=1)."
     )
     return rc
 
@@ -4546,9 +4680,9 @@ def run_sync_daemon(
   """
     interval = _env_int("TELEGRAM_SYNC_INTERVAL_SEC", 600, minimum=60)
     print("=" * 50)
-    print("  SYNC LOOP — opsional (Ctrl+C untuk stop)")
-    print(f"  ⚠ Setiap {interval}s: pull + login + health + push (bisa overwrite Sheet)")
-    print("  Disarankan: matikan loop, pakai listen + instant push saja.")
+    print("  SYNC LOOP — optional (Ctrl+C to stop)")
+    print(f"  ⚠ Every {interval}s: pull + login + health + push (may overwrite Sheet)")
+    print("  Recommended: disable loop; use listen + instant push instead.")
     print("=" * 50)
 
     cycle = 0
@@ -4566,11 +4700,11 @@ def run_sync_daemon(
                 keep_device=keep_device,
             )
             if rc != 0:
-                print(f"⚠ Cycle #{cycle} selesai dengan error (rc={rc}).", file=sys.stderr)
-            print(f"\n⏳ Idle {interval}s — sync berikutnya otomatis (Ctrl+C stop)...", flush=True)
+                print(f"⚠ Cycle #{cycle} finished with error (rc={rc}).", file=sys.stderr)
+            print(f"\n⏳ Idle {interval}s — next sync automatically (Ctrl+C to stop)...", flush=True)
             time.sleep(interval)
     except KeyboardInterrupt:
-        print(f"\n\n✓ Sync daemon dihentikan setelah {cycle} cycle(s).")
+        print(f"\n\n✓ Sync daemon stopped after {cycle} cycle(s).")
         return 0
 
 
@@ -4583,7 +4717,7 @@ def run_sync_live_pull() -> int:
     interval = _env_int("TELEGRAM_SYNC_PULL_INTERVAL_SEC", 45, minimum=10)
     print("=" * 52)
     print("  LIVE PULL — Sheet -> JSON (auto register)")
-    print(f"  Interval: {interval}s (Ctrl+C untuk stop)")
+    print(f"  Interval: {interval}s (Ctrl+C to stop)")
     print("  Group Main -> GCS | Other -> Shooter | dedup by phone")
     print("=" * 52)
 
@@ -4595,11 +4729,11 @@ def run_sync_live_pull() -> int:
             print(f"\n[Live Pull #{cycle}] {ts}")
             rc = _run_sync_pull(root, label="Live Pull: Google Sheet → JSON")
             if rc != 0:
-                print(f"⚠ Live pull gagal (rc={rc}), retry {interval}s lagi.", file=sys.stderr)
-            print(f"⏳ Tunggu {interval}s...", flush=True)
+                print(f"⚠ Live pull failed (rc={rc}), retrying in {interval}s.", file=sys.stderr)
+            print(f"⏳ Waiting {interval}s...", flush=True)
             time.sleep(interval)
     except KeyboardInterrupt:
-        print(f"\n\n✓ Live pull dihentikan setelah {cycle} cycle(s).")
+        print(f"\n\n✓ Live pull stopped after {cycle} cycle(s).")
         return 0
 
 
@@ -4613,29 +4747,35 @@ def run_sync_live_status(
     Tidak menjalankan health-check full scan agar terminal tetap rapi.
     """
     if pool != "all" or account_id != "all":
-        print("⚠ live-status mengabaikan --pool/--id; mode ini push delta global.", file=sys.stderr)
+        print("⚠ live-status ignores --pool/--id; this mode pushes global delta.", file=sys.stderr)
 
     interval = _env_int("TELEGRAM_SYNC_STATUS_INTERVAL_SEC", 120, minimum=30)
     print("=" * 56)
     print("  LIVE STATUS (DELTA) — queue -> Google Sheet")
-    print(f"  Interval: {interval}s (Ctrl+C untuk stop)")
-    print("  Tanpa health-check full scan. Hanya update perubahan terbaru.")
+    print(f"  Interval: {interval}s (Ctrl+C to stop)")
+    print("  No health-check / full scan. Queue changes only.")
+    print("  Empty Account Status is normal (filled when listen detects issues).")
     print("=" * 56)
 
     cycle = 0
     try:
         while True:
             cycle += 1
-            rc_push, updated_rows = _run_sync_push(project_root(), verbose=False)
+            rc_push, updated_rows, queued = _run_sync_push_delta(project_root(), verbose=False)
             if rc_push != 0:
-                print(f"⚠ Push status gagal (rc={rc_push}), retry {interval}s lagi.", file=sys.stderr)
-            elif updated_rows > 0:
+                print(f"⚠ Push status failed (rc={rc_push}), retrying in {interval}s.", file=sys.stderr)
+            elif queued > 0:
                 ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-                print(f"[Live Status #{cycle}] {ts} -> {updated_rows} row(s) updated")
-            print(f"⏳ Tunggu {interval}s...", flush=True)
+                if updated_rows > 0:
+                    print(f"[Live Status #{cycle}] {ts} -> {updated_rows}/{queued} row(s) updated")
+                else:
+                    print(
+                        f"[Live Status #{cycle}] {ts} -> queue {queued}, skip (already matches Sheet)"
+                    )
+            print(f"⏳ Waiting {interval}s...", flush=True)
             time.sleep(interval)
     except KeyboardInterrupt:
-        print(f"\n\n✓ Live status dihentikan setelah {cycle} cycle(s).")
+        print(f"\n\n✓ Live status stopped after {cycle} cycle(s).")
         return 0
 
 
@@ -4668,42 +4808,42 @@ def run_sync(
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
         description="Telegram OTP all-in-one.",
-        epilog="Tip: pakai `sync` untuk Sheet + login baru + status. Lihat COMMANDS.txt.",
+        epilog="Tip: use `sync` for Sheet + new logins + status. See COMMANDS.txt.",
     )
     sub = ap.add_subparsers(dest="command", required=True)
 
     p_sync = sub.add_parser(
         "sync",
-        help="Smart hub: Sheet↔JSON, login akun baru, push status, kelola session.",
+        help="Smart hub: Sheet↔JSON, login new accounts, push status, manage sessions.",
     )
     p_sync.add_argument(
         "step",
         nargs="?",
         default=None,
         choices=["once", "all", "loop", "live", "live-status", "pull", "login", "health", "push", "sessions", "init"],
-        help="(kosong)=pull+login. live=Sheet→JSON. live-status=push delta status (tanpa full scan).",
+        help="(default)=pull+login. live=Sheet→JSON. live-status=push delta status (no full scan).",
     )
     p_sync.add_argument("--pool", choices=["gcs", "shooter", "all"], default="all")
-    p_sync.add_argument("--id", dest="account_id", default="all", help="Untuk sessions: id/brand partial.")
+    p_sync.add_argument("--id", dest="account_id", default="all", help="For sessions: id/brand partial.")
     p_sync.add_argument(
         "--kill",
         dest="session_kill",
         default=None,
         metavar="REF",
-        help="Terminate session: nomor index, hash, atau 'others' (keep FRIDAY_BO).",
+        help="Terminate session: index number, hash, or 'others' (keep FRIDAY_BO).",
     )
     p_sync.add_argument("--keep-device", dest="keep_device", default="FRIDAY_BO")
 
-    sub.add_parser("bot", help="Jalankan bot polling (/start, /ping).")
+    sub.add_parser("bot", help="Run bot polling (/start, /ping).")
     sub.add_parser("login-all", help="Bootstrap login for all otp_accounts (GCS).")
-    sub.add_parser("login-all-shooter", help="Login shooter_accounts + sync profile_hint dari Telegram.")
+    sub.add_parser("login-all-shooter", help="Login shooter_accounts + sync profile_hint from Telegram.")
     sub.add_parser(
         "listen",
         help="OTP listener for GCS + Shooter (separate logs; shooter MYR topic only).",
     )
     p_notify = sub.add_parser("notify", help="Send a manual message via bot.")
-    p_notify.add_argument("message", help="Teks pesan")
-    p_notify.add_argument("-a", "--account", default=None, help="id account tujuan")
+    p_notify.add_argument("message", help="Message text")
+    p_notify.add_argument("-a", "--account", default=None, help="Target account id")
     p_notify.add_argument("--all", action="store_true", help="send to all registered chat ids")
 
     p_term = sub.add_parser(

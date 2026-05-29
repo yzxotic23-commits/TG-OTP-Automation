@@ -3,88 +3,42 @@
 ====================================================
 
 PowerShell (Windows):
-  .\run_local.ps1      → bot + listen (2 jendela, production)
-  .\run_local_3.ps1    → bot + listen + live-status (3 jendela)
-  .\run_sync.ps1       → sync sekali (import + login baru)
-  .\run_sync.ps1 health → audit manual
-  .\setup.ps1          → setup laptop baru
+  .\setup.ps1              → setup laptop baru (sekali)
+  .\start_production.ps1   → stop lama + buka 3 jendela (BOT+LISTEN+LIVE-STATUS)
 
 JANGAN commit / sync lewat Git:
   .env, telegram_session/, tg-otp-automation-*.json, *.lock, state.json
 
-2 terminal WAJIB jalan terus + sync sesuai kebutuhan:
+JANGAN start production 2x (penyebab 409 Conflict).
+JANGAN jalankan bot dari terminal Cursor — pakai start_production.ps1.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  1. BOT (biarkan jalan)
+  PRODUCTION (3 jendela PowerShell terpisah)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  python telegram_otp_allinone.py bot
+  powershell -ExecutionPolicy Bypass -File .\start_production.ps1
 
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  2. LISTEN (biarkan jalan — update Sheet otomatis)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  python telegram_otp_allinone.py listen
-
-  Saat deteksi Banned / Frozen / Expired / Disconnected:
-    → Google Sheet langsung update (1 baris, tidak overwrite semua)
-    → TELEGRAM_SYNC_INSTANT_PUSH=1 di .env
-    → Notifikasi langsung ke forum topic System Status
-
-  TIDAK perlu sync setiap 10 menit.
-
-  Production .env (topic only, tanpa preview DM):
-    TELEGRAM_LOGIN_STATUS_CHAT_ID=-1003994531684
-    TELEGRAM_LOGIN_STATUS_THREAD_ID=1322
-    (TELEGRAM_STATUS_PREVIEW_* — dikomentari / tidak dipakai)
+  Jendela 1 = BOT
+  Jendela 2 = LISTEN
+  Jendela 3 = LIVE-STATUS (delta push Sheet)
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  3. SYNC (hanya saat perlu — sekali jalan lalu exit)
+  SYNC MANUAL (sekali jalan, jendela ini)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Import Sheet + login akun baru + import ulang setelah login sukses:
-    python telegram_otp_allinone.py sync
-    (1) Sheet → JSON  (2) login baru  (3) Sheet → JSON lagi + profile
+  .\.venv\Scripts\python.exe telegram_otp_allinone.py sync
+  .\.venv\Scripts\python.exe telegram_otp_allinone.py sync health
 
-  Hanya pull dari Sheet:
-    python telegram_otp_allinone.py sync pull
-
-  Live pull (tanpa restart): auto-register nomor baru Sheet -> JSON terus jalan:
-    python telegram_otp_allinone.py sync live
-    (deteksi by Phone Number, Group Main=GCS, Other=Shooter, owner dari kolom User)
-
-  Live status (tanpa restart): cek account freeze/banned/disconnect lalu push ke Sheet:
-    python telegram_otp_allinone.py sync live-status
-    (update kolom Account Status + Session Friday secara berkala)
-    (pakai bulk batch update — bukan update_cell 1-by-1)
-
-  Audit manual semua akun (health + push):
-    python telegram_otp_allinone.py sync health
-
-  Full sekali (pull+login+health+push):
-    python telegram_otp_allinone.py sync all
-
-  Loop berkala (TIDAK disarankan — limit API / overwrite):
-    python telegram_otp_allinone.py sync loop
+  JANGAN: sync loop
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  4. SESSIONS (cek / terminate device asing)
+  LOGIN SESSION (jika belum ada .session)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  python telegram_otp_allinone.py sync sessions --pool gcs --id STMY
-  python telegram_otp_allinone.py sync sessions --pool all --id all --kill others
+  .\.venv\Scripts\python.exe telegram_otp_allinone.py login-all
+  .\.venv\Scripts\python.exe telegram_otp_allinone.py login-all-shooter
 
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  GOOGLE SHEET
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  Group: Main = GCS | Other = Shooter
-  User: owner shooter (baris Other)
-  Account Status / Session Friday: script isi (saat ada masalah)
-
-====================================================
+  Atau via bot: /login <account_id>

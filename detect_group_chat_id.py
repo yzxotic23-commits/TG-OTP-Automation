@@ -50,7 +50,7 @@ def main() -> None:
     load_dotenv(project_root() / ".env")
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     if not token:
-        logger.error("TELEGRAM_BOT_TOKEN kosong di .env")
+        logger.error("TELEGRAM_BOT_TOKEN is empty in .env")
         sys.exit(1)
 
     if sys.platform == "win32" and sys.version_info < (3, 14):
@@ -62,7 +62,7 @@ def main() -> None:
 
     app = Application.builder().token(token).build()
     app.add_handler(CommandHandler("start", cmd_start))
-    logger.info("Detector aktif. Kirim /start dari group untuk melihat chat_id.")
+    logger.info("Detector active. Send /start from a group to see chat_id.")
     app.run_polling(drop_pending_updates=True)
 
 
