@@ -94,6 +94,8 @@ function Start-OtpServiceWindow {
     $scriptQ = $script.Replace("'", "''")
     $argStr = ($PythonArgs | ForEach-Object { "'$_'" }) -join ', '
     $cmd = @"
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+`$OutputEncoding = [System.Text.Encoding]::UTF8
 Set-Location -LiteralPath '$($root.Replace("'", "''"))'
 `$Host.UI.RawUI.WindowTitle = '$WindowTitle'
 Write-Host '$WindowTitle' -ForegroundColor Green
@@ -127,7 +129,7 @@ Write-Host "  1 = BOT          (/login, /accounts, /ping)" -ForegroundColor Whit
 Write-Host "  2 = LISTEN       (OTP + status to Sheet)" -ForegroundColor White
 Write-Host "  3 = LIVE-PULL    (Sheet -> JSON, auto register)" -ForegroundColor White
 Write-Host "  4 = LIVE-LOGIN   (Sheet OTP column -> .session)" -ForegroundColor White
-Write-Host "  5 = LIVE-STATUS  (queue -> Sheet, delta push)" -ForegroundColor White
+Write-Host "  5 = LIVE-STATUS  (queue + health-check 2 days -> Sheet)" -ForegroundColor White
 Write-Host ""
 Write-Host "  Close a PowerShell window to stop that service." -ForegroundColor Yellow
 Write-Host "  Do NOT run this script again while all 5 windows are open." -ForegroundColor Red

@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -22,9 +23,9 @@ _HEADER_ALIASES: dict[str, frozenset[str]] = {
     "acc_name": frozenset({"acc_name", "accname", "account_name", "profile_hint", "profile", "name"}),
     "phone": frozenset({"phone", "phone_number", "number"}),
     "telco": frozenset({"telco"}),
-    # Column I: Status (Feeding / Active / Ready / Pending) — Pending triggers LIVE-LOGIN
+    # Single Status column (dropdown): Pending=login trigger; script writes Ready/Banned/Frozen/…
     "status": frozenset({"status", "state", "feeding_status", "feeding"}),
-    # Column J: Account Status (not "Session User")
+    # Legacy — removed from Sheet; read-only fallback if column still exists
     "session_user": frozenset({
         "session_user",
         "sessionuser",
@@ -76,14 +77,32 @@ def _normalize_sheet_status_value(raw: str) -> str:
 
 
 def sheet_status_is_login_trigger(raw: str) -> bool:
-    """Column I (Status) = Pending triggers LIVE-LOGIN."""
+    """Status = Pending triggers LIVE-LOGIN (staff sets via dropdown)."""
     trigger = os.environ.get("TELEGRAM_SHEET_LOGIN_TRIGGER_STATUS", "Pending").strip()
     return _normalize_sheet_status_value(raw) == _normalize_sheet_status_value(trigger)
 
 
 def sheet_status_after_login_value() -> str:
-    """Column I value after successful login (default Feeding)."""
-    return os.environ.get("TELEGRAM_SHEET_STATUS_AFTER_LOGIN", "Feeding").strip() or "Feeding"
+    """Status after successful login (default Ready)."""
+    return os.environ.get("TELEGRAM_SHEET_STATUS_AFTER_LOGIN", "Ready").strip() or "Ready"
+
+
+def pull_register_pending_only() -> bool:
+    """When True, pull only adds NEW rows where Status = Pending (production default)."""
+    v = os.environ.get("TELEGRAM_SYNC_PULL_PENDING_ONLY", "1").strip().lower()
+    return v not in ("0", "false", "no", "off")
+
+
+def effective_row_status(row: dict[str, str]) -> str:
+    """Account status from Sheet — Status column only (legacy Account Status as fallback)."""
+    return str(row.get("status") or row.get("session_user") or "").strip()
+
+
+def _status_column_index(headers: list[str]) -> int | None:
+    col = _col_index(headers, "status")
+    if col is not None:
+        return col
+    return _col_index(headers, "session_user")
 
 
 _OWNER_FIX: dict[str, str] = {
@@ -128,16 +147,208 @@ def _truthy(s: str) -> bool:
     return str(s or "").strip().lower() not in ("0", "false", "no", "off", "")
 
 
+_CURRENCY_CODES = frozenset({
+    "MYR", "SGD", "USD", "USC", "KHR", "IDR", "THB", "VND", "PHP", "INR",
+    "CNY", "JPY", "KRW", "MMK", "BRL", "EUR", "GBP", "AUD",
+})
+
+
+def is_currency_code(value: str) -> bool:
+    return str(value or "").strip().upper() in _CURRENCY_CODES
+
+
+# Sheet Device ID: CURRENCY-CODE[-suffix]  e.g. MYR-SB, SGD-FW-003
+# Currency = part 1 (MYR, SGD, USC). Brand code = part 2.
+_DEVICE_BRAND_CODES: dict[str, str] = {
+    "SB": "SBMY",
+    "ST": "STMY",
+    "JM": "JMMY",
+    "FW": "FWSG",
+    "WB": "WBSG",
+    "M24": "M24SG",
+}
+
+
+def parse_device_id(device_id: str) -> tuple[str, str]:
+    """Parse 'MYR-SB main user geri' → currency='MYR', brand_code='SB'."""
+    raw = str(device_id or "").strip()
+    if not raw:
+        return "", ""
+    head = raw.split()[0]
+    parts = [p.strip().upper() for p in head.split("-") if p.strip()]
+    if len(parts) >= 2:
+        return parts[0], parts[1]
+    if len(parts) == 1:
+        return "", parts[0]
+    return "", ""
+
+
+def resolve_device_brand_code(
+    code: str,
+    *,
+    currency: str = "",
+    brands_cfg: dict[str, dict[str, Any]] | None = None,
+) -> str | None:
+    """Map device brand code (SB, ST, M24, …) → full brand key (SBMY, M24SG, …)."""
+    c = str(code or "").strip().upper()
+    if not c:
+        return None
+    mapped = _DEVICE_BRAND_CODES.get(c)
+    if mapped:
+        if brands_cfg and currency:
+            cfg = brands_cfg.get(mapped, {})
+            cur = str(cfg.get("currency") or "").strip().upper()
+            if cur and cur != currency.upper():
+                mapped = None
+            else:
+                return mapped
+        elif mapped:
+            return mapped
+    if not brands_cfg:
+        return None
+    cur_u = currency.upper().strip()
+    candidates: list[str] = []
+    for bk, bv in brands_cfg.items():
+        if not isinstance(bv, dict):
+            continue
+        bcur = str(bv.get("currency") or "").strip().upper()
+        if cur_u and bcur and bcur != cur_u:
+            continue
+        if bk == c or bk.startswith(c) or c in bk:
+            candidates.append(bk)
+    if not candidates:
+        return None
+    if len(candidates) == 1:
+        return candidates[0]
+    candidates.sort(key=lambda x: (len(x), x))
+    for bk in candidates:
+        if bk.startswith(c):
+            return bk
+    return candidates[0]
+
+
+_ID_PREFIX_BRAND_ALIASES: dict[str, str] = {
+    "SEABET99KH": "SB99KH",
+    "SEABET99": "SB99KH",
+    "SEABETKH": "SBKH",
+    "SEABETCS99": "SBKH",
+    "SEABETKHCS01": "SBKH",
+    "SEABETKHCS2": "SBKH",
+    "SEABETKHCS5": "SBKH",
+    "17WIN168": "17WIN168KH",
+    "UWON29": "UW29KH",
+    "UWKH29": "UW29KH",
+}
+
+
+def resolve_brand_from_id(
+    account_id: str,
+    brands_cfg: dict[str, dict[str, Any]] | None = None,
+) -> str | None:
+    """Resolve brand from account id prefix; prefer full keys in brands_cfg."""
+    aid = str(account_id or "").strip().upper()
+    if not aid or aid in ("GCS", "SH", "UNKNOWN"):
+        return None
+    pref = aid.split("_", 1)[0] if "_" in aid else aid
+    pref = _ID_PREFIX_BRAND_ALIASES.get(pref, pref)
+    if is_currency_code(pref):
+        return None
+    if brands_cfg:
+        if pref in brands_cfg:
+            return pref
+        best = ""
+        for bk in brands_cfg:
+            bu = str(bk).strip().upper()
+            if aid == bu or aid.startswith(f"{bu}_"):
+                if len(bu) > len(best):
+                    best = bu
+        if best:
+            return best
+        for bk in sorted(brands_cfg, key=lambda x: len(str(x)), reverse=True):
+            bu = str(bk).strip().upper()
+            if bu.startswith(pref) and len(bu) > len(pref):
+                return bu
+    if len(pref) >= 3:
+        return pref
+    return None
+
+
+def infer_gcs_brand(
+    *,
+    device_id: str = "",
+    acc_name: str = "",
+    account_id: str = "",
+    brand: str = "",
+    brands_cfg: dict[str, dict[str, Any]] | None = None,
+) -> str | None:
+    """
+    Brand for GCS — Device ID (MYR-SB → SBMY) for new rows; id/brand for existing.
+    """
+    b = str(brand or "").strip().upper()
+    if b and not is_currency_code(b):
+        if not brands_cfg or b in brands_cfg:
+            return b
+
+    resolved = resolve_brand_from_id(account_id, brands_cfg)
+    if resolved:
+        return resolved
+
+    currency, code = parse_device_id(device_id)
+    if code and currency:
+        resolved = resolve_device_brand_code(code, currency=currency, brands_cfg=brands_cfg)
+        if resolved:
+            return resolved
+    return None
+
+
 def norm_phone(raw: str) -> str:
-    """60123456789 → +60123456789"""
+    """60123456789 → +60123456789; 08xx → +628xx (Indonesia); 01xx → +601xx (Malaysia)."""
     d = re.sub(r"\D", "", str(raw or ""))
     if not d:
         return ""
     if d.startswith("00"):
         d = d[2:]
-    if not d.startswith("+"):
-        return "+" + d
-    return d
+    if d.startswith("0") and len(d) >= 9:
+        if d.startswith("08"):
+            d = "62" + d[1:]
+        elif d.startswith("01"):
+            d = "60" + d[1:]
+        else:
+            d = d.lstrip("0") or d
+    return "+" + d
+
+
+# --- In-memory cache: avoid Google Sheets 429 (read quota per minute) ---
+_SHEET_TAB_CACHE: dict[str, tuple[float, list[str], list[list[str]]]] = {}
+
+
+def invalidate_sheet_cache() -> None:
+    _SHEET_TAB_CACHE.clear()
+
+
+def _sheet_read_cache_sec() -> float:
+    raw = os.environ.get("TELEGRAM_SHEET_READ_CACHE_SEC", "20").strip()
+    try:
+        return max(5.0, float(raw))
+    except ValueError:
+        return 20.0
+
+
+def read_telegram_acc_tab(root: Path, *, force: bool = False) -> tuple[list[str], list[list[str]]]:
+    """Cached read of tab Telegram Acc. Use force=True for pull/register (must be fresh)."""
+    if not _sheet_id() or not use_telegram_acc_format():
+        return [], []
+    tab = _tab_telegram()
+    cache_key = f"{_sheet_id()}:{tab}"
+    now = time.time()
+    if not force:
+        hit = _SHEET_TAB_CACHE.get(cache_key)
+        if hit and (now - hit[0]) < _sheet_read_cache_sec():
+            return hit[1], hit[2]
+    wb = open_workbook(root)
+    headers, lines = _read_tab_raw(wb, tab)
+    _SHEET_TAB_CACHE[cache_key] = (now, headers, lines)
+    return headers, lines
 
 
 def _pool_from_group(group_val: str) -> str | None:
@@ -289,14 +500,11 @@ def _should_instant_push(session_user: str) -> bool:
         "Frozen",
         "Expired",
         "Disconnected",
-        "Pending Login",
     )
 
 
 def classify_account_status(exc: BaseException | None = None, *, message: str = "") -> str:
-    """
-    Telegram account status for Account Status column (not Session Friday).
-  """
+    """Telegram account status for Sheet Status dropdown (Banned/Frozen/Expired/…)."""
     if exc is not None:
         name = type(exc).__name__.lower()
         msg = str(exc).lower()
@@ -316,7 +524,7 @@ def classify_account_status(exc: BaseException | None = None, *, message: str = 
     if "authkeyunregistered" in name or "sessionrevoked" in name or "auth key" in combined:
         return "Expired"
     if "password" in combined and "needed" in combined:
-        return "Pending Login"
+        return "Expired"
     if "expired" in combined or "not authorized" in combined:
         return "Expired"
     if "disconnect" in combined:
@@ -329,6 +537,17 @@ def classify_account_status(exc: BaseException | None = None, *, message: str = 
     return "Expired"
 
 
+def _sheet_status_column_value(raw: str) -> str:
+    """
+    Status dropdown only — script never writes Pending (staff login trigger).
+    Pending Login belongs in Session Friday, not Status.
+    """
+    su = _map_script_status(raw)
+    if su.lower() in ("pending login", "pending"):
+        return ""
+    return su
+
+
 def queue_status(
     root: Path,
     account_id: str,
@@ -339,16 +558,24 @@ def queue_status(
     phone: str = "",
     session_user: str = "",
     session_friday: str = "",
+    allow_instant: bool | None = None,
 ) -> None:
     """
     Queue entry for Sheet push.
-    session_user  → Account Status column (Active/Banned/Frozen/…)
-    session_friday → Session Friday column (FRIDAY_BO bot session only)
-    `status` = fallback for session_user when session_user is empty.
+    session_user / status → Status column (dropdown). Script never writes Pending.
+    session_friday → Session Friday column only.
+    allow_instant=False → queue only (LISTEN); LIVE-STATUS bulk-pushes later.
     """
-    path = status_queue_path(root)
-    su = _map_script_status(session_user or status)
+    su = _sheet_status_column_value(session_user or status)
     sf = _map_script_status(session_friday) if session_friday else ""
+    if allow_instant is False:
+        su_l = su.lower()
+        if su_l in ("active", "feeding", "ready") and (not sf or sf.lower() == "active"):
+            return
+    if not su and not sf:
+        return
+
+    path = status_queue_path(root)
     row = {
         "account_id": account_id,
         "pool": pool,
@@ -365,7 +592,8 @@ def queue_status(
     except OSError:
         pass
 
-    if instant_push_enabled() and row.get("phone") and _should_instant_push(su):
+    use_instant = allow_instant if allow_instant is not None else instant_push_enabled()
+    if use_instant and row.get("phone") and _should_instant_push(su):
         import threading
 
         threading.Thread(
@@ -387,7 +615,7 @@ def _instant_push_worker(
             label = account_id or phone
             friday_part = f" | Friday: {session_friday}" if session_friday else ""
             print(
-                f"  📋 Google Sheet updated · {label} → Account Status: {session_user}{friday_part}",
+                f"  📋 Google Sheet updated · {label} → Status: {session_user}{friday_part}",
                 flush=True,
             )
     except Exception as e:
@@ -406,7 +634,7 @@ def push_status_instant(
     np = norm_phone(phone)
     if not np:
         return False
-    su = _map_script_status(session_user)
+    su = _sheet_status_column_value(session_user)
     sf = _map_script_status(session_friday) if session_friday else ""
     by_phone = {np: {"session_user": su, "session_friday": sf}}
     try:
@@ -452,11 +680,15 @@ def open_workbook(root: Path):
 
 
 def _extract_login_code(raw: str) -> str:
-    """Telegram login codes are numeric (usually 5 digits)."""
-    digits = re.sub(r"\D", "", str(raw or ""))
-    if 5 <= len(digits) <= 8:
-        return digits
-    if 4 <= len(digits) <= 9:
+    """OTP = kolom tidak kosong dan berisi tepat 5 digit (kode login Telegram)."""
+    s = str(raw or "").strip()
+    if not s:
+        return ""
+    m = re.search(r"\b(\d{5})\b", s)
+    if m:
+        return m.group(1)
+    digits = re.sub(r"\D", "", s)
+    if len(digits) == 5:
         return digits
     return ""
 
@@ -473,8 +705,7 @@ def fetch_phones_by_sheet_status(root: Path, *status_values: str) -> set[str]:
         raw_trigger = os.environ.get("TELEGRAM_SHEET_LOGIN_TRIGGER_STATUS", "Pending").strip()
         targets = {_normalize_sheet_status_value(raw_trigger)}
     try:
-        wb = open_workbook(root)
-        headers, lines = _read_tab_raw(wb, _tab_telegram())
+        headers, lines = read_telegram_acc_tab(root)
         if not headers:
             return set()
         out: set[str] = set()
@@ -493,16 +724,15 @@ def fetch_phones_by_sheet_status(root: Path, *status_values: str) -> set[str]:
         return set()
 
 
-def fetch_passwords_by_phone(root: Path) -> dict[str, str]:
+def fetch_passwords_by_phone(root: Path, *, force: bool = False) -> dict[str, str]:
     """
     Read tab Telegram Acc: phone -> 2FA (header: 2FA / Password / Cloud Password).
-    Does not mutate JSON.
+    Does not mutate JSON. force=True bypasses read cache (use during login poll).
     """
     if not _sheet_id() or not use_telegram_acc_format():
         return {}
     try:
-        wb = open_workbook(root)
-        headers, lines = _read_tab_raw(wb, _tab_telegram())
+        headers, lines = read_telegram_acc_tab(root, force=force)
         if not headers:
             return {}
         out: dict[str, str] = {}
@@ -519,16 +749,15 @@ def fetch_passwords_by_phone(root: Path) -> dict[str, str]:
         return {}
 
 
-def fetch_login_codes_by_phone(root: Path) -> dict[str, str]:
+def fetch_login_codes_by_phone(root: Path, *, force: bool = False) -> dict[str, str]:
     """
     Read tab Telegram Acc: phone -> OTP (header: OTP / Login Code).
-    Does not mutate JSON.
+    Accepts cell with exactly 5 digits. force=True bypasses read cache (login poll).
     """
     if not _sheet_id() or not use_telegram_acc_format():
         return {}
     try:
-        wb = open_workbook(root)
-        headers, lines = _read_tab_raw(wb, _tab_telegram())
+        headers, lines = read_telegram_acc_tab(root, force=force)
         if not headers:
             return {}
         out: dict[str, str] = {}
@@ -570,6 +799,7 @@ def _update_sheet_cell_by_phone(
                 continue
             cell = f"{_col_to_a1(col + 1)}{r_idx}"
             _batch_update_with_retry(ws, [{"range": cell, "values": [[value]]}])
+            invalidate_sheet_cache()
             return True
     except Exception:
         return False
@@ -577,7 +807,7 @@ def _update_sheet_cell_by_phone(
 
 
 def update_sheet_status_column(root: Path, phone: str, status_value: str) -> bool:
-    """Update column I (Status): Pending -> Feeding after successful login."""
+    """Update Status dropdown: Pending → Ready after successful login."""
     return _update_sheet_cell_by_phone(root, phone, "status", status_value)
 
 
@@ -591,10 +821,30 @@ def _read_tab_raw(wb, tab_name: str) -> tuple[list[str], list[list[str]]]:
         ws = wb.worksheet(tab_name)
     except Exception:
         return [], []
-    values = ws.get_all_values()
-    if len(values) < 1:
-        return [], []
-    return values[0], values[1:]
+    retries = int(os.environ.get("GOOGLE_SHEET_READ_RETRIES", "4"))
+    base_sleep = float(os.environ.get("GOOGLE_SHEET_BATCH_BASE_SLEEP_SEC", "1.0"))
+    last_err: Exception | None = None
+    for attempt in range(max(1, retries)):
+        try:
+            values = ws.get_all_values()
+            if len(values) < 1:
+                return [], []
+            return values[0], values[1:]
+        except Exception as e:
+            last_err = e
+            msg = str(e).lower()
+            if "429" in msg or "quota" in msg:
+                sleep_s = base_sleep * (2**attempt)
+                print(
+                    f"  ⚠ Sheet read quota (429), retry in {sleep_s:.0f}s...",
+                    flush=True,
+                )
+                time.sleep(sleep_s)
+                continue
+            raise
+    if last_err:
+        raise last_err
+    return [], []
 
 
 def _read_tab_rows(wb, tab_name: str, *, require_id: bool = True) -> list[dict[str, str]]:
@@ -644,17 +894,40 @@ def _session_user_disabled(st: str) -> bool:
     return s in ("banned", "frozen", "freeze", "disabled", "inactive", "deleted")
 
 
-def _new_gcs_id(phone: str, acc_name: str, existing: list[dict[str, Any]]) -> str:
+def _gcs_id_needs_fix(aid: str, brand: str) -> bool:
+    """True when id was created without Device ID (GERI, GCS_3926, BOSS_JO, …)."""
+    a = str(aid or "").strip().upper()
+    b = str(brand or "").strip().upper()
+    if not a or not b:
+        return False
+    if a == b or a.startswith(f"{b}_"):
+        return False
+    if a.startswith("GCS_"):
+        return True
+    if "_" not in a:
+        return True
+    return a.split("_", 1)[0] != b
+
+
+def _new_gcs_id(
+    phone: str,
+    acc_name: str,
+    existing: list[dict[str, Any]],
+    *,
+    brand_hint: str = "",
+    user_name: str = "",
+) -> str:
     suffix = re.sub(r"\D", "", phone)[-4:] or "0000"
-    name = str(acc_name or "").strip()
-    if len(name) > 2:
-        slug = re.sub(r"[^A-Za-z0-9]+", "_", name).strip("_").upper()
-        if slug and not slug.replace("_", "").isdigit():
-            base = slug[:24]
-        else:
-            base = f"GCS_{suffix}"
+    brand = str(brand_hint or "").strip().upper()
+    user_slug = re.sub(r"[^A-Za-z0-9]+", "_", str(user_name or "").strip()).strip("_").upper()
+
+    if brand and user_slug and not user_slug.replace("_", "").isdigit():
+        base = f"{brand}_{user_slug}"[:28]
+    elif brand:
+        base = f"{brand}_{suffix}"
     else:
         base = f"GCS_{suffix}"
+
     ids = {str(r.get("id") or "") for r in existing if isinstance(r, dict)}
     if base not in ids:
         return base
@@ -677,6 +950,51 @@ def _new_shooter_id(owner: str, phone: str, existing: list[dict[str, Any]]) -> s
     return f"{base}_{n}"
 
 
+def _should_skip_wealth_gcs_row(row: dict[str, str]) -> bool:
+    """Baris wealth (W+ plus) — bukan GCS brand, jangan masuk otp_accounts."""
+    user = str(row.get("user") or "").strip().lower()
+    dev = str(row.get("device_id") or "").strip().lower()
+    return dev == "wealth" or ("w+" in user and "plus" in user)
+
+
+_MYR_DEVICE_HEAD = re.compile(r"^MYR-(SB|JM|ST)\b", re.I)
+_EXCLUDED_GCS_ID = re.compile(r"^(GCS_\w+|SBMY_\d{4}|JMMY_\d{4})$", re.I)
+
+
+def _should_skip_gcs_row(row: dict[str, str]) -> bool:
+    """Skip wealth + baris MYR-SB/JM test (bukan akun GCS asli). STMY (MYR-ST) tetap."""
+    if _should_skip_wealth_gcs_row(row):
+        return True
+    dev = str(row.get("device_id") or "").strip()
+    head = dev.split()[0] if dev else ""
+    m = _MYR_DEVICE_HEAD.match(head)
+    if not m:
+        return False
+    code = m.group(1).upper()
+    if code == "ST":
+        return False
+    brand = "SBMY" if code == "SB" else "JMMY" if code == "JM" else ""
+    if not brand:
+        return False
+    acc = str(row.get("acc_name") or row.get("profile_hint") or "").strip().upper()
+    return brand not in acc
+
+
+def _is_excluded_otp_account(row: dict[str, Any]) -> bool:
+    aid = str(row.get("id") or "").strip()
+    if _EXCLUDED_GCS_ID.match(aid):
+        return True
+    if str(row.get("device_id") or "").strip().lower() == "wealth":
+        return True
+    return False
+
+
+def _prune_excluded_gcs_accounts(lst: list[dict[str, Any]]) -> int:
+    before = len(lst)
+    lst[:] = [r for r in lst if isinstance(r, dict) and not _is_excluded_otp_account(r)]
+    return before - len(lst)
+
+
 def _telegram_row_to_gcs(
     row: dict[str, str], raw: dict[str, Any], existing: list[dict[str, Any]]
 ) -> dict[str, Any] | None:
@@ -691,31 +1009,58 @@ def _telegram_row_to_gcs(
         return None
 
     matched = _find_by_phone(existing, phone)
+    if _should_skip_gcs_row(row):
+        return None
+
     api_id, api_hash = _resolve_gcs_api(row, raw, existing, matched)
     if not api_id or not api_hash:
         return None
 
     acc_name = row.get("acc_name") or row.get("profile_hint") or ""
-    account_status = str(row.get("session_user") or "").strip()
+    account_status = effective_row_status(row)
+    device_id_raw = str(row.get("device_id") or "").strip()
+    brands_cfg = {
+        str(k).strip().upper(): v
+        for k, v in (raw.get("brands") or {}).items()
+        if isinstance(v, dict)
+    }
+    row_user = str(row.get("user") or "").strip()
+
     aid = str(matched.get("id") if matched else "").strip()
-    if not aid:
-        aid = _new_gcs_id(phone, acc_name, existing)
+    if not matched:
+        brand_hint = infer_gcs_brand(
+            device_id=device_id_raw,
+            acc_name=acc_name,
+            brands_cfg=brands_cfg,
+        ) or ""
+        aid = _new_gcs_id(
+            phone,
+            acc_name,
+            existing,
+            brand_hint=brand_hint,
+            user_name=row_user,
+        )
 
     enabled = _truthy(row.get("enabled", "1"))
     if _session_user_disabled(account_status):
         enabled = False
 
     session_default = f"telegram_session/{aid}"
+    old_session = str(matched.get("session") or "") if matched else ""
+    if matched and aid != str(matched.get("id") or ""):
+        session_path = session_default
+    else:
+        session_path = old_session or session_default
+
     out: dict[str, Any] = {
         "id": aid,
         "phone": phone,
         "api_id": int(api_id),
         "api_hash": api_hash,
         "enabled": enabled,
-        "session": (matched.get("session") if matched else None) or session_default,
+        "session": session_path,
         "notify_account": _resolve_notify_account_from_user(raw, row.get("user", ""), matched),
     }
-    row_user = str(row.get("user") or "").strip()
     if row_user:
         out["user_name"] = row_user
     elif matched and str(matched.get("user_name") or "").strip():
@@ -724,8 +1069,26 @@ def _telegram_row_to_gcs(
         out["profile_hint"] = acc_name
     if row.get("password"):
         out["password"] = row["password"]
-    if row.get("device_id"):
-        out["brand"] = str(row.get("device_id", "")).split("-")[0].upper() or None
+    if device_id_raw:
+        out["device_id"] = device_id_raw
+    if matched:
+        prev_b = str(matched.get("brand") or "").strip().upper()
+        if prev_b and not is_currency_code(prev_b):
+            out["brand"] = prev_b
+        else:
+            resolved = resolve_brand_from_id(aid, brands_cfg)
+            if resolved:
+                out["brand"] = resolved
+    else:
+        inferred = infer_gcs_brand(
+            device_id=device_id_raw,
+            acc_name=acc_name,
+            account_id=aid,
+            brand=str(row.get("brand") or ""),
+            brands_cfg=brands_cfg,
+        )
+        if inferred:
+            out["brand"] = inferred
     return out
 
 
@@ -742,7 +1105,7 @@ def _telegram_row_to_shooter(row: dict[str, str], raw: dict[str, Any], existing:
 
     owner = _normalize_owner_name(row.get("user") or row.get("owner") or "")
     acc_name = row.get("acc_name") or row.get("profile_hint") or ""
-    account_status = str(row.get("session_user") or "").strip()
+    account_status = effective_row_status(row)
 
     matched = _find_by_phone(existing, phone)
     aid = str(matched.get("id") if matched else "").strip()
@@ -772,8 +1135,24 @@ def _telegram_row_to_shooter(row: dict[str, str], raw: dict[str, Any], existing:
         out["profile_hint"] = acc_name
     if row.get("password"):
         out["password"] = row["password"]
-    if row.get("device_id"):
-        out["remark"] = str(row.get("device_id") or "")
+    device_id_raw = str(row.get("device_id") or "").strip()
+    if device_id_raw:
+        out["remark"] = device_id_raw
+        brands_cfg = {
+            str(k).strip().upper(): v
+            for k, v in (raw.get("brands") or {}).items()
+            if isinstance(v, dict)
+        }
+        currency, _code = parse_device_id(device_id_raw)
+        brand_from_dev = infer_gcs_brand(
+            device_id=device_id_raw,
+            acc_name=acc_name,
+            brands_cfg=brands_cfg,
+        )
+        if brand_from_dev:
+            out["brand"] = brand_from_dev
+        if currency:
+            out["currency"] = currency
     return out
 
 
@@ -781,8 +1160,14 @@ def _pull_telegram_acc(
     wb,
     mutate_accounts: Callable[[dict[str, Any]], bool],
     mutate_shooter: Callable[[dict[str, Any]], bool],
+    *,
+    headers_lines: tuple[list[str], list[list[str]]] | None = None,
+    pending_only: bool = False,
 ) -> dict[str, int]:
-    headers, lines = _read_tab_raw(wb, _tab_telegram())
+    if headers_lines:
+        headers, lines = headers_lines
+    else:
+        headers, lines = _read_tab_raw(wb, _tab_telegram())
     stats = {
         "shooter_added": 0, "shooter_updated": 0, "shooter_skipped": 0,
         "gcs_added": 0, "gcs_updated": 0, "gcs_skipped": 0,
@@ -798,18 +1183,41 @@ def _pull_telegram_acc(
             if not any(str(c).strip() for c in line):
                 continue
             row = _row_dict(headers, line)
+            if pending_only:
+                if _pool_from_group(row.get("group", "")) != "gcs":
+                    continue
+                if not sheet_status_is_login_trigger(effective_row_status(row)):
+                    stats["gcs_skipped"] += 1
+                    continue
+                np = norm_phone(row.get("phone", ""))
+                if not np or _find_by_phone(lst, np):
+                    stats["gcs_skipped"] += 1
+                    continue
             entry = _telegram_row_to_gcs(row, data, lst)
             if not entry:
                 if _pool_from_group(row.get("group", "")) == "gcs":
                     stats["gcs_skipped"] += 1
                 continue
             phone = entry["phone"]
-            before = _find_by_phone(lst, phone) is not None
-            _upsert_list(lst, entry, key="id")
-            if before:
+            matched = _find_by_phone(lst, phone)
+            if matched:
+                entry["id"] = str(matched.get("id") or entry.get("id") or "").strip()
+                if matched.get("session"):
+                    entry["session"] = matched["session"]
+                for i, r in enumerate(lst):
+                    if norm_phone(str(r.get("phone") or "")) == norm_phone(phone):
+                        merged = dict(r)
+                        merged.update(entry)
+                        merged["id"] = entry["id"]
+                        lst[i] = merged
+                        break
                 stats["gcs_updated"] += 1
             else:
+                _upsert_list(lst, entry, key="id")
                 stats["gcs_added"] += 1
+        pruned = _prune_excluded_gcs_accounts(lst)
+        if pruned:
+            stats["gcs_skipped"] += pruned
 
     def _apply_shooter(data: dict[str, Any]) -> None:
         nonlocal stats
@@ -821,6 +1229,16 @@ def _pull_telegram_acc(
             if not any(str(c).strip() for c in line):
                 continue
             row = _row_dict(headers, line)
+            if pending_only:
+                if _pool_from_group(row.get("group", "")) != "shooter":
+                    continue
+                if not sheet_status_is_login_trigger(effective_row_status(row)):
+                    stats["shooter_skipped"] += 1
+                    continue
+                np = norm_phone(row.get("phone", ""))
+                if not np or _find_by_phone(lst, np):
+                    stats["shooter_skipped"] += 1
+                    continue
             entry = _telegram_row_to_shooter(row, data, lst)
             if not entry:
                 if _pool_from_group(row.get("group", "")) == "shooter":
@@ -851,7 +1269,7 @@ def _sheet_row_to_gcs(row: dict[str, str], raw: dict[str, Any], root: Path) -> d
     if not api_id or not api_hash:
         return None
     session_default = f"telegram_session/{aid}"
-    st = row.get("session_user") or row.get("status") or ""
+    st = effective_row_status(row)
     enabled = _truthy(row.get("enabled", "1")) and not _session_user_disabled(st)
     out: dict[str, Any] = {
         "id": aid,
@@ -876,7 +1294,7 @@ def _sheet_row_to_shooter_legacy(row: dict[str, str], raw: dict[str, Any]) -> di
     owner = (row.get("owner") or row.get("group") or "").strip().upper()
     if not aid or not phone or not owner:
         return None
-    st = row.get("session_user") or row.get("status") or ""
+    st = effective_row_status(row)
     enabled = _truthy(row.get("enabled", "1")) and not _session_user_disabled(st)
     return {
         "id": aid,
@@ -892,10 +1310,23 @@ def pull_from_sheet(
     root: Path,
     mutate_accounts: Callable[[dict[str, Any]], bool],
     mutate_shooter: Callable[[dict[str, Any]], bool],
+    *,
+    pending_only: bool | None = None,
 ) -> dict[str, int]:
+    if pending_only is None:
+        pending_only = pull_register_pending_only()
     wb = open_workbook(root)
     if use_telegram_acc_format():
-        return _pull_telegram_acc(wb, mutate_accounts, mutate_shooter)
+        headers, lines = _read_tab_raw(wb, _tab_telegram())
+        tab = _tab_telegram()
+        _SHEET_TAB_CACHE[f"{_sheet_id()}:{tab}"] = (time.time(), headers, lines)
+        return _pull_telegram_acc(
+            wb,
+            mutate_accounts,
+            mutate_shooter,
+            headers_lines=(headers, lines),
+            pending_only=pending_only,
+        )
 
     gcs_rows = _read_tab_rows(wb, _tab_gcs())
     sh_rows = _read_tab_rows(wb, _tab_shooter())
@@ -960,10 +1391,18 @@ def _session_status(session_path: Path) -> str:
     return "Pending Login"
 
 
+def _normalize_sheet_display(st: str) -> str:
+    return _map_script_status(str(st or "").strip()) or str(st or "").strip()
+
+
 def _map_script_status(st: str) -> str:
     s = str(st or "").strip().lower()
     mapping = {
         "active": "Active",
+        "pending": "Pending",
+        "ready": "Ready",
+        "feeding": "Feeding",
+        "ready": "Ready",
         "pending_login": "Pending Login",
         "expired": "Expired",
         "disconnected": "Disconnected",
@@ -972,6 +1411,45 @@ def _map_script_status(st: str) -> str:
         "freeze": "Frozen",
     }
     return mapping.get(s, st.title() if st else "")
+
+
+def _skip_sheet_status_write(old: str, new: str) -> bool:
+    """True = no Sheet write needed (unchanged or redundant)."""
+    o = _normalize_sheet_display(old).lower()
+    n = _normalize_sheet_display(new).lower()
+    if not n:
+        return True
+    if o == n:
+        return True
+    if o == "active" and n == "active":
+        return True
+    if o == "feeding" and n in ("active", "feeding", "ready"):
+        return True
+    if o == "ready" and n in ("active", "ready", "feeding"):
+        return True
+    return False
+
+
+def _script_may_write_status(old: str, new: str) -> bool:
+    """
+    Protect Status dropdown: staff Pending is login trigger — script must not overwrite
+    with Active/Ready until LIVE-LOGIN completes (except Banned/Frozen/Expired).
+    """
+    if _skip_sheet_status_write(old, new):
+        return False
+    if sheet_status_is_login_trigger(old):
+        new_n = _normalize_sheet_status_value(_map_script_status(new))
+        after = _normalize_sheet_status_value(sheet_status_after_login_value())
+        if new_n in (
+            after,
+            "banned",
+            "frozen",
+            "expired",
+            "disconnected",
+        ):
+            return True
+        return False
+    return True
 
 
 def collect_status_by_phone(
@@ -1096,6 +1574,51 @@ def collect_status_from_queue(
     except (OSError, json.JSONDecodeError):
         pass
     return out
+
+
+def compact_status_queue(root: Path, *, max_lines: int | None = None) -> int:
+    """
+    Keep latest entry per phone; cap total lines.
+    Returns number of lines removed.
+    """
+    qpath = status_queue_path(root)
+    if not qpath.is_file():
+        return 0
+    cap = max_lines
+    if cap is None:
+        raw = os.environ.get("TELEGRAM_STATUS_QUEUE_MAX_LINES", "2000").strip()
+        try:
+            cap = max(100, int(raw))
+        except ValueError:
+            cap = 2000
+    try:
+        lines = [ln.strip() for ln in qpath.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    except OSError:
+        return 0
+    before = len(lines)
+    latest: dict[str, str] = {}
+    order: list[str] = []
+    for raw in lines:
+        try:
+            ev = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        p = norm_phone(str(ev.get("phone") or ""))
+        if not p:
+            continue
+        if p not in latest:
+            order.append(p)
+        latest[p] = raw
+    kept_order = order[-cap:] if len(order) > cap else order
+    kept = [latest[p] for p in kept_order if p in latest]
+    try:
+        if kept:
+            qpath.write_text("\n".join(kept) + "\n", encoding="utf-8")
+        else:
+            qpath.unlink(missing_ok=True)
+    except OSError:
+        return 0
+    return before - len(kept)
 
 
 def _trim_status_queue(root: Path, phones: set[str]) -> None:
@@ -1271,23 +1794,24 @@ def _push_telegram_acc(
 ) -> int:
     if not by_phone:
         return 0
+    headers, lines = read_telegram_acc_tab(root)
     wb = open_workbook(root)
-    headers, lines = _read_tab_raw(wb, _tab_telegram())
     if not headers:
-        return 0
+        headers, lines = _read_tab_raw(wb, _tab_telegram())
 
     phone_col = _col_index(headers, "phone")
-    su_col = _col_index(headers, "session_user")
+    st_col = _status_column_index(headers)
     sf_col = _col_index(headers, "session_friday")
     if phone_col is None:
         return 0
-    if su_col is None:
-        print('  ⚠ Column "Account Status" not found in Sheet.', file=sys.stderr, flush=True)
+    if st_col is None:
+        print('  ⚠ Column "Status" not found in Sheet.', file=sys.stderr, flush=True)
         return 0
 
     ws = wb.worksheet(_tab_telegram())
     changed: list[dict[str, Any]] = []
     updated_phones: set[str] = set()
+    sheet_phones_seen: set[str] = set()
 
     for r_idx, line in enumerate(lines, start=2):
         if phone_col >= len(line):
@@ -1295,46 +1819,76 @@ def _push_telegram_acc(
         phone = norm_phone(str(line[phone_col]))
         if not phone or phone not in by_phone:
             continue
+        sheet_phones_seen.add(phone)
         info = by_phone[phone]
-        # Account Status = script/event/health report (do not force default Active/Unknown)
-        su_new = str(info.get("session_user", "") or "").strip()
-        if su_new.lower() == "unknown":
-            su_new = ""
-        # Session Friday = session bot FRIDAY_BO
+        status_new = str(info.get("session_user", "") or info.get("status", "") or "").strip()
+        if status_new.lower() == "unknown":
+            status_new = ""
         sf_new = str(info.get("session_friday", "") or "").strip()
-        old_su = str(line[su_col]).strip() if su_col < len(line) else ""
+        old_st = str(line[st_col]).strip() if st_col < len(line) else ""
         old_sf = str(line[sf_col]).strip() if (sf_col is not None and sf_col < len(line)) else ""
 
         if delta_only:
-            if not su_new and not sf_new:
+            if not status_new and not sf_new:
                 continue
             row_changed = False
-            if su_new and su_col is not None and old_su != su_new:
+            if (
+                status_new
+                and st_col is not None
+                and _script_may_write_status(old_st, status_new)
+            ):
                 changed.append(
-                    {"range": f"{_col_to_a1(su_col + 1)}{r_idx}", "values": [[su_new]]}
+                    {"range": f"{_col_to_a1(st_col + 1)}{r_idx}", "values": [[status_new]]}
                 )
                 row_changed = True
-            if sf_new and sf_col is not None and old_sf != sf_new:
+            if (
+                sf_new
+                and sf_col is not None
+                and not _skip_sheet_status_write(old_sf, sf_new)
+            ):
                 changed.append(
                     {"range": f"{_col_to_a1(sf_col + 1)}{r_idx}", "values": [[sf_new]]}
                 )
                 row_changed = True
-            if row_changed:
+            if row_changed or (
+                _skip_sheet_status_write(old_st, status_new)
+                and _skip_sheet_status_write(old_sf, sf_new)
+            ):
                 updated_phones.add(phone)
             continue
 
-        su_val = su_new or old_su
+        st_val = status_new or old_st
         sf_val = sf_new or old_sf
 
-        if old_su == su_val and old_sf == sf_val:
+        skip_st = not status_new or not _script_may_write_status(old_st, st_val)
+        skip_sf = not sf_new or _skip_sheet_status_write(old_sf, sf_val)
+        if skip_st and skip_sf:
             continue
 
-        start_col = min(su_col, sf_col) + 1
-        end_col = max(su_col, sf_col) + 1
-        left_val = su_val if start_col == su_col + 1 else sf_val
-        right_val = sf_val if end_col == sf_col + 1 else su_val
-        rng = f"{_col_to_a1(start_col)}{r_idx}:{_col_to_a1(end_col)}{r_idx}"
-        changed.append({"range": rng, "values": [[left_val, right_val]]})
+        if skip_st:
+            st_val = old_st
+        if skip_sf:
+            sf_val = old_sf
+
+        if old_st == st_val and old_sf == sf_val:
+            continue
+
+        if st_col is not None and sf_col is not None and not skip_st and not skip_sf:
+            start_col = min(st_col, sf_col) + 1
+            end_col = max(st_col, sf_col) + 1
+            left_val = st_val if start_col == st_col + 1 else sf_val
+            right_val = sf_val if end_col == sf_col + 1 else st_val
+            rng = f"{_col_to_a1(start_col)}{r_idx}:{_col_to_a1(end_col)}{r_idx}"
+            changed.append({"range": rng, "values": [[left_val, right_val]]})
+        else:
+            if not skip_st and st_col is not None:
+                changed.append(
+                    {"range": f"{_col_to_a1(st_col + 1)}{r_idx}", "values": [[st_val]]}
+                )
+            if not skip_sf and sf_col is not None:
+                changed.append(
+                    {"range": f"{_col_to_a1(sf_col + 1)}{r_idx}", "values": [[sf_val]]}
+                )
         updated_phones.add(phone)
 
     if changed:
@@ -1345,11 +1899,80 @@ def _push_telegram_acc(
             _batch_update_with_retry(ws, chunk)
             if pause_s > 0 and i + batch_size < len(changed):
                 time.sleep(pause_s)
+        invalidate_sheet_cache()
 
     updated = len(updated_phones)
-    if updated_phones:
-        _trim_status_queue(root, updated_phones)
+    trim_phones = set(updated_phones)
+    if delta_only:
+        orphan = {p for p in by_phone if p not in sheet_phones_seen}
+        if orphan:
+            trim_phones |= orphan
+            sample = ", ".join(sorted(orphan)[:5])
+            extra = f" (+{len(orphan) - 5})" if len(orphan) > 5 else ""
+            print(
+                f"  ⚠ Queue dropped {len(orphan)} phone(s) not in Sheet: {sample}{extra}",
+                file=sys.stderr,
+                flush=True,
+            )
+    if trim_phones:
+        _trim_status_queue(root, trim_phones)
+        compact_status_queue(root)
     return updated
+
+
+def reconcile_json_vs_sheet(
+    root: Path,
+    *,
+    gcs_accounts: list[dict[str, Any]],
+    shooter_accounts: list[dict[str, Any]],
+) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+    """
+    Compare JSON phones vs Sheet tab Telegram Acc.
+    Returns (missing_in_sheet, missing_in_json).
+    """
+    headers, lines = read_telegram_acc_tab(root, force=True)
+    sheet_by_phone: dict[str, dict[str, str]] = {}
+    for line in lines:
+        if not any(str(c).strip() for c in line):
+            continue
+        row = _row_dict(headers, line)
+        phone = norm_phone(row.get("phone", ""))
+        if phone:
+            sheet_by_phone[phone] = row
+
+    json_rows: list[dict[str, str]] = []
+    for pool, accounts in (("GCS", gcs_accounts), ("SHOOTER", shooter_accounts)):
+        for acc in accounts:
+            if not isinstance(acc, dict):
+                continue
+            phone = norm_phone(str(acc.get("phone") or ""))
+            if not phone:
+                continue
+            json_rows.append(
+                {
+                    "id": str(acc.get("id") or ""),
+                    "phone": phone,
+                    "pool": pool,
+                    "profile": str(acc.get("profile_hint") or acc.get("id") or ""),
+                    "brand": str(acc.get("brand") or ""),
+                }
+            )
+
+    json_phones = {r["phone"] for r in json_rows}
+    missing_in_sheet = [r for r in json_rows if r["phone"] not in sheet_by_phone]
+    missing_in_json: list[dict[str, str]] = []
+    for phone, row in sorted(sheet_by_phone.items()):
+        if phone in json_phones:
+            continue
+        missing_in_json.append(
+            {
+                "phone": phone,
+                "name": str(row.get("acc_name") or row.get("profile_hint") or ""),
+                "status": effective_row_status(row),
+                "group": str(row.get("group") or ""),
+            }
+        )
+    return missing_in_sheet, missing_in_json
 
 
 def ensure_sheet_tabs(root: Path) -> None:

@@ -38,6 +38,17 @@ from telegram.ext import (
 logger = logging.getLogger(__name__)
 
 
+def _configure_stdio_utf8() -> None:
+    """Windows console often cp1252 — avoid UnicodeEncodeError on ✓/→ in LISTEN logs."""
+    if sys.platform != "win32":
+        return
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
+
 def _configure_runtime_warnings() -> None:
     """Suppress google-auth (Python 3.9 EOL) and urllib3/LibreSSL warnings on macOS."""
     import warnings
@@ -1458,6 +1469,7 @@ async def _flush_disconnect_alerts(
             phone=str(acc_info.get("phone") or ""),
             session_user="Disconnected",
             session_friday="Disconnected",
+            allow_instant=False,
         )
 
 
@@ -1752,6 +1764,7 @@ def load_otp_accounts(raw: dict[str, Any], root: Path, default_peers: list[int])
                     "profile_hint": str(row.get("profile_hint") or "").strip() or None,
                     "peer_ids": parse_peer_ids(row.get("peer_ids"), default_peers),
                     "brand": str(row.get("brand") or "").strip() or None,
+                    "device_id": str(row.get("device_id") or "").strip() or None,
                     "pool": "gcs",
                 }
             )
@@ -1759,21 +1772,61 @@ def load_otp_accounts(raw: dict[str, Any], root: Path, default_peers: list[int])
     return out
 
 
-def derive_otp_brand(row: dict[str, Any]) -> str:
-    """Brand grouping: `brand` field in JSON, or id prefix before `_`, or full id."""
+def derive_otp_brand(
+    row: dict[str, Any],
+    brands_cfg: dict[str, dict[str, Any]] | None = None,
+) -> str:
+    """Brand grouping: saved `brand`, id prefix, then explicit Device ID (MYR-SB-001)."""
+    try:
+        import sheets_sync
+    except Exception:
+        sheets_sync = None  # type: ignore[assignment]
+
     raw_b = row.get("brand")
     if raw_b is not None and str(raw_b).strip():
-        return str(raw_b).strip().upper()
+        b = str(raw_b).strip().upper()
+        if sheets_sync is not None:
+            if not sheets_sync.is_currency_code(b):
+                return b
+        elif b not in ("MYR", "SGD", "USD", "USC", "KHR"):
+            return b
+
     aid = str(row.get("id") or "").strip()
-    if "_" in aid:
-        return aid.split("_", 1)[0].upper()
-    return aid.upper() if aid else "UNKNOWN"
+    if sheets_sync is not None:
+        resolved = sheets_sync.resolve_brand_from_id(aid, brands_cfg)
+        if resolved:
+            return resolved
+
+    device_id = str(row.get("device_id") or "").strip()
+    if device_id and sheets_sync is not None:
+        currency, code = sheets_sync.parse_device_id(device_id)
+        if currency and code:
+            inferred = sheets_sync.infer_gcs_brand(
+                device_id=device_id,
+                account_id=aid,
+                brand=str(row.get("brand") or ""),
+                brands_cfg=brands_cfg,
+            )
+            if inferred:
+                return inferred
+
+    if aid and aid.upper() not in ("GCS", "SH", "UNKNOWN"):
+        bare = aid.split("_", 1)[0].upper() if "_" in aid else aid.upper()
+        if sheets_sync is not None:
+            if not sheets_sync.is_currency_code(bare) and len(bare) >= 3:
+                return bare
+        elif bare not in ("MYR", "SGD", "USD", "USC", "KHR") and len(bare) >= 3:
+            return bare
+    return "UNKNOWN"
 
 
-def group_otp_rows_by_brand(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+def group_otp_rows_by_brand(
+    rows: list[dict[str, Any]],
+    brands_cfg: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, list[dict[str, Any]]]:
     by: dict[str, list[dict[str, Any]]] = {}
     for row in rows:
-        b = derive_otp_brand(row)
+        b = derive_otp_brand(row, brands_cfg)
         by.setdefault(b, []).append(row)
     for b in by:
         by[b].sort(key=lambda r: (str(r.get("profile_hint") or r.get("id") or "")).lower())
@@ -1875,7 +1928,7 @@ def account_pool(acc: dict[str, Any]) -> str:
 def account_currency_for_request(acc: dict[str, Any], brands_cfg: dict[str, dict[str, Any]]) -> str:
     if account_pool(acc) == "shooter":
         return str(acc.get("currency") or SHOOTER_DEFAULT_CURRENCY).strip().upper()
-    return derive_brand_currency(derive_otp_brand(acc), brands_cfg)
+    return derive_brand_currency(derive_otp_brand(acc, brands_cfg), brands_cfg)
 
 
 def profile_name_from_me(me: Any, fallback: str = "") -> str:
@@ -2005,11 +2058,7 @@ def format_shooter_account_line(row: dict[str, Any], index: int) -> str:
         label = html.escape(name)
     else:
         label = "<i>(profile after login-all-shooter)</i>"
-    remark = str(row.get("remark") or "").strip()
-    line = f"<b>{index}.</b> <code>{phone}</code>  ·  {label}"
-    if remark:
-        line += f"  <i>({html.escape(remark)})</i>"
-    return line
+    return f"<b>{index}.</b> <code>{phone}</code>  ·  {label}"
 
 
 _COUNTRY_TO_CURRENCY: dict[str, str] = {
@@ -2661,14 +2710,15 @@ async def cmd_accounts(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     raw = load_json(accounts_json_path())
     default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
     rows = load_otp_accounts(raw, project_root(), default_peers)
+    brands_cfg = load_brands_config(raw)
+    rows = [r for r in rows if derive_otp_brand(r, brands_cfg) != "UNKNOWN"]
     if not rows:
         await em.reply_text(
             accounts_header_html("⚠️ <b>No Accounts</b>") + "\n\nNo active <code>otp_accounts</code> in accounts.json.",
             parse_mode="HTML",
         )
         return
-    grouped = group_otp_rows_by_brand(rows)
-    brands_cfg = load_brands_config(raw)
+    grouped = group_otp_rows_by_brand(rows, brands_cfg)
     brand_filter = " ".join(context.args).strip().upper() if context.args else ""
     thread_id = getattr(em, "message_thread_id", None)
 
@@ -3547,6 +3597,11 @@ def run_terminate_other_sessions(pool: str, target_id: str) -> int:
 
 
 _login_fail_cooldown_until: dict[str, float] = {}
+_login_awaiting_otp: dict[str, float] = {}
+_login_wait_otp_logged_at: dict[str, float] = {}
+_listen_pending_logged: set[str] = set()
+_listen_failed_cooldown_until: dict[str, float] = {}
+_listen_watch_tasks: dict[str, asyncio.Task[None]] = {}
 
 
 def _login_sheet_code_enabled() -> bool:
@@ -3576,12 +3631,13 @@ def _make_login_code_callback(
     *,
     max_otp_retries: int,
     preset_code: str = "",
+    quiet: bool = False,
 ) -> Callable[[], str]:
     """Wait for OTP column (L) in Google Sheet; optional terminal fallback."""
     otp_attempt = [0]
     use_sheet = _login_sheet_code_enabled() and not preset_code
     wait_sec = _env_int("TELEGRAM_SHEET_LOGIN_WAIT_SEC", 180, minimum=30)
-    poll_sec = max(2.0, float(os.environ.get("TELEGRAM_SHEET_LOGIN_POLL_SEC", "3").strip() or "3"))
+    poll_sec = max(1.0, float(os.environ.get("TELEGRAM_SHEET_LOGIN_POLL_SEC", "2").strip() or "2"))
     fallback_tty = os.environ.get("TELEGRAM_LOGIN_SHEET_FALLBACK_TTY", "0").strip().lower() in (
         "1",
         "true",
@@ -3607,17 +3663,19 @@ def _make_login_code_callback(
             import sheets_sync
 
             np = sheets_sync.norm_phone(phone)
-            print(
-                f"  Waiting for OTP in Sheet ({account_id} | {phone}) "
-                f"up to {wait_sec}s...",
-                flush=True,
-            )
+            if not quiet:
+                print(
+                    f"  Waiting for OTP in Sheet ({account_id} | {phone}) "
+                    f"up to {wait_sec}s...",
+                    flush=True,
+                )
             deadline = time.time() + wait_sec
             while time.time() < deadline:
-                codes = sheets_sync.fetch_login_codes_by_phone(root)
+                codes = sheets_sync.fetch_login_codes_by_phone(root, force=True)
                 code = codes.get(np, "") if np else ""
                 if code:
-                    print(f"  ✓ Sheet OTP received for {account_id}", flush=True)
+                    if not quiet:
+                        print(f"  ✓ Sheet OTP received for {account_id}", flush=True)
                     if _sheet_clear_code_after_login() and np:
                         sheets_sync.clear_login_code_in_sheet(root, np)
                     return code
@@ -3656,7 +3714,7 @@ def _make_login_password_callback(
     """Wait for 2FA column in Google Sheet; optional terminal fallback."""
     use_sheet = _login_sheet_code_enabled()
     wait_sec = _env_int("TELEGRAM_SHEET_LOGIN_WAIT_SEC", 180, minimum=30)
-    poll_sec = max(2.0, float(os.environ.get("TELEGRAM_SHEET_LOGIN_POLL_SEC", "3").strip() or "3"))
+    poll_sec = max(1.0, float(os.environ.get("TELEGRAM_SHEET_LOGIN_POLL_SEC", "2").strip() or "2"))
     fallback_tty = os.environ.get("TELEGRAM_LOGIN_SHEET_FALLBACK_TTY", "0").strip().lower() in (
         "1",
         "true",
@@ -3669,7 +3727,7 @@ def _make_login_password_callback(
 
         np = sheets_sync.norm_phone(phone)
         if use_sheet and np:
-            passwords = sheets_sync.fetch_passwords_by_phone(root)
+            passwords = sheets_sync.fetch_passwords_by_phone(root, force=True)
             pw = (passwords.get(np) or preset_password or "").strip()
             if pw:
                 print(f"  ✓ Sheet 2FA received for {account_id}", flush=True)
@@ -3681,7 +3739,7 @@ def _make_login_password_callback(
             )
             deadline = time.time() + wait_sec
             while time.time() < deadline:
-                passwords = sheets_sync.fetch_passwords_by_phone(root)
+                passwords = sheets_sync.fetch_passwords_by_phone(root, force=True)
                 pw = (passwords.get(np) or "").strip()
                 if pw:
                     print(f"  ✓ Sheet 2FA received for {account_id}", flush=True)
@@ -3740,15 +3798,15 @@ def _login_single_account(
         kw["phone"] = acc["phone"]
 
     sheet_pw = _apply_sheet_login_fields(acc, root)
-    if sheet_pw:
-        kw["password"] = sheet_pw
     if _login_sheet_code_enabled():
-        kw["password_callback"] = _make_login_password_callback(
+        kw["password"] = _make_login_password_callback(
             root,
             acc_id,
             acc_phone,
             preset_password=sheet_pw,
         )
+    elif sheet_pw:
+        kw["password"] = sheet_pw
 
     max_otp_retries = _env_int("TELEGRAM_LOGIN_OTP_RETRIES", 3, minimum=1)
     kw["code_callback"] = _make_login_code_callback(
@@ -3757,6 +3815,7 @@ def _login_single_account(
         acc_phone,
         max_otp_retries=max_otp_retries,
         preset_code=preset_code.strip(),
+        quiet=quiet,
     )
 
     conn_retries = _env_int("TELETHON_CONNECTION_RETRIES", 5, minimum=1)
@@ -3899,6 +3958,21 @@ def _phones_registered_in_json(root: Path, phones: set[str]) -> set[str]:
     return found
 
 
+def _account_sheet_login_pending(root: Path, acc: dict[str, Any]) -> bool:
+    """True while Sheet Status = Pending — LISTEN must wait for LIVE-LOGIN."""
+    if not os.environ.get("GOOGLE_SHEET_ID", "").strip():
+        return False
+    try:
+        import sheets_sync
+
+        phone = sheets_sync.norm_phone(str(acc.get("phone") or ""))
+        if not phone:
+            return False
+        return phone in sheets_sync.fetch_phones_by_sheet_status(root)
+    except Exception:
+        return False
+
+
 def _collect_accounts_pending_login(root: Path) -> list[tuple[str, dict[str, Any], str]]:
     """
     Accounts where Sheet column I (Status) = Pending (login trigger).
@@ -4036,6 +4110,7 @@ async def _listen_start_account(
     expired: list[str],
     skipped: list[str],
     profile_synced: list[str],
+    quiet: bool = False,
 ) -> None:
     pool = account_pool(acc)
     list_key = "shooter_accounts" if pool == "shooter" else "otp_accounts"
@@ -4051,15 +4126,19 @@ async def _listen_start_account(
     )
     if not session_file.is_file() or session_file.stat().st_size < 1024:
         skipped.append(listener_account_display_name(acc, acc_id))
-        print(f"  [{tag}] ⏭ {acc_id} — not logged in", flush=True)
-        _queue_sheet_status(
-            acc_id,
-            pool,
-            "pending_login",
-            phone=str(acc.get("phone") or ""),
-            session_user="Pending Login",
-            session_friday="Pending Login",
-        )
+        if _account_sheet_login_pending(project_root(), acc):
+            if not quiet and acc_id not in _listen_pending_logged:
+                print(f"  [{tag}] ⏭ {acc_id} — Pending (waiting LIVE-LOGIN + OTP in Sheet)", flush=True)
+                _listen_pending_logged.add(acc_id)
+            _listen_mark_login_wait(acc_id)
+        return
+
+    root = project_root()
+    if _account_sheet_login_pending(root, acc):
+        if not quiet and acc_id not in _listen_pending_logged:
+            print(f"  [{tag}] ⏭ {acc_id} — Pending (waiting LIVE-LOGIN + OTP in Sheet)", flush=True)
+            _listen_pending_logged.add(acc_id)
+        _listen_mark_login_wait(acc_id)
         return
 
     client = TelegramClient(
@@ -4132,18 +4211,39 @@ async def _listen_start_account(
 
     kw["code_callback"] = lambda: _no_interactive_code()
 
-    print(f"  [{tag}] Connecting {acc_id}...", flush=True)
+    if not quiet:
+        print(f"  [{tag}] Connecting {acc_id}...", flush=True)
     try:
         await client.start(**kw) if kw else await client.start()
     except Exception as e:
         err_text = str(e).lower()
+        if _account_sheet_login_pending(root, acc) or "fill otp column in sheet" in err_text:
+            skipped.append(listener_account_display_name(acc, acc_id))
+            if not quiet:
+                print(f"  [{tag}] ⏭ {acc_id} — waiting for LIVE-LOGIN", flush=True)
+            _listen_mark_login_wait(acc_id)
+            try:
+                await client.disconnect()
+            except Exception:
+                pass
+            return
         if "database is locked" in err_text:
-            user_st = "Pending Login"
-        else:
-            user_st = _classify_account_sheet_status(e)
+            if not quiet:
+                print(f"  [{tag}] ✗ {acc_id} — database locked (retry later)", flush=True)
+            else:
+                logger.info("[%s] %s database locked (hot-reload retry later)", tag, acc_id)
+            try:
+                await client.disconnect()
+            except Exception:
+                pass
+            return
+        user_st = _classify_account_sheet_status(e)
         profile_hint = str(acc.get("profile_hint") or acc_id)
         expired.append(listener_account_display_name(acc, acc_id, profile_hint))
-        print(f"  [{tag}] ✗ {acc_id} — {user_st}", flush=True)
+        if not quiet:
+            print(f"  [{tag}] ✗ {acc_id} — {user_st}", flush=True)
+        else:
+            logger.info("[%s] %s hot-reload failed: %s", tag, acc_id, user_st)
         _queue_sheet_status(
             acc_id,
             pool,
@@ -4151,7 +4251,8 @@ async def _listen_start_account(
             str(e)[:120],
             phone=str(acc.get("phone") or ""),
             session_user=user_st,
-            session_friday="Pending Login",
+            session_friday=_session_friday_for_account_status(user_st),
+            allow_instant=False,
         )
         notify_system_account_status(
             token,
@@ -4192,7 +4293,10 @@ async def _listen_start_account(
     if not verified:
         profile_hint = str(acc.get("profile_hint") or acc_id)
         expired.append(listener_account_display_name(acc, acc_id, profile_hint))
-        print(f"  [{tag}] ✗ {acc_id} — get_me() failed", flush=True)
+        if not quiet:
+            print(f"  [{tag}] ✗ {acc_id} — get_me() failed", flush=True)
+        else:
+            logger.info("[%s] %s hot-reload get_me() failed", tag, acc_id)
         _queue_sheet_status(
             acc_id,
             pool,
@@ -4200,7 +4304,8 @@ async def _listen_start_account(
             "get_me failed",
             phone=str(acc.get("phone") or ""),
             session_user="Expired",
-            session_friday="Active",
+            session_friday="Expired",
+            allow_instant=False,
         )
         notify_system_account_status(
             token,
@@ -4225,7 +4330,10 @@ async def _listen_start_account(
         user_st = "Active"
     if user_st != "Active":
         expired.append(listener_account_display_name(acc, acc_id, profile_name))
-        print(f"  [{tag}] ✗ {acc_id} — {user_st}", flush=True)
+        if not quiet:
+            print(f"  [{tag}] ✗ {acc_id} — {user_st}", flush=True)
+        else:
+            logger.info("[%s] %s hot-reload status: %s", tag, acc_id, user_st)
         _queue_sheet_status(
             acc_id,
             pool,
@@ -4233,7 +4341,8 @@ async def _listen_start_account(
             profile_name,
             phone=str(acc.get("phone") or ""),
             session_user=user_st,
-            session_friday="Active",
+            session_friday=user_st,
+            allow_instant=False,
         )
         notify_system_account_status(
             token,
@@ -4256,7 +4365,8 @@ async def _listen_start_account(
             if profile_name != old_hint:
                 profile_synced.append(acc_id)
     active.append(f"{acc_id} ({profile_name})")
-    print(f"  [{tag}] ✓ {acc_id} → {profile_name}", flush=True)
+    if not quiet:
+        print(f"  [{tag}] ✓ {acc_id} → {profile_name}", flush=True)
     clients.append((client, acc))
 
 
@@ -4269,8 +4379,163 @@ def _listen_hot_reload_enabled() -> bool:
     )
 
 
+def _listen_failed_retry_sec() -> int:
+    return _env_int("TELEGRAM_LISTEN_FAILED_RETRY_SEC", 300, minimum=60)
+
+
 def _listen_hot_reload_interval_sec() -> int:
     return _env_int("TELEGRAM_LISTEN_RELOAD_INTERVAL_SEC", 45, minimum=15)
+
+
+def _listen_mark_login_wait(acc_id: str) -> None:
+    aid = str(acc_id or "").strip()
+    if aid:
+        _listen_failed_cooldown_until[aid] = time.time() + _listen_failed_retry_sec()
+
+
+def _listen_failed_cooldown_active(acc_id: str) -> bool:
+    aid = str(acc_id or "").strip()
+    if not aid:
+        return False
+    until = _listen_failed_cooldown_until.get(aid, 0.0)
+    return until > time.time()
+
+
+def _listen_spawn_watch(
+    listen_kw: dict[str, Any],
+    cl: TelegramClient,
+    acc_info: dict[str, Any],
+) -> None:
+    acc_id = str(acc_info.get("id") or "")
+    old = _listen_watch_tasks.pop(acc_id, None)
+    if old is not None and not old.done():
+        old.cancel()
+    _listen_watch_tasks[acc_id] = asyncio.create_task(_watch_client_loop(cl, acc_info, listen_kw))
+
+
+async def _listen_stop_watch(listen_kw: dict[str, Any], acc_id: str) -> None:
+    task = _listen_watch_tasks.pop(str(acc_id or ""), None)
+    if task is not None and not task.done():
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+
+async def _listen_disconnect_client(
+    listen_kw: dict[str, Any],
+    cl: TelegramClient,
+    acc_id: str,
+) -> None:
+    await _listen_stop_watch(listen_kw, acc_id)
+    try:
+        await cl.disconnect()
+    except Exception:
+        pass
+
+
+def _listen_load_candidates(
+    *,
+    root: Path,
+    default_peers: list[int],
+    listen_shooter: bool,
+    listen_kw: dict[str, Any],
+) -> tuple[list[tuple[str, dict[str, Any]]], set[str]]:
+    accounts_doc = load_json(accounts_json_path())
+    brands_cfg = load_brands_config(accounts_doc)
+    listen_kw["accounts_doc"] = accounts_doc
+    listen_kw["brands_cfg"] = brands_cfg
+    gcs_accounts = load_otp_accounts(accounts_doc, root, default_peers)
+    shooter_accounts: list[dict[str, Any]] = []
+    if listen_shooter:
+        shooter_doc = load_shooter_doc()
+        shooter_accounts = load_shooter_login_accounts(shooter_doc, root, default_peers)
+    candidates: list[tuple[str, dict[str, Any]]] = [
+        ("GCS", acc) for acc in gcs_accounts
+    ] + [("SHOOTER", acc) for acc in shooter_accounts]
+    json_ids = {str(acc.get("id") or "") for _, acc in candidates if str(acc.get("id") or "")}
+    return candidates, json_ids
+
+
+async def _listen_sync_accounts(
+    *,
+    root: Path,
+    default_peers: list[int],
+    listen_shooter: bool,
+    listen_kw: dict[str, Any],
+) -> None:
+    """Sync LISTEN with JSON — add new accounts, remove deleted ones (incremental only)."""
+    removed_count = 0
+    clients: list[tuple[TelegramClient, dict[str, Any]]] = listen_kw["clients"]
+
+    try:
+        candidates, json_ids = _listen_load_candidates(
+            root=root,
+            default_peers=default_peers,
+            listen_shooter=listen_shooter,
+            listen_kw=listen_kw,
+        )
+    except Exception as e:
+        print(f"  [Hot-reload] sync failed to read JSON: {e}", flush=True)
+        return
+
+    active_ids = {str(acc.get("id") or "") for _, acc in clients}
+    for idx in range(len(clients) - 1, -1, -1):
+        cl, acc_info = clients[idx]
+        acc_id = str(acc_info.get("id") or "")
+        if not acc_id or acc_id in json_ids:
+            continue
+        await _listen_disconnect_client(listen_kw, cl, acc_id)
+        clients.pop(idx)
+        active_ids.discard(acc_id)
+        _listen_pending_logged.discard(acc_id)
+        _listen_failed_cooldown_until.pop(acc_id, None)
+        removed_count += 1
+
+    new_started = 0
+    for tag, acc in candidates:
+        acc_id = str(acc.get("id") or "")
+        if not acc_id or acc_id in active_ids:
+            continue
+        if _account_sheet_login_pending(root, acc):
+            continue
+        if not _session_file_ready(acc):
+            continue
+        if _listen_failed_cooldown_active(acc_id):
+            continue
+        n_before = len(clients)
+        hr_skipped: list[str] = []
+        hr_expired: list[str] = []
+        hr_active: list[str] = []
+        hr_sync: list[str] = []
+        await _listen_start_account(
+            acc,
+            tag=tag,
+            skipped=hr_skipped,
+            expired=hr_expired,
+            active=hr_active,
+            profile_synced=hr_sync,
+            quiet=True,
+            **listen_kw,
+        )
+        if len(clients) > n_before:
+            cl, acc_info = clients[-1]
+            _listen_spawn_watch(listen_kw, cl, acc_info)
+            active_ids.add(acc_id)
+            _listen_failed_cooldown_until.pop(acc_id, None)
+            new_started += 1
+
+    if new_started or removed_count:
+        parts: list[str] = []
+        if new_started:
+            parts.append(f"+{new_started} new")
+        if removed_count:
+            parts.append(f"-{removed_count} removed")
+        print(
+            f"  [Hot-reload] {', '.join(parts)} (total {len(clients)} listener(s))",
+            flush=True,
+        )
 
 
 async def _listen_hot_reload_loop(
@@ -4280,64 +4545,22 @@ async def _listen_hot_reload_loop(
     listen_shooter: bool,
     listen_kw: dict[str, Any],
 ) -> None:
-    """Detect new accounts from JSON (live sync) without restarting listen."""
+    """Incremental sync — add/remove accounts when JSON changes (no full reconnect)."""
     interval = _listen_hot_reload_interval_sec()
+    retry_sec = _listen_failed_retry_sec()
     print(
-        f"  Hot-reload: check for new accounts every {interval}s (TELEGRAM_LISTEN_HOT_RELOAD=0 to disable)",
+        f"  Hot-reload: incremental sync every {interval}s"
+        f" · failed-login retry cooldown {retry_sec}s",
         flush=True,
     )
     while True:
         await asyncio.sleep(interval)
-        clients: list[tuple[TelegramClient, dict[str, Any]]] = listen_kw["clients"]
-        active_ids = {str(acc.get("id") or "") for _, acc in clients}
-
-        try:
-            accounts_doc = load_json(accounts_json_path())
-            brands_cfg = load_brands_config(accounts_doc)
-            listen_kw["accounts_doc"] = accounts_doc
-            listen_kw["brands_cfg"] = brands_cfg
-            gcs_accounts = load_otp_accounts(accounts_doc, root, default_peers)
-            shooter_accounts: list[dict[str, Any]] = []
-            if listen_shooter:
-                shooter_doc = load_shooter_doc()
-                shooter_accounts = load_shooter_login_accounts(shooter_doc, root, default_peers)
-        except Exception as e:
-            print(f"  [Hot-reload] failed to read JSON: {e}", flush=True)
-            continue
-
-        candidates: list[tuple[str, dict[str, Any]]] = [
-            ("GCS", acc) for acc in gcs_accounts
-        ] + [("SHOOTER", acc) for acc in shooter_accounts]
-        new_started = 0
-        for tag, acc in candidates:
-            acc_id = str(acc.get("id") or "")
-            if not acc_id or acc_id in active_ids:
-                continue
-            if not _session_file_ready(acc):
-                continue
-            n_before = len(clients)
-            hr_skipped: list[str] = []
-            hr_expired: list[str] = []
-            hr_active: list[str] = []
-            hr_sync: list[str] = []
-            await _listen_start_account(
-                acc,
-                tag=tag,
-                skipped=hr_skipped,
-                expired=hr_expired,
-                active=hr_active,
-                profile_synced=hr_sync,
-                **listen_kw,
-            )
-            if len(clients) > n_before:
-                cl, acc_info = clients[-1]
-                asyncio.create_task(_watch_client_loop(cl, acc_info, listen_kw))
-                active_ids.add(acc_id)
-                new_started += 1
-                print(f"  [Hot-reload] +{acc_id} ({tag}) added to listener", flush=True)
-
-        if new_started:
-            print(f"  [Hot-reload] {new_started} new account(s) active (total {len(clients)})", flush=True)
+        await _listen_sync_accounts(
+            root=root,
+            default_peers=default_peers,
+            listen_shooter=listen_shooter,
+            listen_kw=listen_kw,
+        )
 
 
 async def _watch_client_loop(
@@ -4363,6 +4586,8 @@ async def _watch_client_loop(
     while True:
         try:
             await cl.run_until_disconnected()
+        except asyncio.CancelledError:
+            return
         except Exception:
             pass
 
@@ -4398,6 +4623,8 @@ async def _watch_client_loop(
 
 
 async def run_listener_async() -> int:
+    global _listen_watch_tasks
+    _listen_watch_tasks.clear()
     root = project_root()
     accounts_doc = load_json(accounts_json_path())
     brands_cfg = load_brands_config(accounts_doc)
@@ -4553,15 +4780,19 @@ async def run_listener_async() -> int:
     _disconnect_batch_queue.clear()
     grace, reconnect_attempts, reconnect_delay, alert_cooldown, batch_min = _disconnect_watch_config()
     print(
+        f"  Sheet status: queue only from LISTEN — LIVE-STATUS bulk-pushes to Google Sheet",
+        flush=True,
+    )
+    print(
         f"  Disconnect policy: grace {grace}s · reconnect {reconnect_attempts}x/"
         f"{reconnect_delay}s · alert cooldown {alert_cooldown}s · batch ≥{batch_min}",
         flush=True,
     )
 
-    tasks: list[asyncio.Task[None]] = [
-        asyncio.create_task(_watch_client_loop(cl, acc_info, listen_kw))
-        for cl, acc_info in clients
-    ]
+    tasks: list[asyncio.Task[None]] = []
+    for cl, acc_info in clients:
+        _listen_spawn_watch(listen_kw, cl, acc_info)
+    tasks.extend(_listen_watch_tasks.values())
     if _listen_hot_reload_enabled():
         tasks.append(
             asyncio.create_task(
@@ -4580,6 +4811,83 @@ async def run_listener_async() -> int:
     return 0
 
 
+def _purge_banned_accounts_enabled() -> bool:
+    return os.environ.get("TELEGRAM_PURGE_BANNED_ACCOUNTS", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def _status_is_banned(raw: str) -> bool:
+    return str(raw or "").strip().lower() == "banned"
+
+
+def _delete_account_session_files(acc: dict[str, Any]) -> None:
+    root = project_root()
+    session_path = acc.get("session")
+    if session_path:
+        sp = Path(str(session_path))
+        if not str(sp).endswith(".session"):
+            sp = Path(str(sp) + ".session")
+        if not sp.is_absolute():
+            sp = root / sp
+        _safe_unlink_session_file(sp)
+        journal = Path(str(sp) + "-journal")
+        _safe_unlink_session_file(journal)
+    aid = str(acc.get("id") or "").strip()
+    if aid:
+        for pattern in (
+            root / "telegram_session" / f"{aid}.session",
+            root / "telegram_session" / "shooter" / f"{aid}.session",
+        ):
+            _safe_unlink_session_file(pattern)
+            _safe_unlink_session_file(Path(str(pattern) + "-journal"))
+
+
+def purge_banned_account_from_json(
+    account_id: str,
+    pool: str,
+    *,
+    phone: str = "",
+) -> bool:
+    """Hapus akun Banned dari otp_accounts / shooter_accounts + session file."""
+    import sheets_sync
+
+    list_key = "shooter_accounts" if str(pool or "").strip().lower() == "shooter" else "otp_accounts"
+    path = _json_path_for_list_key(list_key)
+    aid = str(account_id or "").strip()
+    np = sheets_sync.norm_phone(phone)
+    removed_row: dict[str, Any] | None = None
+
+    def writer(data: dict[str, Any]) -> None:
+        nonlocal removed_row
+        lst = data.get(list_key)
+        if not isinstance(lst, list):
+            return
+        kept: list[dict[str, Any]] = []
+        for row in lst:
+            if not isinstance(row, dict):
+                kept.append(row)
+                continue
+            rid = str(row.get("id") or "").strip()
+            rphone = sheets_sync.norm_phone(str(row.get("phone") or ""))
+            if (aid and rid == aid) or (np and rphone and rphone == np):
+                removed_row = row
+                continue
+            kept.append(row)
+        data[list_key] = kept
+
+    if not _mutate_json_file(path, writer) or removed_row is None:
+        return False
+
+    _delete_account_session_files(removed_row)
+    label = aid or np or "?"
+    print(f"  🗑 Banned account removed from {path.name}: {label}", flush=True)
+    return True
+
+
 def _queue_sheet_status(
     account_id: str,
     pool: str,
@@ -4589,8 +4897,9 @@ def _queue_sheet_status(
     phone: str = "",
     session_user: str = "",
     session_friday: str = "",
+    allow_instant: bool | None = None,
 ) -> None:
-    """Queue status for Sheet push → Account Status / Session Friday."""
+    """Queue status for Sheet push → Status dropdown + Session Friday."""
     if not os.environ.get("GOOGLE_SHEET_ID", "").strip():
         return
     try:
@@ -4603,9 +4912,15 @@ def _queue_sheet_status(
             status,
             note,
             phone=phone,
-            session_user=session_user or status,
+            session_user=session_user if session_user else (status if str(status or "").strip().lower() != "pending login" else ""),
             session_friday=session_friday,
+            allow_instant=allow_instant,
         )
+        st = str(session_user or status or "").strip()
+        if st.lower() == "pending login":
+            st = ""
+        if _purge_banned_accounts_enabled() and _status_is_banned(st):
+            purge_banned_account_from_json(account_id, pool, phone=phone)
     except Exception:
         pass
 
@@ -4629,10 +4944,22 @@ def _safe_unlink_session_file(session_file: Path) -> None:
         pass
 
 
+def _session_friday_for_account_status(user_st: str, *, no_session: bool = False) -> str:
+    """Session Friday mirrors account state — staff use this column as primary reference."""
+    if no_session:
+        return "Pending Login"
+    st = str(user_st or "").strip()
+    if st in ("Banned", "Frozen", "Expired", "Disconnected"):
+        return st
+    if st.lower() == "unknown":
+        return "Disconnected"
+    return "Active"
+
+
 def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str]:
     """Return (session_user, session_friday) for one account."""
     if not _session_file_ready(acc):
-        return "Pending Login", "Pending Login"
+        return "", "Pending Login"
 
     client, tmp_dir = _make_telethon_client_temp(acc)
     user_st = "Unknown"
@@ -4640,7 +4967,7 @@ def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str]:
     try:
         client.connect()
         if not client.is_user_authorized():
-            return "Expired", "Pending Login"
+            return "Expired", "Expired"
         try:
             me = client.get_me()
             if not me:
@@ -4651,13 +4978,13 @@ def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str]:
                 user_st = "Frozen"
             else:
                 user_st = "Active"
-            friday_st = "Active"
+            friday_st = _session_friday_for_account_status(user_st)
         except Exception as e:
             user_st = _classify_account_sheet_status(e)
-            friday_st = "Active"
+            friday_st = _session_friday_for_account_status(user_st)
     except Exception as e:
         user_st = _classify_account_sheet_status(e)
-        friday_st = "Pending Login"
+        friday_st = _session_friday_for_account_status(user_st, no_session=True)
     finally:
         try:
             result = client.disconnect()
@@ -4676,16 +5003,16 @@ def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str]:
     # Never push "Unknown" to Sheet during sync health.
     if str(user_st).strip().lower() == "unknown":
         user_st = "Disconnected"
+    friday_st = _session_friday_for_account_status(user_st)
     return user_st, friday_st
 
 
 def _after_login_sync_status(acc: dict[str, Any], pool: str) -> tuple[str, str]:
     """
     After successful login:
-      - Column J Account Status → Active (unless health detects Banned/Frozen)
-      - Column K Session Friday → Active
-      - Column I Status → Feeding
-      - Column L OTP cleared
+      - Status dropdown → Ready (or Banned/Frozen if detected)
+      - Session Friday → Active
+      - OTP column cleared
     """
     root = project_root()
     acc_id = str(acc.get("id") or "?")
@@ -4693,18 +5020,26 @@ def _after_login_sync_status(acc: dict[str, Any], pool: str) -> tuple[str, str]:
     print(f"  Recording Sheet status for {acc_id}...", flush=True)
 
     user_st, friday_st = _health_check_one_account(acc)
-    if user_st in ("Banned", "Frozen"):
+    try:
+        import sheets_sync as _ss
+
+        after_status = _ss.sheet_status_after_login_value()
+    except Exception:
+        after_status = "Ready"
+
+    if user_st in ("Banned", "Frozen", "Expired", "Disconnected"):
+        sheet_status = user_st
         friday_st = user_st
     else:
-        user_st = "Active"
+        sheet_status = after_status
         friday_st = "Active"
 
     _queue_sheet_status(
         acc_id,
         pool,
-        user_st.lower(),
+        sheet_status.lower(),
         phone=phone,
-        session_user=user_st,
+        session_user=sheet_status,
         session_friday=friday_st,
     )
     try:
@@ -4712,39 +5047,35 @@ def _after_login_sync_status(acc: dict[str, Any], pool: str) -> tuple[str, str]:
 
         if phone:
             if sheets_sync.instant_push_enabled():
-                sheets_sync.push_status_instant(root, phone, user_st, friday_st)
-            sheets_sync.update_sheet_status_column(
-                root, phone, sheets_sync.sheet_status_after_login_value()
-            )
+                sheets_sync.push_status_instant(root, phone, sheet_status, friday_st)
+            else:
+                sheets_sync.update_sheet_status_column(root, phone, sheet_status)
             sheets_sync.clear_login_code_in_sheet(root, phone)
     except Exception:
         pass
-    after_status = "Feeding"
-    try:
-        import sheets_sync as _ss
-
-        after_status = _ss.sheet_status_after_login_value()
-    except Exception:
-        pass
     print(
-        f"  Sheet: Status={after_status} | Account Status={user_st} | Session Friday={friday_st}",
+        f"  Sheet: Status={sheet_status} | Session Friday={friday_st}",
         flush=True,
     )
-    return user_st, friday_st
+    return sheet_status, friday_st
 
 
 def _health_check_print_section(
     title: str,
     accounts: list[dict[str, Any]],
     pool_name: str,
+    *,
+    quiet: bool = False,
 ) -> dict[str, int]:
     """Print one GCS or Shooter block; return status counts."""
     counts: dict[str, int] = {}
-    print(f"\n{'=' * 44}")
-    print(f"  {title}  ({len(accounts)} account(s))")
-    print(f"{'=' * 44}")
+    if not quiet:
+        print(f"\n{'=' * 44}")
+        print(f"  {title}  ({len(accounts)} account(s))")
+        print(f"{'=' * 44}")
     if not accounts:
-        print("  (none)")
+        if not quiet:
+            print("  (none)")
         return counts
 
     for acc in accounts:
@@ -4753,26 +5084,33 @@ def _health_check_print_section(
         profile = str(acc.get("profile_hint") or acc_id)
         user_st, friday_st = _health_check_one_account(acc)
         counts[user_st] = counts.get(user_st, 0) + 1
-        print(f"  · {acc_id} ({profile})")
-        print(f"      Account Status : {user_st}")
-        print(f"      Session Friday : {friday_st}")
+        if not quiet:
+            print(f"  · {acc_id} ({profile})")
+            print(f"      Account Status : {user_st}")
+            print(f"      Session Friday : {friday_st}")
+        if user_st == "Active" and friday_st == "Active":
+            continue
+        if not user_st and friday_st == "Active":
+            continue
         _queue_sheet_status(
             acc_id,
             pool_name,
-            user_st.lower(),
+            user_st.lower() if user_st else "",
             profile,
             phone=phone,
             session_user=user_st,
             session_friday=friday_st,
+            allow_instant=False,
         )
         time.sleep(0.25)
 
-    parts = ", ".join(f"{k} {v}" for k, v in sorted(counts.items()))
-    print(f"  ── Subtotal: {parts or '—'}")
+    if not quiet:
+        parts = ", ".join(f"{k} {v}" for k, v in sorted(counts.items()))
+        print(f"  ── Subtotal: {parts or '—'}")
     return counts
 
 
-def run_health_check(pool: str = "all", target_id: str = "all") -> int:
+def run_health_check(pool: str = "all", target_id: str = "all", *, quiet: bool = False) -> int:
     """
     Brief connect to each account (temp session, safe with listen running).
     Output split: GCS and Shooter (not mixed).
@@ -4784,51 +5122,163 @@ def run_health_check(pool: str = "all", target_id: str = "all") -> int:
     sh_list = [a for a in accounts if account_pool(a) == "shooter"]
 
     if not gcs_list and not sh_list:
-        print(f"No accounts for health-check (pool={pool}, id={target_id}).", file=sys.stderr)
+        if not quiet:
+            print(f"No accounts for health-check (pool={pool}, id={target_id}).", file=sys.stderr)
         return 2
 
-    print("\n-- Health-check (temp copy, listen may keep running) --")
+    if not quiet:
+        print("\n-- Health-check (temp copy, listen may keep running) --")
 
     total_gcs: dict[str, int] = {}
     total_sh: dict[str, int] = {}
 
     if pool in ("all", "gcs"):
-        total_gcs = _health_check_print_section("GCS ACCOUNTS", gcs_list, "gcs")
+        total_gcs = _health_check_print_section("GCS ACCOUNTS", gcs_list, "gcs", quiet=quiet)
     if pool in ("all", "shooter"):
-        total_sh = _health_check_print_section("SHOOTER ACCOUNTS", sh_list, "shooter")
+        total_sh = _health_check_print_section("SHOOTER ACCOUNTS", sh_list, "shooter", quiet=quiet)
 
-    print(f"\n{'=' * 44}")
-    print("  HEALTH-CHECK SUMMARY")
-    print(f"{'=' * 44}")
-    if pool in ("all", "gcs"):
-        g_parts = ", ".join(f"{k} {v}" for k, v in sorted(total_gcs.items()))
-        print(f"  GCS     : {len(gcs_list)} checked — {g_parts or '—'}")
-    if pool in ("all", "shooter"):
-        s_parts = ", ".join(f"{k} {v}" for k, v in sorted(total_sh.items()))
-        print(f"  SHOOTER : {len(sh_list)} checked — {s_parts or '—'}")
-    print(f"{'=' * 44}\n")
+    merged: dict[str, int] = {}
+    for bucket in (total_gcs, total_sh):
+        for k, v in bucket.items():
+            merged[k] = merged.get(k, 0) + v
+
+    if quiet:
+        parts = ", ".join(f"{k} {v}" for k, v in sorted(merged.items()))
+        print(
+            f"  ✓ Health-check done — GCS {len(gcs_list)} · Shooter {len(sh_list)} — {parts or 'all Active'}",
+            flush=True,
+        )
+    else:
+        print(f"\n{'=' * 44}")
+        print("  HEALTH-CHECK SUMMARY")
+        print(f"{'=' * 44}")
+        if pool in ("all", "gcs"):
+            g_parts = ", ".join(f"{k} {v}" for k, v in sorted(total_gcs.items()))
+            print(f"  GCS     : {len(gcs_list)} checked — {g_parts or '—'}")
+        if pool in ("all", "shooter"):
+            s_parts = ", ".join(f"{k} {v}" for k, v in sorted(total_sh.items()))
+            print(f"  SHOOTER : {len(sh_list)} checked — {s_parts or '—'}")
+        print(f"{'=' * 44}\n")
     return 0
 
 
-def _run_sync_pull(root: Path, *, label: str = "Pull: Google Sheet → JSON") -> int:
-    """Import / update accounts.json + shooteraccounts.json from Telegram Acc tab."""
+def _live_login_otp_poll_sec() -> float:
+    return max(1.0, float(os.environ.get("TELEGRAM_SHEET_LOGIN_POLL_SEC", "2").strip() or "2"))
+
+
+def _live_login_wait_log_interval_sec() -> float:
+    return max(30.0, float(os.environ.get("TELEGRAM_LIVE_LOGIN_WAIT_LOG_SEC", "90").strip() or "90"))
+
+
+def _live_login_idle_log_interval_sec() -> float:
+    return max(60.0, float(os.environ.get("TELEGRAM_LIVE_LOGIN_IDLE_LOG_SEC", "300").strip() or "300"))
+
+
+def _health_check_interval_sec() -> int:
+    """0 = disabled in LIVE-STATUS loop. Default 172800 = 2 days."""
+    raw = os.environ.get("TELEGRAM_SYNC_HEALTH_INTERVAL_SEC", "172800").strip()
+    try:
+        return max(0, int(float(raw)))
+    except ValueError:
+        return 172800
+
+
+def _health_check_live_enabled() -> bool:
+    if os.environ.get("TELEGRAM_SYNC_HEALTH_CHECK", "1").strip().lower() in (
+        "0", "false", "no", "off",
+    ):
+        return False
+    return _health_check_interval_sec() > 0
+
+
+def _last_health_check_monotonic() -> float:
+    try:
+        st = load_json(state_json_path())
+        return float(st.get("last_health_check_ts") or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _save_last_health_check_ts(ts: float | None = None) -> None:
+    path = state_json_path()
+    data = load_json(path)
+    data["last_health_check_ts"] = ts if ts is not None else time.time()
+    try:
+        path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    except OSError as e:
+        logger.warning("cannot save health-check timestamp: %s", e)
+
+
+def _health_check_due() -> bool:
+    interval = _health_check_interval_sec()
+    if interval <= 0:
+        return False
+    last = _last_health_check_monotonic()
+    if last <= 0:
+        return True
+    return (time.time() - last) >= interval
+
+
+def _format_health_interval(sec: int) -> str:
+    if sec <= 0:
+        return "off"
+    if sec % 86400 == 0:
+        d = sec // 86400
+        return f"{d} day(s)"
+    if sec % 3600 == 0:
+        return f"{sec // 3600} hour(s)"
+    return f"{sec}s"
+
+
+def _maybe_log_waiting_otp(acc_ids: list[str]) -> None:
+    """Log 'waiting OTP' at most once per account per interval — no spam."""
+    if not acc_ids:
+        return
+    now = time.time()
+    gap = _live_login_wait_log_interval_sec()
+    for aid in acc_ids:
+        if not aid:
+            continue
+        last = _login_wait_otp_logged_at.get(aid, 0.0)
+        if now - last >= gap:
+            print(f"  · waiting OTP (5 digits) in Sheet for {aid} …", flush=True)
+            _login_wait_otp_logged_at[aid] = now
+
+
+def _run_sync_pull(
+    root: Path,
+    *,
+    label: str = "Pull: Google Sheet → JSON",
+    pending_only: bool | None = None,
+    verbose: bool = True,
+) -> int:
+    """Import accounts from Telegram Acc tab. pending_only=True → hanya Status=Pending + phone baru."""
     import sheets_sync
 
-    print(f"\n── {label} ──")
+    mode = "Pending-only (new phones)" if (pending_only if pending_only is not None else sheets_sync.pull_register_pending_only()) else "full"
+    if verbose:
+        print(f"\n── {label} [{mode}] ──")
     try:
         stats = sheets_sync.pull_from_sheet(
             root,
             lambda w: _mutate_json_file(accounts_json_path(), w),
             lambda w: _mutate_json_file(shooter_accounts_json_path(), w),
+            pending_only=pending_only,
         )
-        print(
-            f"  GCS     +{stats['gcs_added']} new, ~{stats['gcs_updated']} updated"
-            f" (skip {stats['gcs_skipped']})"
-        )
-        print(
-            f"  Shooter +{stats['shooter_added']} new, ~{stats['shooter_updated']} updated"
-            f" (skip {stats['shooter_skipped']})"
-        )
+        if verbose:
+            print(
+                f"  GCS     +{stats['gcs_added']} new, ~{stats['gcs_updated']} updated"
+                f" (skip {stats['gcs_skipped']})"
+            )
+            print(
+                f"  Shooter +{stats['shooter_added']} new, ~{stats['shooter_updated']} updated"
+                f" (skip {stats['shooter_skipped']})"
+            )
+        elif stats.get("gcs_added") or stats.get("shooter_added"):
+            print(
+                f"  ✓ registered: GCS +{stats['gcs_added']} · Shooter +{stats['shooter_added']}",
+                flush=True,
+            )
         return 0
     except Exception as e:
         print(f"✗ Pull failed: {e}", file=sys.stderr)
@@ -4836,15 +5286,17 @@ def _run_sync_pull(root: Path, *, label: str = "Pull: Google Sheet → JSON") ->
 
 
 def _run_sync_pull_after_login(root: Path) -> int:
-    """After successful login: merge from Sheet again + profile_hint from Telegram."""
+    """After login: do not mass-update JSON (Pending-only pull = no-op for existing)."""
     return _run_sync_pull(
         root,
-        label="Re-import Sheet → JSON (after successful login)",
+        label="Post-login JSON sync",
+        pending_only=True,
+        verbose=False,
     )
 
 
 def _run_sync_push(root: Path, *, verbose: bool = True) -> tuple[int, int]:
-    """Write Account Status & Session Friday to Google Sheet (full baseline + queue)."""
+    """Write Status dropdown & Session Friday to Google Sheet (queue delta)."""
     import sheets_sync
 
     try:
@@ -4907,6 +5359,9 @@ def run_sync_once(
     if step == "once":
         step = "all"
 
+    if step == "reconcile":
+        return run_sync_reconcile()
+
     if step == "sessions" or session_kill:
         if session_kill:
             return run_terminate_session(pool, account_id, session_kill, keep_device=keep_device or None)
@@ -4920,11 +5375,11 @@ def run_sync_once(
         return 0
 
     if step in ("all", "pull"):
-        if _run_sync_pull(root, label="1/4 Pull: Google Sheet → JSON") != 0:
+        if _run_sync_pull(root, label="1/4 Pull: Google Sheet → JSON", pending_only=False) != 0:
             return 1
 
     if step == "login":
-        if _run_sync_pull(root, label="Import Sheet → JSON") != 0:
+        if _run_sync_pull(root, label="Import Sheet → JSON", pending_only=False) != 0:
             return 1
 
     if step in ("all", "login"):
@@ -5053,46 +5508,52 @@ def _live_login_skip_pull() -> bool:
 
 
 def run_sync_live_login() -> int:
-    """Live login: Status=Pending -> send SMS -> wait for OTP column in Sheet."""
+    """Live login: Status=Pending -> send SMS once -> wait quietly for 5-digit OTP in Sheet."""
     if not os.environ.get("GOOGLE_SHEET_ID", "").strip():
         print("GOOGLE_SHEET_ID not set — live-login disabled.", file=sys.stderr)
         return 2
     root = project_root()
     interval_idle = _env_int("TELEGRAM_SYNC_LOGIN_INTERVAL_SEC", 60, minimum=20)
-    interval_busy = _env_int("TELEGRAM_SYNC_LOGIN_FAST_INTERVAL_SEC", 20, minimum=10)
+    interval_busy = _env_int("TELEGRAM_SYNC_LOGIN_FAST_INTERVAL_SEC", 5, minimum=2)
     fail_cooldown = _env_int("TELEGRAM_SHEET_LOGIN_FAIL_COOLDOWN_SEC", 600, minimum=60)
+    otp_poll = _live_login_otp_poll_sec()
 
     trigger = os.environ.get("TELEGRAM_SHEET_LOGIN_TRIGGER_STATUS", "Pending").strip() or "Pending"
     print("=" * 56)
     print("  LIVE LOGIN — Sheet-triggered (no terminal login-all)")
-    print(f"  Idle interval: {interval_idle}s | Busy: {interval_busy}s (Ctrl+C to stop)")
-    print(f"  Trigger: column I Status = {trigger!r}")
-    print(
-        "  Flow: Pending -> JSON -> login -> OTP + 2FA columns -> Active J/K"
-    )
+    print(f"  OTP poll: {otp_poll}s (5-digit in Sheet) | idle: {interval_idle}s")
+    print(f"  Trigger: Status = {trigger!r}")
+    print("  Flow: Pending -> SMS once -> fill OTP -> Ready / Active (quiet while waiting)")
     print("=" * 56)
 
     cycle = 0
+    last_idle_log = 0.0
     try:
         while True:
             cycle += 1
-            ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-            print(f"\n[Live Login #{cycle}] {ts}")
-
+            now = time.time()
             import sheets_sync
 
             pending_phones = _pending_trigger_phones_from_sheet(root)
             if not pending_phones:
-                print(f"  No rows with Status={trigger!r}.", flush=True)
+                if now - last_idle_log >= _live_login_idle_log_interval_sec():
+                    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+                    print(f"\n[Live Login] {ts} — no Status={trigger!r}", flush=True)
+                    last_idle_log = now
                 time.sleep(interval_idle)
                 continue
 
-            # New Sheet row: pull first so phone is added to JSON before login runs.
-            do_pull = not _live_login_skip_pull() or bool(pending_phones)
-            if do_pull:
+            registered_early = _phones_registered_in_json(root, pending_phones)
+            missing_early = pending_phones - registered_early
+
+            if missing_early:
+                ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+                print(f"\n[Live Login] {ts} — register {len(missing_early)} new Pending row(s)", flush=True)
                 if _run_sync_pull(
                     root,
-                    label="Live Login: Sheet -> JSON (auto-register if new)",
+                    label="Live Login: register new Pending row",
+                    pending_only=True,
+                    verbose=False,
                 ) != 0:
                     print(f"⚠ Pull failed, retry in {interval_idle}s.", file=sys.stderr)
                     time.sleep(interval_idle)
@@ -5108,92 +5569,127 @@ def run_sync_live_login() -> int:
                     f"  ⚠ Pending in Sheet but not in JSON: {sample}{extra}",
                     flush=True,
                 )
-                print(
-                    "    Fix row: Phone, Group (Main/Other), Channel; GCS needs api_id in accounts.json.",
-                    flush=True,
-                )
 
-            sleep_s = interval_busy if pending else interval_idle
             if not pending:
-                time.sleep(sleep_s)
+                time.sleep(interval_busy)
                 continue
 
-            codes = sheets_sync.fetch_login_codes_by_phone(root)
-            now = time.time()
+            codes = sheets_sync.fetch_login_codes_by_phone(root, force=True)
             picked: tuple[str, dict[str, Any], str] | None = None
             preset = ""
+            action = ""
 
-            for json_key, acc, _pool in pending:
+            # 1) Session already OK → finalize Sheet only
+            for json_key, acc, pool in pending:
                 acc_id = str(acc.get("id") or "")
-                if not acc_id:
+                if not acc_id or now < _login_fail_cooldown_until.get(acc_id, 0.0):
                     continue
-                until = _login_fail_cooldown_until.get(acc_id, 0.0)
-                if now < until:
-                    continue
-                phone = sheets_sync.norm_phone(str(acc.get("phone") or ""))
-                code = codes.get(phone, "") if phone else ""
-                if code:
-                    picked = (json_key, acc, _pool)
-                    preset = code
+                if _session_working(acc):
+                    picked = (json_key, acc, pool)
+                    preset = ""
+                    action = "finalize"
                     break
 
+            # 2) OTP (5 digits) in Sheet → login immediately
             if not picked:
                 for json_key, acc, pool in pending:
                     acc_id = str(acc.get("id") or "")
-                    if not acc_id:
+                    if not acc_id or now < _login_fail_cooldown_until.get(acc_id, 0.0):
                         continue
-                    if now < _login_fail_cooldown_until.get(acc_id, 0.0):
+                    if _session_working(acc):
+                        continue
+                    phone = sheets_sync.norm_phone(str(acc.get("phone") or ""))
+                    code = codes.get(phone, "") if phone else ""
+                    if code:
+                        picked = (json_key, acc, pool)
+                        preset = code
+                        action = "otp"
+                        break
+
+            # 3) No OTP yet → send SMS once per account, then wait quietly
+            if not picked:
+                for json_key, acc, pool in pending:
+                    acc_id = str(acc.get("id") or "")
+                    if not acc_id or now < _login_fail_cooldown_until.get(acc_id, 0.0):
+                        continue
+                    if _session_working(acc):
+                        continue
+                    if acc_id in _login_awaiting_otp:
                         continue
                     picked = (json_key, acc, pool)
                     preset = ""
+                    action = "sms"
                     break
 
+            # 4) Already waiting for OTP — silent poll (log at most every 90s)
             if not picked:
-                print("  All pending accounts in cooldown.", flush=True)
-                time.sleep(sleep_s)
+                waiting_ids = [
+                    str(acc.get("id") or "")
+                    for _, acc, _ in pending
+                    if str(acc.get("id") or "") in _login_awaiting_otp
+                    and not _session_working(acc)
+                ]
+                if waiting_ids:
+                    _maybe_log_waiting_otp([i for i in waiting_ids if i])
+                    time.sleep(otp_poll)
+                    continue
+                if all(
+                    now < _login_fail_cooldown_until.get(str(acc.get("id") or ""), 0.0)
+                    for _, acc, _ in pending
+                    if str(acc.get("id") or "")
+                ):
+                    time.sleep(interval_busy)
+                    continue
+                time.sleep(otp_poll)
                 continue
 
             json_key, acc, pool = picked
             acc_id = str(acc.get("id") or "?")
             label = "SHOOTER" if pool == "shooter" else "GCS"
             phone = str(acc.get("phone") or "")
-            if _session_working(acc):
-                print(
-                    f"  -> Finalize {acc_id} ({label}) — session OK, updating Sheet only",
-                    flush=True,
-                )
+            ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+            if action == "finalize":
+                print(f"\n[Live Login] {ts} -> finalize {acc_id} ({label})", flush=True)
                 pool_name = "shooter" if pool == "shooter" else "gcs"
                 _after_login_sync_status(acc, pool_name)
                 _run_sync_push_delta(root, verbose=False)
                 _run_sync_pull_after_login(root)
-                print(f"  ✓ {acc_id} Sheet updated (Active / Feeding).", flush=True)
-                print(f"⏳ Waiting {sleep_s}s...", flush=True)
-                time.sleep(sleep_s)
+                _login_awaiting_otp.pop(acc_id, None)
+                _login_wait_otp_logged_at.pop(acc_id, None)
+                print(f"  ✓ {acc_id} Sheet updated (Ready / Active).", flush=True)
+                time.sleep(interval_busy)
                 continue
 
-            _apply_sheet_login_fields(acc, root)
-            has_2fa = bool(str(acc.get("password") or "").strip())
-            otp_hint = " (OTP in Sheet)" if preset else " — waiting OTP column"
-            fa_hint = " + 2FA in Sheet" if has_2fa else " (fill 2FA column if account has 2FA)"
-            print(f"  -> Login {acc_id} ({label}){otp_hint}{fa_hint}", flush=True)
+            if action == "otp":
+                print(f"\n[Live Login] {ts} -> OTP detected → login {acc_id} ({label})", flush=True)
+            elif action == "sms":
+                print(
+                    f"\n[Live Login] {ts} -> SMS request {acc_id} ({label}) — fill OTP column when received",
+                    flush=True,
+                )
+                _login_awaiting_otp[acc_id] = now
 
+            _apply_sheet_login_fields(acc, root)
             ok = _login_single_account(
                 acc,
                 json_key,
                 label,
                 preset_code=preset,
-                quiet=False,
+                quiet=(action == "sms"),
             )
             if ok:
                 print(f"  ✓ {acc_id} session ready — LISTEN hot-reload will pick it up.", flush=True)
                 _login_fail_cooldown_until.pop(acc_id, None)
+                _login_awaiting_otp.pop(acc_id, None)
+                _login_wait_otp_logged_at.pop(acc_id, None)
                 _run_sync_pull_after_login(root)
             else:
                 _login_fail_cooldown_until[acc_id] = now + fail_cooldown
+                _login_awaiting_otp.pop(acc_id, None)
                 print(f"  ✗ {acc_id} failed — cooldown {fail_cooldown}s", file=sys.stderr)
 
-            print(f"⏳ Waiting {sleep_s}s...", flush=True)
-            time.sleep(sleep_s)
+            time.sleep(interval_busy if ok else min(interval_busy, otp_poll))
     except KeyboardInterrupt:
         print(f"\n\n✓ Live login stopped after {cycle} cycle(s).")
         return 0
@@ -5201,15 +5697,17 @@ def run_sync_live_login() -> int:
 
 def run_sync_live_pull() -> int:
     """
-    Live record ringan: hanya pull Sheet -> JSON secara berkala.
-    Auto-register new phone numbers from Sheet without restarting the terminal.
+    Live pull: register NEW accounts only when Sheet Status = Pending.
+    Does not update existing JSON rows (avoids junk re-import every cycle).
     """
     root = project_root()
-    interval = _env_int("TELEGRAM_SYNC_PULL_INTERVAL_SEC", 45, minimum=10)
+    interval = _env_int("TELEGRAM_SYNC_PULL_INTERVAL_SEC", 90, minimum=30)
+    trigger = os.environ.get("TELEGRAM_SHEET_LOGIN_TRIGGER_STATUS", "Pending").strip() or "Pending"
     print("=" * 52)
-    print("  LIVE PULL — Sheet -> JSON (auto register)")
+    print("  LIVE PULL — Pending -> JSON (new phones only)")
+    print(f"  Trigger: Status = {trigger!r} + phone not in JSON yet")
     print(f"  Interval: {interval}s (Ctrl+C to stop)")
-    print("  Group Main -> GCS | Other -> Shooter | dedup by phone")
+    print("  Existing accounts are never modified by this service.")
     print("=" * 52)
 
     cycle = 0
@@ -5218,9 +5716,17 @@ def run_sync_live_pull() -> int:
             cycle += 1
             ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
             print(f"\n[Live Pull #{cycle}] {ts}")
-            rc = _run_sync_pull(root, label="Live Pull: Google Sheet → JSON")
+            rc = _run_sync_pull(
+                root,
+                label="Live Pull",
+                pending_only=True,
+            )
             if rc != 0:
-                print(f"⚠ Live pull failed (rc={rc}), retrying in {interval}s.", file=sys.stderr)
+                err_hint = " (429 quota — increase TELEGRAM_SYNC_PULL_INTERVAL_SEC)" if rc == 1 else ""
+                print(
+                    f"⚠ Live pull failed (rc={rc}){err_hint}, retrying in {interval}s.",
+                    file=sys.stderr,
+                )
             print(f"⏳ Waiting {interval}s...", flush=True)
             time.sleep(interval)
     except KeyboardInterrupt:
@@ -5234,25 +5740,39 @@ def run_sync_live_status(
     account_id: str = "all",
 ) -> int:
     """
-    Lightweight live status: push queue delta to Sheet periodically.
-    No full health-check scan (keeps the terminal quiet).
+    Live status: queue delta push + scheduled full health-check (default every 2 days).
     """
     if pool != "all" or account_id != "all":
         print("⚠ live-status ignores --pool/--id; this mode pushes global delta.", file=sys.stderr)
 
     interval = _env_int("TELEGRAM_SYNC_STATUS_INTERVAL_SEC", 120, minimum=30)
+    hc_interval = _health_check_interval_sec()
+    hc_on = _health_check_live_enabled()
     print("=" * 56)
-    print("  LIVE STATUS (DELTA) — queue -> Google Sheet")
-    print(f"  Interval: {interval}s (Ctrl+C to stop)")
-    print("  No health-check / full scan. Queue changes only.")
-    print("  Empty Account Status is normal (filled when listen detects issues).")
+    print("  LIVE STATUS — queue -> Google Sheet")
+    print(f"  Delta push every {interval}s")
+    if hc_on:
+        print(f"  Full health-check every {_format_health_interval(hc_interval)} (all accounts)")
+    else:
+        print("  Scheduled health-check: off (TELEGRAM_SYNC_HEALTH_INTERVAL_SEC=0)")
     print("=" * 56)
 
     cycle = 0
     try:
         while True:
             cycle += 1
-            rc_push, updated_rows, queued = _run_sync_push_delta(project_root(), verbose=False)
+            root = project_root()
+
+            if hc_on and _health_check_due():
+                ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+                print(f"\n[Live Status] {ts} — scheduled health-check starting …", flush=True)
+                hc_rc = run_health_check(quiet=True)
+                if hc_rc == 0:
+                    _save_last_health_check_ts()
+                else:
+                    print("  ⚠ Health-check skipped or failed.", file=sys.stderr)
+
+            rc_push, updated_rows, queued = _run_sync_push_delta(root, verbose=False)
             if rc_push != 0:
                 print(f"⚠ Push status failed (rc={rc_push}), retrying in {interval}s.", file=sys.stderr)
             elif queued > 0:
@@ -5263,11 +5783,69 @@ def run_sync_live_status(
                     print(
                         f"[Live Status #{cycle}] {ts} -> queue {queued}, skip (already matches Sheet)"
                     )
-            print(f"⏳ Waiting {interval}s...", flush=True)
             time.sleep(interval)
     except KeyboardInterrupt:
         print(f"\n\n✓ Live status stopped after {cycle} cycle(s).")
         return 0
+
+
+def run_sync_reconcile() -> int:
+    """Laporan akun di JSON tapi tidak di Sheet (dan sebaliknya)."""
+    import sheets_sync
+
+    root = project_root()
+    if not os.environ.get("GOOGLE_SHEET_ID", "").strip():
+        print("GOOGLE_SHEET_ID not set.", file=sys.stderr)
+        return 2
+    default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
+    raw_gcs = load_json(accounts_json_path())
+    gcs = load_otp_accounts(raw_gcs, root, default_peers)
+    raw_sh = load_shooter_doc()
+    shooter = load_shooter_login_accounts(raw_sh, root, default_peers)
+    missing_sheet, missing_json = sheets_sync.reconcile_json_vs_sheet(
+        root, gcs_accounts=gcs, shooter_accounts=shooter
+    )
+
+    print("=" * 56)
+    print("  RECONCILE — JSON vs Google Sheet (Telegram Acc)")
+    print("=" * 56)
+    print(f"\n  JSON total     : {len(gcs) + len(shooter)} account(s)")
+    print(f"  Missing Sheet  : {len(missing_sheet)} (ada di JSON, tidak di Sheet)")
+    print(f"  Missing JSON   : {len(missing_json)} (ada di Sheet, tidak di JSON)")
+
+    if missing_sheet:
+        print("\n── Tambahkan baris ini ke Google Sheet ──")
+        by_brand: dict[str, list[dict[str, str]]] = {}
+        for row in missing_sheet:
+            b = row.get("brand") or row.get("pool") or "?"
+            by_brand.setdefault(b, []).append(row)
+        for brand in sorted(by_brand, key=lambda x: x.lower()):
+            rows = sorted(by_brand[brand], key=lambda r: r.get("id", ""))
+            print(f"\n  [{brand}] {len(rows)} account(s)")
+            for r in rows[:50]:
+                print(f"    · {r['id']:22} {r['phone']:16} {r['profile']}")
+            if len(rows) > 50:
+                print(f"    … +{len(rows) - 50} more")
+
+    if missing_json:
+        print("\n── Ada di Sheet tapi tidak di JSON (Pending pull / junk?) ──")
+        for r in missing_json[:40]:
+            print(
+                f"    · {r['phone']:16} {r['name']!r:20} "
+                f"status={r['status']} group={r['group']}"
+            )
+        if len(missing_json) > 40:
+            print(f"    … +{len(missing_json) - 40} more")
+
+    if not missing_sheet and not missing_json:
+        print("\n  ✓ JSON dan Sheet selaras (by phone).")
+    elif missing_sheet:
+        print(
+            "\n  → Tambah baris di Sheet, lalu set Status=Pending hanya untuk login baru.",
+            flush=True,
+        )
+    print()
+    return 0
 
 
 def run_sync(
@@ -5289,6 +5867,8 @@ def run_sync(
         return run_sync_live_login()
     if step == "live-status":
         return run_sync_live_status(pool=pool, account_id=account_id)
+    if step == "reconcile":
+        return run_sync_reconcile()
     return run_sync_once(
         step,
         pool=pool,
@@ -5314,10 +5894,10 @@ def build_parser() -> argparse.ArgumentParser:
         nargs="?",
         default=None,
         choices=[
-            "once", "all", "loop", "live", "live-login", "live-status",
+            "once", "all", "loop", "live", "live-login", "live-status", "reconcile",
             "pull", "login", "health", "push", "sessions", "init",
         ],
-        help="live=Sheet->JSON. live-login=Sheet OTP column->session. live-status=delta push.",
+        help="reconcile=JSON vs Sheet report. live=Sheet->JSON. live-status=delta push.",
     )
     p_sync.add_argument("--pool", choices=["gcs", "shooter", "all"], default="all")
     p_sync.add_argument("--id", dest="account_id", default="all", help="For sessions: id/brand partial.")
@@ -5398,6 +5978,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    _configure_stdio_utf8()
     _configure_runtime_warnings()
     logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s %(message)s", level=logging.INFO)
     # Avoid spam "Task was destroyed but it is pending!" on forced stop on Windows.

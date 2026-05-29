@@ -3,56 +3,91 @@
 ====================================================
 
 PowerShell (Windows):
-  .\setup.ps1              → one-time setup on a new laptop
-  .\start_production.ps1   → stop old processes + open 5 windows (BOT+LISTEN+LIVE-PULL+LIVE-LOGIN+LIVE-STATUS)
+  .\setup.ps1              → one-time setup
+  .\start_production.ps1   → kill all + open 5 windows (fresh start)
+  .\restart_service.ps1    → restart ONE window only (listen/bot/live-*)
 
-Do NOT commit / sync via Git:
-  .env, telegram_session/, tg-otp-automation-*.json, *.lock, state.json
+Do NOT commit: .env, telegram_session/, credentials JSON, *.lock, state.json
 
-Do NOT start production twice (causes 409 Conflict).
-Do NOT run the bot from the Cursor terminal — use start_production.ps1.
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  PRODUCTION (5 separate PowerShell windows)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  powershell -ExecutionPolicy Bypass -File .\start_production.ps1
-
-  Window 1 = BOT
-  Window 2 = LISTEN
-  Window 3 = LIVE-PULL    (Sheet -> JSON, auto register)
-  Window 4 = LIVE-LOGIN   (Sheet OTP column -> .session)
-  Window 5 = LIVE-STATUS  (queue -> Sheet, delta push)
-
-  Google Sheet columns (tab "Telegram Acc"):
-    I  Status          — set Pending to trigger login
-    J  Account Status  — script writes Active after success
-    K  Session Friday  — script writes Active after success
-    L  OTP             — staff fills SMS code during login
-    M  2FA             — cloud / 2FA password (if Telegram account has 2FA)
+Do NOT start production twice (409 Conflict).
+Do NOT run BOT from Cursor terminal.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  MANUAL SYNC (one-off, in any PowerShell window)
+  RESTART 1 SERVICE ONLY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  .\.venv\Scripts\python.exe telegram_otp_allinone.py sync
-  .\.venv\Scripts\python.exe telegram_otp_allinone.py sync health
-
-  Do NOT use: sync loop
+  powershell -ExecutionPolicy Bypass -File .\restart_service.ps1 listen
+  powershell -ExecutionPolicy Bypass -File .\restart_service.ps1 bot
+  powershell -ExecutionPolicy Bypass -File .\restart_service.ps1 live-pull
+  powershell -ExecutionPolicy Bypass -File .\restart_service.ps1 live-login
+  powershell -ExecutionPolicy Bypass -File .\restart_service.ps1 live-status
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  NEW SESSION LOGIN (no terminal typing)
+  WHEN TO RESTART
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  1) Add row in Google Sheet (Phone, Group, User, …)
-  2) Set column I Status = Pending
-     (LIVE-LOGIN auto-registers JSON if phone not there yet, then login)
-  3) LIVE-PULL also syncs all rows every ~45s (optional backup)
-  4) Wait for SMS → fill OTP column (M); 2FA in column L if needed
-  5) LIVE-LOGIN + LIVE-STATUS update J/K automatically
+  Edit JSON / Sheet / add-remove account  →  NO restart (LISTEN hot-reload ~45s)
+  Change .py or .env code                 →  restart THAT service only
+  Want all 5 windows fresh                →  start_production.ps1
 
-  Emergency manual only: login-all / login-all-shooter
-  Daily OTP for staff: /login <account_id> in the bot
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  GOOGLE SHEET COLUMNS (tab "Telegram Acc")
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Status (dropdown)
+    · STAFF sets Pending  → triggers LIVE-LOGIN (login baru)
+    · SCRIPT writes Ready / Banned / Frozen / Expired / Disconnected
+    · SCRIPT never writes Pending or Pending Login
+
+  Session Friday  (staff reference — script only)
+    · Active          = bot session OK
+    · Pending Login   = belum ada / belum valid session
+    · Banned          = akun banned (mirror Status)
+    · Frozen / Expired / Disconnected = same meaning
+
+  OTP   = staff isi 5 digit saat login
+  2FA   = cloud password jika ada
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  NEW LOGIN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1) Row di Sheet (Phone, Group, Acc Name, Device ID)
+  2) Status = Pending  (staff only)
+  3) LIVE-LOGIN SMS → isi OTP
+  4) Status=Ready, Session Friday=Active
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  REPLACE BANNED (same row)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1) Banned → auto purge JSON + session (TELEGRAM_PURGE_BANNED_ACCOUNTS=1)
+  2) Clear row → isi detail akun baru (phone baru OK)
+  3) Status = Pending → login seperti akun baru
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  RECONCILE JSON vs SHEET
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  .\.venv\Scripts\python.exe telegram_otp_allinone.py sync reconcile
+
+  Shows accounts in JSON but missing from Sheet — add rows before sync works.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SINGLE COMMANDS (manual window)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  cd "E:\Telegram BOT OTP"
+  .\.venv\Scripts\python.exe telegram_otp_allinone.py bot
+  .\.venv\Scripts\python.exe telegram_otp_allinone.py listen
+  .\.venv\Scripts\python.exe telegram_otp_allinone.py sync live
+  .\.venv\Scripts\python.exe telegram_otp_allinone.py sync live-login
+  .\.venv\Scripts\python.exe telegram_otp_allinone.py sync live-status
+  .\.venv\Scripts\python.exe telegram_otp_allinone.py sync reconcile

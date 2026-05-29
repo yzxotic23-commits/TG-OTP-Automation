@@ -1,96 +1,99 @@
 # Telegram BOT OTP
 
-Telegram bot that forwards Telegram login OTP codes to configured chats.
+Telegram bot that forwards login OTP codes to configured chats. Production runs as **5 separate PowerShell windows**.
 
 ---
 
-## Quick Start (New PC)
-
-### 1. Setup (once)
+## Quick Start (Windows)
 
 ```powershell
 cd "E:\Telegram BOT OTP"
 powershell -ExecutionPolicy Bypass -File .\setup.ps1
-```
-
-### 2. Copy sensitive files manually (do not use Git)
-
-```
-.env
-accounts.json
-shooteraccounts.json
-tg-otp-automation-*.json
-telegram_session\**\*.session
-```
-
-> Do **not** sync `telegram_session/` across Mac/Windows via Git.
-
-### 3. New account login (production flow)
-
-1. Add a row in Google Sheet (Phone, Group, User, …).
-2. **LIVE-PULL** syncs Sheet → JSON.
-3. Set **column I (Status) = `Pending`** to trigger login.
-4. When SMS arrives, fill **OTP column** (header `OTP`). Put **2FA** in its column if the account uses 2FA.
-5. After success: **J & K = Active**, **I = Feeding**.
-
-Emergency terminal login (optional):
-
-```powershell
-.\.venv\Scripts\python.exe telegram_otp_allinone.py login-all
-.\.venv\Scripts\python.exe telegram_otp_allinone.py login-all-shooter
-```
-
-### 4. Run production (5 separate PowerShell windows)
-
-```powershell
 powershell -ExecutionPolicy Bypass -File .\start_production.ps1
 ```
 
-This script will:
-- Stop old OTP processes (bot/listen/live-*) if still running
-- Open **5 external PowerShell windows**: BOT, LISTEN, LIVE-PULL, LIVE-LOGIN, LIVE-STATUS
-- Handle new sessions via Sheet column **L (OTP)** — no typing in the terminal
+Copy manually (do **not** use Git): `.env`, `accounts.json`, `shooteraccounts.json`, `tg-otp-automation-*.json`, `telegram_session\**\*.session`
 
 ---
 
 ## Google Sheet columns (tab `Telegram Acc`)
 
-| Col | Header | Role |
-|-----|--------|------|
-| I | Status | Staff sets **Pending** to trigger LIVE-LOGIN |
-| J | Account Status | Script writes **Active** (or Banned/Frozen) after login |
-| K | Session Friday | Script writes **Active** after login |
-| L | 2FA | Cloud / 2FA password (if the Telegram account has 2FA enabled) |
-| M | OTP | Staff fills SMS code during login |
+| Column | Who writes | Values |
+|--------|------------|--------|
+| **Status** | **Staff** sets `Pending` to trigger login. **Script** writes `Ready`, `Banned`, `Frozen`, `Expired`, `Disconnected` | Script **never** writes `Pending` or `Pending Login` |
+| **Session Friday** | **Script only** | `Active`, `Pending Login`, `Banned`, `Frozen`, `Expired`, `Disconnected` |
+| **OTP** | Staff during login | 5-digit SMS code |
+| **2FA** | Staff | Cloud password if account has 2FA |
+
+**Staff rule:** Only set **Status = Pending** manually. Session Friday is the main reference for bot session state.
 
 ---
 
-## Bot commands (Telegram)
+## Production windows
+
+| # | Service | Role |
+|---|---------|------|
+| 1 | BOT | `/login`, `/accounts`, `/ping` |
+| 2 | LISTEN | OTP forward + detect Banned/Frozen → queue |
+| 3 | LIVE-PULL | Pending + **new phone** → JSON only |
+| 4 | LIVE-LOGIN | SMS once → wait OTP in Sheet |
+| 5 | LIVE-STATUS | Push queue → Sheet + health-check (2 days) |
+
+Restart **one** service only:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\restart_service.ps1 listen
+```
+
+Full reset (all 5 windows):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start_production.ps1
+```
+
+**No restart needed** when editing `accounts.json` or Sheet rows (LISTEN hot-reload ~45s).
+
+---
+
+## New account login
+
+1. Add row in Google Sheet (Device ID, Group, Acc Name, Phone, …)
+2. Staff set **Status = Pending**
+3. LIVE-PULL registers phone if new → JSON
+4. LIVE-LOGIN sends SMS → fill **OTP** column
+5. Script writes **Status = Ready**, **Session Friday = Active**
+
+---
+
+## Replace banned account (same row)
+
+1. Old account → **Status = Banned**, **Session Friday = Banned** (auto purge JSON + session)
+2. Clear row → fill new details (new phone OK)
+3. Staff set **Status = Pending** → login flow as new account
+
+---
+
+## Reconcile JSON vs Sheet
+
+Find accounts in JSON missing from Sheet (common gap):
+
+```powershell
+.\.venv\Scripts\python.exe telegram_otp_allinone.py sync reconcile
+```
+
+Add missing rows to Sheet before expecting status sync to work.
+
+---
+
+## Bot commands
 
 | Command | Function |
 |---------|----------|
-| `/start` | Register / link staff |
-| `/ping` | Check bot is alive |
-| `/accounts` | List GCS brands |
-| `/login STMY_LINA` | Request OTP for an account |
+| `/accounts [BRAND]` | List GCS accounts |
+| `/login ACCOUNT_ID` | Request OTP (staff must send in topic first if `TELEGRAM_REQUIRE_LOGIN_REQUEST=1`) |
+| `/ping` | Bot alive check |
 
----
-
-## PowerShell scripts
-
-| Script | Function |
-|--------|----------|
-| `setup.ps1` | First-time setup + venv helpers |
-| `start_production.ps1` | Stop old processes + start all 5 live services |
-
-## Manual sync (any PowerShell window)
-
-```powershell
-.\.venv\Scripts\python.exe telegram_otp_allinone.py sync
-.\.venv\Scripts\python.exe telegram_otp_allinone.py sync health
-```
-
-Do not use `sync loop`.
+See **COMMANDS.txt** for full reference.
 
 ---
 
@@ -98,15 +101,16 @@ Do not use `sync loop`.
 
 | Issue | Fix |
 |-------|-----|
-| `409 Conflict` | Do not start the bot twice; close old BOT window; run `start_production.ps1` once |
-| `AuthKeyDuplicatedError` | Session used on 2 machines; re-login; run `listen` on one PC only |
-| OTP not delivered | Ensure LISTEN window is running and staff used `/login` |
-| `database is locked` | Stop LISTEN, then retry login |
+| `409 Conflict` | Only one BOT instance; use `start_production.ps1` once |
+| LISTEN Unicode error | Fixed: UTF-8 stdout on Windows (restart LISTEN) |
+| OTP not delivered | LISTEN running + staff used `/login` |
+| Status not syncing | Run `sync reconcile` — phone may be missing from Sheet |
+| `database is locked` | Stop LISTEN briefly, retry login |
 
 ---
 
 ## Git safety
 
-Do not commit: `.env`, `telegram_session/`, `tg-otp-automation-*.json`, `*.lock`, `state.json`.
+Do not commit: `.env`, `telegram_session/`, credentials JSON, `*.lock`, `state.json`, `sheet_status_queue.jsonl`
 
-Optional variables: see `.env.example`.
+Optional env vars: see `.env.example`

@@ -122,7 +122,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "STMY"
     },
     {
       "id": "STMY_LINA",
@@ -136,7 +137,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "STMY"
     },
     {
       "id": "STMY_ALICIA",
@@ -150,7 +152,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "STMY"
     },
     {
       "id": "STMY_RAISA",
@@ -164,7 +167,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "STMY"
     },
     {
       "id": "STMY_OFFICIAL",
@@ -178,7 +182,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "STMY"
     },
     {
       "id": "STMY_RICO",
@@ -192,7 +197,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "STMY"
     },
     {
       "id": "STMY_MANAGER",
@@ -206,7 +212,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "STMY"
     },
     {
       "id": "JMMY_RICHARD",
@@ -220,7 +227,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "JMMY",
+      "device_id": "MYR-JM-001"
     },
     {
       "id": "JMMY_HARIS",
@@ -234,7 +243,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "JMMY",
+      "device_id": "MYR-JM-001"
     },
     {
       "id": "JMMY_STEVEN",
@@ -248,7 +259,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "JMMY",
+      "device_id": "MYR-JM-001"
     },
     {
       "id": "SBMY_JAYSON",
@@ -262,7 +275,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBMY",
+      "device_id": "MYR-SB-001"
     },
     {
       "id": "SBMY_BEN",
@@ -276,7 +291,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBMY",
+      "device_id": "MYR-SB-001"
     },
     {
       "id": "SBMY_6",
@@ -290,7 +307,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBMY",
+      "device_id": "MYR-SB-001"
     },
     {
       "id": "SBMY_KENNY",
@@ -304,7 +323,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBMY",
+      "device_id": "MYR-SB-001"
     },
     {
       "id": "SBMY_8",
@@ -318,7 +339,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBMY",
+      "device_id": "MYR-SB-001"
     },
     {
       "id": "M24SG_MASTER",
@@ -332,7 +355,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "M24SG",
+      "device_id": "SGD-M24-001"
     },
     {
       "id": "M24SG_MANTOU",
@@ -346,7 +371,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "M24SG",
+      "device_id": "SGD-M24-001"
     },
     {
       "id": "M24SG_JENNIFER",
@@ -360,7 +387,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "M24SG",
+      "device_id": "SGD-M24-001"
     },
     {
       "id": "WBSG_MIA",
@@ -374,7 +403,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "WBSG",
+      "device_id": "SGD-WB-001"
     },
     {
       "id": "WBSG_KELLY",
@@ -388,7 +419,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "WBSG",
+      "device_id": "SGD-WB-001"
     },
     {
       "id": "WBSG_EDDIE",
@@ -402,7 +435,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "WBSG",
+      "device_id": "SGD-WB-001"
     },
     {
       "id": "WBSG_CARINA",
@@ -416,7 +451,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "WBSG",
+      "device_id": "SGD-WB-001"
     },
     {
       "id": "FWSG_JASON",
@@ -430,7 +467,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "FWSG",
+      "device_id": "SGD-FW-001"
     },
     {
       "id": "FWSG_AVICII",
@@ -444,7 +483,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "FWSG",
+      "device_id": "SGD-FW-001"
     },
     {
       "id": "FWSG_MIKA",
@@ -458,7 +499,9 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "FWSG",
+      "device_id": "SGD-FW-001"
     },
     {
       "id": "KH778KH_CS3",
@@ -472,7 +515,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "KH778KH"
     },
     {
       "id": "KH778KH_CS4",
@@ -486,7 +530,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "KH778KH"
     },
     {
       "id": "KH778KH_MEYLY",
@@ -500,7 +545,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "KH778KH"
     },
     {
       "id": "KH778KH_OUNLEAK",
@@ -514,7 +560,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "KH778KH"
     },
     {
       "id": "KH778KH_NANA",
@@ -528,7 +575,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "KH778KH"
     },
     {
       "id": "KH888KH_GCS2",
@@ -542,7 +590,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "KH888KH"
     },
     {
       "id": "KH888KH_GCS1",
@@ -556,7 +605,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "KH888KH"
     },
     {
       "id": "KH888KH_GCS3",
@@ -570,7 +620,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "KH888KH"
     },
     {
       "id": "CAM78KH_CS1",
@@ -584,7 +635,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM78KH"
     },
     {
       "id": "CAM78KH_CS3",
@@ -598,7 +650,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM78KH"
     },
     {
       "id": "CAM78KH_AHJU",
@@ -612,7 +665,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM78KH"
     },
     {
       "id": "CAM68KH_AHPICH",
@@ -626,7 +680,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM68KH"
     },
     {
       "id": "CAM68KH_LITA",
@@ -640,7 +695,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM68KH"
     },
     {
       "id": "CAM68KH_LIIKAA",
@@ -654,7 +710,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM68KH"
     },
     {
       "id": "CAM68KH_ANITA",
@@ -668,7 +725,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM68KH"
     },
     {
       "id": "CAM68KH_SOLYDA",
@@ -682,7 +740,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM68KH"
     },
     {
       "id": "CAM68KH_MEYCHU",
@@ -696,7 +755,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM68KH"
     },
     {
       "id": "CAM68KH_CS1",
@@ -710,7 +770,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM68KH"
     },
     {
       "id": "CAM68KH_CS3",
@@ -724,7 +785,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM68KH"
     },
     {
       "id": "CAM68KH_SOLKOLAB",
@@ -738,7 +800,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM68KH"
     },
     {
       "id": "CAM68KH_GCS2",
@@ -752,7 +815,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM68KH"
     },
     {
       "id": "CAM68KH_GCS3",
@@ -766,7 +830,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM68KH"
     },
     {
       "id": "CAM68KH_SOKNANIN",
@@ -780,7 +845,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "CAM68KH"
     },
     {
       "id": "OK188KH_DAVDAV",
@@ -794,7 +860,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK188KH"
     },
     {
       "id": "OK188KH_MONYNEATH",
@@ -808,7 +875,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK188KH"
     },
     {
       "id": "OK188KH_MEYLANG",
@@ -822,7 +890,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK188KH"
     },
     {
       "id": "OK188KH_CS1",
@@ -836,7 +905,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK188KH"
     },
     {
       "id": "OK188KH_CS66",
@@ -850,7 +920,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK188KH"
     },
     {
       "id": "OK188KH_CS77",
@@ -864,7 +935,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK188KH"
     },
     {
       "id": "OK188KH_CS88",
@@ -878,7 +950,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK188KH"
     },
     {
       "id": "OK188KH_KIMO",
@@ -892,7 +965,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK188KH"
     },
     {
       "id": "OK188KH_CS2",
@@ -906,7 +980,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK188KH"
     },
     {
       "id": "OK188KH_CS3",
@@ -920,7 +995,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK188KH"
     },
     {
       "id": "OK888KH_SEANYANG",
@@ -934,7 +1010,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK888KH"
     },
     {
       "id": "OK888KH_MIKYURA",
@@ -948,7 +1025,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK888KH"
     },
     {
       "id": "OK888KH_CS1",
@@ -962,7 +1040,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK888KH"
     },
     {
       "id": "OK888KH_CS2",
@@ -976,7 +1055,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK888KH"
     },
     {
       "id": "OK888KH_CS3",
@@ -990,7 +1070,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK888KH"
     },
     {
       "id": "OK888KH_OUKSAMEAS",
@@ -1004,7 +1085,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK888KH"
     },
     {
       "id": "OK888KH_MEASOUKSA2",
@@ -1018,7 +1100,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "OK888KH"
     },
     {
       "id": "SBKH_CS2",
@@ -1032,7 +1115,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBKH"
     },
     {
       "id": "SBKH_CS5",
@@ -1046,7 +1130,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBKH"
     },
     {
       "id": "SBKH_CS99",
@@ -1060,7 +1145,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBKH"
     },
     {
       "id": "SBKH_MIEMIE",
@@ -1074,7 +1160,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBKH"
     },
     {
       "id": "SBKH_TIYNITT",
@@ -1088,7 +1175,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBKH"
     },
     {
       "id": "SBKH_CS6",
@@ -1102,7 +1190,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBKH"
     },
     {
       "id": "SBKH_CS03",
@@ -1116,7 +1205,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBKH"
     },
     {
       "id": "SBKH_LIIKAA",
@@ -1130,7 +1220,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBKH"
     },
     {
       "id": "SBKH_OFFICIAL",
@@ -1144,7 +1235,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBKH"
     },
     {
       "id": "SBKH_CS01",
@@ -1158,7 +1250,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SBKH"
     },
     {
       "id": "SB99KH_MENGMENG",
@@ -1172,7 +1265,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SB99KH"
     },
     {
       "id": "SB99KH_YOYO",
@@ -1186,7 +1280,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SB99KH"
     },
     {
       "id": "SB99KH_CS1",
@@ -1200,7 +1295,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SB99KH"
     },
     {
       "id": "SB99KH_CS3",
@@ -1214,7 +1310,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SB99KH"
     },
     {
       "id": "SB99KH_CS2",
@@ -1228,7 +1325,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SB99KH"
     },
     {
       "id": "SB99KH_AHHNAM",
@@ -1242,7 +1340,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SB99KH"
     },
     {
       "id": "SB99KH_CS",
@@ -1256,7 +1355,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SB99KH"
     },
     {
       "id": "SB99KH_HUAT",
@@ -1270,7 +1370,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SB99KH"
     },
     {
       "id": "SB99KH_OUNNA",
@@ -1284,7 +1385,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SB99KH"
     },
     {
       "id": "SB99KH_OUNRY",
@@ -1298,7 +1400,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SB99KH"
     },
     {
       "id": "SB99KH_OFFICIAL",
@@ -1312,7 +1415,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "SB99KH"
     },
     {
       "id": "UW29KH_GROUP",
@@ -1326,7 +1430,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "UW29KH"
     },
     {
       "id": "UW29KH_CS00",
@@ -1340,7 +1445,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "UW29KH"
     },
     {
       "id": "UW29KH_FAFA",
@@ -1354,7 +1460,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "UW29KH"
     },
     {
       "id": "UW29KH_B1",
@@ -1368,7 +1475,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "UW29KH"
     },
     {
       "id": "UW29KH_CS1",
@@ -1382,7 +1490,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "UW29KH"
     },
     {
       "id": "UW29KH_CS2",
@@ -1396,7 +1505,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "UW29KH"
     },
     {
       "id": "UWON33_CS4",
@@ -1410,7 +1520,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "UWON33"
     },
     {
       "id": "UWON33_CS5",
@@ -1424,7 +1535,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "UWON33"
     },
     {
       "id": "UWON33_CS6",
@@ -1438,7 +1550,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "UWON33"
     },
     {
       "id": "UWON33_CS7",
@@ -1452,7 +1565,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "UWON33"
     },
     {
       "id": "UWON33_CS1",
@@ -1466,7 +1580,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "UWON33"
     },
     {
       "id": "UWON33_CS2",
@@ -1480,7 +1595,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "UWON33"
     },
     {
       "id": "UWON33_CS3",
@@ -1494,7 +1610,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "UWON33"
     },
     {
       "id": "17WINKH_VIP1",
@@ -1508,7 +1625,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "17WINKH"
     },
     {
       "id": "17WINKH_VIP2",
@@ -1522,7 +1640,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "17WINKH"
     },
     {
       "id": "17WINKH_VIP3",
@@ -1536,7 +1655,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "17WINKH"
     },
     {
       "id": "17WINKH_VIP4",
@@ -1550,7 +1670,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "17WINKH"
     },
     {
       "id": "17WINKH_MEYMEY",
@@ -1564,7 +1685,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "17WINKH"
     },
     {
       "id": "17WINKH_ADMIN",
@@ -1578,7 +1700,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "17WINKH"
     },
     {
       "id": "17WIN168KH_CS1",
@@ -1592,7 +1715,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "17WIN168KH"
     },
     {
       "id": "17WIN168KH_CS2",
@@ -1606,7 +1730,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "17WIN168KH"
     },
     {
       "id": "17WIN168KH_CS3",
@@ -1620,7 +1745,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "17WIN168KH"
     },
     {
       "id": "17WIN168KH_CS4",
@@ -1634,7 +1760,8 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "17WIN168KH"
     },
     {
       "id": "17WIN168KH_CS",
@@ -1648,7 +1775,56 @@
       "peer_ids": [
         777000
       ],
-      "enabled": true
+      "enabled": true,
+      "brand": "17WIN168KH"
+    },
+    {
+      "id": "STMY_4864",
+      "phone": "+60148474864",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/STMY_4864",
+      "notify_account": "geri_work",
+      "profile_hint": "V",
+      "device_id": "MYR-ST-001",
+      "brand": "STMY"
+    },
+    {
+      "id": "STMY_7594",
+      "phone": "+60146927594",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/STMY_7594",
+      "notify_account": "geri_work",
+      "profile_hint": "D",
+      "device_id": "MYR-ST-001",
+      "brand": "STMY"
+    },
+    {
+      "id": "STMY_8311",
+      "phone": "+60145728311",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/STMY_8311",
+      "notify_account": "geri_work",
+      "profile_hint": "F",
+      "device_id": "MYR-ST-001",
+      "brand": "STMY"
+    },
+    {
+      "id": "STMY_0643",
+      "phone": "+60134520643",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/STMY_0643",
+      "notify_account": "geri_work",
+      "profile_hint": "Boss jo",
+      "device_id": "MYR-ST-001",
+      "brand": "STMY"
     }
   ],
   "accounts": [

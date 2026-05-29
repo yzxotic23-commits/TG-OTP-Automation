@@ -24,7 +24,11 @@
       "phone": "+601162276700",
       "profile_hint": "Y",
       "session": "telegram_session/shooter/SH_VENNUS_01",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Venus",
+      "remark": "MYR-SB-003",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_VENNUS_02",
@@ -32,7 +36,11 @@
       "phone": "+601137311419",
       "profile_hint": "F",
       "session": "telegram_session/shooter/SH_VENNUS_02",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Venus",
+      "remark": "MYR-SB-003",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_VENNUS_03",
@@ -40,7 +48,11 @@
       "phone": "+601137311350",
       "profile_hint": "V",
       "session": "telegram_session/shooter/SH_VENNUS_03",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Venus",
+      "remark": "MYR-SB-003",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_VENNUS_04",
@@ -48,7 +60,11 @@
       "phone": "+601161758496",
       "profile_hint": "G",
       "session": "telegram_session/shooter/SH_VENNUS_04",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Venus",
+      "remark": "MYR-SB-003",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_VENNUS_05",
@@ -56,7 +72,11 @@
       "phone": "+601161758869",
       "profile_hint": "G",
       "session": "telegram_session/shooter/SH_VENNUS_05",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Venus",
+      "remark": "MYR-SB-003",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_EUDORA_01",
@@ -64,7 +84,11 @@
       "phone": "+601161759548",
       "profile_hint": "R",
       "session": "telegram_session/shooter/SH_EUDORA_01",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Eudora",
+      "remark": "MYR-SB-005",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_EUDORA_02",
@@ -72,7 +96,11 @@
       "phone": "+601161759626",
       "profile_hint": "B",
       "session": "telegram_session/shooter/SH_EUDORA_02",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Eudora",
+      "remark": "MYR-SB-005",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_EUDORA_03",
@@ -80,7 +108,11 @@
       "phone": "+601161759849",
       "profile_hint": "H",
       "session": "telegram_session/shooter/SH_EUDORA_03",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Eudora",
+      "remark": "MYR-SB-005",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_EUDORA_04",
@@ -88,7 +120,11 @@
       "phone": "+601161759932",
       "profile_hint": "B",
       "session": "telegram_session/shooter/SH_EUDORA_04",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Eudora",
+      "remark": "MYR-SB-005",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_EUDORA_05",
@@ -96,7 +132,11 @@
       "phone": "+601161760219",
       "profile_hint": "H",
       "session": "telegram_session/shooter/SH_EUDORA_05",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Eudora",
+      "remark": "MYR-SB-005",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_FANIE_01",
@@ -104,7 +144,11 @@
       "phone": "+601137306717",
       "profile_hint": "g",
       "session": "telegram_session/shooter/SH_FANIE_01",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Fanie",
+      "remark": "MYR-SB-007",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_FANIE_02",
@@ -112,7 +156,11 @@
       "phone": "+601137306404",
       "profile_hint": "y",
       "session": "telegram_session/shooter/SH_FANIE_02",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Fanie",
+      "remark": "MYR-SB-007",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_FANIE_03",
@@ -120,7 +168,11 @@
       "phone": "+601137306104",
       "profile_hint": "h",
       "session": "telegram_session/shooter/SH_FANIE_03",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Fanie",
+      "remark": "MYR-SB-007",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_FANIE_04",
@@ -128,7 +180,11 @@
       "phone": "+601137305786",
       "profile_hint": "f",
       "session": "telegram_session/shooter/SH_FANIE_04",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Fanie",
+      "remark": "MYR-SB-007",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_FANIE_05",
@@ -136,7 +192,11 @@
       "phone": "+601137305286",
       "profile_hint": "g",
       "session": "telegram_session/shooter/SH_FANIE_05",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Fanie",
+      "remark": "MYR-SB-007",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_WAI_01",
@@ -144,7 +204,11 @@
       "phone": "+601137304929",
       "profile_hint": "t",
       "session": "telegram_session/shooter/SH_WAI_01",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Wai",
+      "remark": "MYR-SB-008",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_WAI_02",
@@ -152,7 +216,11 @@
       "phone": "+601137310036",
       "profile_hint": "SOMELL",
       "session": "telegram_session/shooter/SH_WAI_02",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Wai",
+      "remark": "MYR-SB-008",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_WAI_03",
@@ -160,7 +228,11 @@
       "phone": "+601137309963",
       "profile_hint": "g",
       "session": "telegram_session/shooter/SH_WAI_03",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Wai",
+      "remark": "MYR-SB-008",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_WAI_04",
@@ -168,7 +240,11 @@
       "phone": "+601137309821",
       "profile_hint": "f",
       "session": "telegram_session/shooter/SH_WAI_04",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Wai",
+      "remark": "MYR-SB-008",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_WAI_05",
@@ -176,7 +252,11 @@
       "phone": "+601137309524",
       "profile_hint": "f",
       "session": "telegram_session/shooter/SH_WAI_05",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Wai",
+      "remark": "MYR-SB-008",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_LIHYUN_01",
@@ -184,7 +264,11 @@
       "phone": "+601161754778",
       "profile_hint": "H",
       "session": "telegram_session/shooter/SH_LIHYUN_01",
-      "enabled": true
+      "enabled": true,
+      "user_name": "liyun",
+      "remark": "MYR-SB-009",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_LIHYUN_02",
@@ -192,7 +276,11 @@
       "phone": "+601162277537",
       "profile_hint": "H",
       "session": "telegram_session/shooter/SH_LIHYUN_02",
-      "enabled": true
+      "enabled": true,
+      "user_name": "liyun",
+      "remark": "MYR-SB-009",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_LIHYUN_03",
@@ -200,7 +288,11 @@
       "phone": "+601161754146",
       "profile_hint": "G",
       "session": "telegram_session/shooter/SH_LIHYUN_03",
-      "enabled": true
+      "enabled": true,
+      "user_name": "liyun",
+      "remark": "MYR-SB-009",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_LIHYUN_04",
@@ -208,7 +300,11 @@
       "phone": "+601162278074",
       "profile_hint": "G",
       "session": "telegram_session/shooter/SH_LIHYUN_04",
-      "enabled": true
+      "enabled": true,
+      "user_name": "liyun",
+      "remark": "MYR-SB-009",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_LIHYUN_05",
@@ -216,7 +312,11 @@
       "phone": "+601161760648",
       "profile_hint": "G",
       "session": "telegram_session/shooter/SH_LIHYUN_05",
-      "enabled": true
+      "enabled": true,
+      "user_name": "liyun",
+      "remark": "MYR-SB-009",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_SHEVA_01",
@@ -224,7 +324,11 @@
       "phone": "+601137311457",
       "profile_hint": "Celline",
       "session": "telegram_session/shooter/SH_SHEVA_01",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Sheva",
+      "remark": "MYR-SB-011",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_SHEVA_02",
@@ -232,7 +336,11 @@
       "phone": "+601161758292",
       "profile_hint": "Sellina",
       "session": "telegram_session/shooter/SH_SHEVA_02",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Sheva",
+      "remark": "MYR-SB-011",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_SHEVA_03",
@@ -240,7 +348,11 @@
       "phone": "+601161758583",
       "profile_hint": "Harlisa",
       "session": "telegram_session/shooter/SH_SHEVA_03",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Sheva",
+      "remark": "MYR-SB-011",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_SHEVA_04",
@@ -248,7 +360,11 @@
       "phone": "+601161759790",
       "profile_hint": "Laura",
       "session": "telegram_session/shooter/SH_SHEVA_04",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Sheva",
+      "remark": "MYR-SB-011",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_SHEVA_05",
@@ -256,7 +372,11 @@
       "phone": "+601161760178",
       "profile_hint": "Jesica",
       "session": "telegram_session/shooter/SH_SHEVA_05",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Sheva",
+      "remark": "MYR-SB-011",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_KELLY_01",
@@ -264,7 +384,11 @@
       "phone": "+601161760192",
       "profile_hint": "Nana",
       "session": "telegram_session/shooter/SH_KELLY_01",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Kelly",
+      "remark": "MYR-SB-012",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_KELLY_02",
@@ -272,7 +396,11 @@
       "phone": "+601162278101",
       "profile_hint": "Fishy",
       "session": "telegram_session/shooter/SH_KELLY_02",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Kelly",
+      "remark": "MYR-SB-012",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_KELLY_03",
@@ -280,7 +408,11 @@
       "phone": "+601162278175",
       "profile_hint": "J",
       "session": "telegram_session/shooter/SH_KELLY_03",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Kelly",
+      "remark": "MYR-SB-012",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_KELLY_04",
@@ -288,7 +420,11 @@
       "phone": "+601162277538",
       "profile_hint": "Jolina",
       "session": "telegram_session/shooter/SH_KELLY_04",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Kelly",
+      "remark": "MYR-SB-012",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_KELLY_05",
@@ -296,7 +432,11 @@
       "phone": "+601161754934",
       "profile_hint": "Gabby",
       "session": "telegram_session/shooter/SH_KELLY_05",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Kelly",
+      "remark": "MYR-SB-012",
+      "brand": "SBMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_INDRI_01",
@@ -304,7 +444,11 @@
       "phone": "+60145619910",
       "profile_hint": "f",
       "session": "telegram_session/shooter/SH_INDRI_01",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Indri",
+      "remark": "MYR-ST-002",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_INDRI_02",
@@ -312,7 +456,11 @@
       "phone": "+60192723625",
       "profile_hint": "G",
       "session": "telegram_session/shooter/SH_INDRI_02",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Indri",
+      "remark": "MYR-ST-002",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_INDRI_03",
@@ -320,7 +468,11 @@
       "phone": "+60145427949",
       "profile_hint": "d",
       "session": "telegram_session/shooter/SH_INDRI_03",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Indri",
+      "remark": "MYR-ST-002",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_INDRI_04",
@@ -328,7 +480,11 @@
       "phone": "+60129544075",
       "profile_hint": "Lina",
       "session": "telegram_session/shooter/SH_INDRI_04",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Indri",
+      "remark": "MYR-ST-002",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_INDRI_05",
@@ -336,7 +492,11 @@
       "phone": "+60145482358",
       "profile_hint": "Fbb",
       "session": "telegram_session/shooter/SH_INDRI_05",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Indri",
+      "remark": "MYR-ST-002",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_WIDYA_01",
@@ -344,7 +504,11 @@
       "phone": "+601162277292",
       "profile_hint": "Cintya",
       "session": "telegram_session/shooter/SH_WIDYA_01",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Widya",
+      "remark": "MYR-ST-003",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_WIDYA_02",
@@ -352,7 +516,11 @@
       "phone": "+601162276962",
       "profile_hint": "😎 STMY ALI",
       "session": "telegram_session/shooter/SH_WIDYA_02",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Widya",
+      "remark": "MYR-ST-003",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_WIDYA_03",
@@ -360,7 +528,11 @@
       "phone": "+601162276263",
       "profile_hint": "Angela",
       "session": "telegram_session/shooter/SH_WIDYA_03",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Widya",
+      "remark": "MYR-ST-003",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_WIDYA_04",
@@ -368,7 +540,11 @@
       "phone": "+601162276322",
       "profile_hint": "Queenza",
       "session": "telegram_session/shooter/SH_WIDYA_04",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Widya",
+      "remark": "MYR-ST-003",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_WIDYA_05",
@@ -376,7 +552,11 @@
       "phone": "+601162276248",
       "profile_hint": "aletya",
       "session": "telegram_session/shooter/SH_WIDYA_05",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Widya",
+      "remark": "MYR-ST-003",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_RINTO_01",
@@ -384,7 +564,11 @@
       "phone": "+601162276458",
       "profile_hint": "Dd",
       "session": "telegram_session/shooter/SH_RINTO_01",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Rinto",
+      "remark": "MYR-ST-004",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_RINTO_02",
@@ -392,7 +576,11 @@
       "phone": "+601162276115",
       "profile_hint": "G",
       "session": "telegram_session/shooter/SH_RINTO_02",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Rinto",
+      "remark": "MYR-ST-004",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_RINTO_03",
@@ -400,7 +588,11 @@
       "phone": "+601162276194",
       "profile_hint": "U",
       "session": "telegram_session/shooter/SH_RINTO_03",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Rinto",
+      "remark": "MYR-ST-004",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_RINTO_04",
@@ -408,7 +600,11 @@
       "phone": "+601162276884",
       "profile_hint": "U",
       "session": "telegram_session/shooter/SH_RINTO_04",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Rinto",
+      "remark": "MYR-ST-004",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_RINTO_05",
@@ -416,7 +612,11 @@
       "phone": "+601162276265",
       "profile_hint": "G",
       "session": "telegram_session/shooter/SH_RINTO_05",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Rinto",
+      "remark": "MYR-ST-004",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_ALDO_01",
@@ -424,7 +624,11 @@
       "phone": "+601162276196",
       "profile_hint": "H",
       "session": "telegram_session/shooter/SH_ALDO_01",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Aldo",
+      "remark": "MYR-ST-005",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_ALDO_02",
@@ -432,7 +636,11 @@
       "phone": "+601162276451",
       "profile_hint": "h",
       "session": "telegram_session/shooter/SH_ALDO_02",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Aldo",
+      "remark": "MYR-ST-005",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_ALDO_03",
@@ -440,7 +648,11 @@
       "phone": "+601162276176",
       "profile_hint": "Y",
       "session": "telegram_session/shooter/SH_ALDO_03",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Aldo",
+      "remark": "MYR-ST-005",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_ALDO_04",
@@ -448,7 +660,11 @@
       "phone": "+601162277046",
       "profile_hint": "h",
       "session": "telegram_session/shooter/SH_ALDO_04",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Aldo",
+      "remark": "MYR-ST-005",
+      "brand": "STMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_ALDO_05",
@@ -464,7 +680,11 @@
       "phone": "+60135394613",
       "profile_hint": "gina",
       "session": "telegram_session/shooter/SH_KAREN_01",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Karen",
+      "remark": "MYR-JM-002",
+      "brand": "JMMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_KAREN_02",
@@ -472,7 +692,11 @@
       "phone": "+60145181374",
       "profile_hint": "aurel",
       "session": "telegram_session/shooter/SH_KAREN_02",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Karen",
+      "remark": "MYR-JM-002",
+      "brand": "JMMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_KAREN_03",
@@ -480,7 +704,11 @@
       "phone": "+60164066937",
       "profile_hint": "H",
       "session": "telegram_session/shooter/SH_KAREN_03",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Karen",
+      "remark": "MYR-JM-002",
+      "brand": "JMMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_KAREN_04",
@@ -488,7 +716,11 @@
       "phone": "+60145626084",
       "profile_hint": "jennie",
       "session": "telegram_session/shooter/SH_KAREN_04",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Karen",
+      "remark": "MYR-JM-002",
+      "brand": "JMMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_KAREN_05",
@@ -496,7 +728,11 @@
       "phone": "+60134091088",
       "profile_hint": "dessy",
       "session": "telegram_session/shooter/SH_KAREN_05",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Karen",
+      "remark": "MYR-JM-002",
+      "brand": "JMMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_RIZKYR_01",
@@ -504,7 +740,11 @@
       "phone": "+601162276035",
       "profile_hint": "Steven",
       "session": "telegram_session/shooter/SH_RIZKYR_01",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Rizky-R",
+      "remark": "MYR-JM-003",
+      "brand": "JMMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_RIZKYR_02",
@@ -512,7 +752,11 @@
       "phone": "+601162276205",
       "profile_hint": "Richard",
       "session": "telegram_session/shooter/SH_RIZKYR_02",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Rizky-R",
+      "remark": "MYR-JM-003",
+      "brand": "JMMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_RIZKYR_03",
@@ -520,7 +764,11 @@
       "phone": "+601162276380",
       "profile_hint": "Asran Name",
       "session": "telegram_session/shooter/SH_RIZKYR_03",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Rizky-R",
+      "remark": "MYR-JM-003",
+      "brand": "JMMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_RIZKYR_04",
@@ -528,7 +776,11 @@
       "phone": "+601162276321",
       "profile_hint": "Jimmy",
       "session": "telegram_session/shooter/SH_RIZKYR_04",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Rizky-R",
+      "remark": "MYR-JM-003",
+      "brand": "JMMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_RIZKYR_05",
@@ -536,7 +788,11 @@
       "phone": "+601162276410",
       "profile_hint": "Rico",
       "session": "telegram_session/shooter/SH_RIZKYR_05",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Rizky-R",
+      "remark": "MYR-JM-003",
+      "brand": "JMMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_VENAN_01",
@@ -544,7 +800,11 @@
       "phone": "+601162275984",
       "profile_hint": "Bb",
       "session": "telegram_session/shooter/SH_VENAN_01",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Venan",
+      "remark": "MYR-JM-004",
+      "brand": "JMMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_VENAN_02",
@@ -552,7 +812,11 @@
       "phone": "+601162276788",
       "profile_hint": "G",
       "session": "telegram_session/shooter/SH_VENAN_02",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Venan",
+      "remark": "MYR-JM-004",
+      "brand": "JMMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_VENAN_03",
@@ -560,7 +824,11 @@
       "phone": "+601162276079",
       "profile_hint": "Haris",
       "session": "telegram_session/shooter/SH_VENAN_03",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Venan",
+      "remark": "MYR-JM-004",
+      "brand": "JMMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_VENAN_04",
@@ -568,7 +836,11 @@
       "phone": "+601162276188",
       "profile_hint": "Fuq",
       "session": "telegram_session/shooter/SH_VENAN_04",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Venan",
+      "remark": "MYR-JM-004",
+      "brand": "JMMY",
+      "currency": "MYR"
     },
     {
       "id": "SH_VENAN_05",
@@ -576,7 +848,1439 @@
       "phone": "+601162276233",
       "profile_hint": "Ronald",
       "session": "telegram_session/shooter/SH_VENAN_05",
-      "enabled": true
+      "enabled": true,
+      "user_name": "Venan",
+      "remark": "MYR-JM-004",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_INDRI_9268",
+      "phone": "+60196939268",
+      "owner": "INDRI",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_INDRI_9268",
+      "user_name": "Indri",
+      "profile_hint": "G",
+      "remark": "MYR-ST-002",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_INDRI_2584",
+      "phone": "+60134372584",
+      "owner": "INDRI",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_INDRI_2584",
+      "user_name": "Indri",
+      "profile_hint": "Agnes",
+      "remark": "MYR-ST-002",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_INDRI_6647",
+      "phone": "+60133916647",
+      "owner": "INDRI",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_INDRI_6647",
+      "user_name": "Indri",
+      "profile_hint": "d",
+      "remark": "MYR-ST-002",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_INDRI_8737",
+      "phone": "+60196768737",
+      "owner": "INDRI",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_INDRI_8737",
+      "user_name": "Indri",
+      "profile_hint": "Selina",
+      "remark": "MYR-ST-002",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_INDRI_0117",
+      "phone": "+60196920117",
+      "owner": "INDRI",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_INDRI_0117",
+      "user_name": "Indri",
+      "profile_hint": "M",
+      "remark": "MYR-ST-002",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_WIDYA_2711",
+      "phone": "+60196912711",
+      "owner": "WIDYA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WIDYA_2711",
+      "user_name": "Widya",
+      "profile_hint": "R",
+      "remark": "MYR-ST-003",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_WIDYA_8303",
+      "phone": "+60134348303",
+      "owner": "WIDYA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WIDYA_8303",
+      "user_name": "Widya",
+      "profile_hint": "H",
+      "remark": "MYR-ST-003",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_WIDYA_5762",
+      "phone": "+60146235762",
+      "owner": "WIDYA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WIDYA_5762",
+      "user_name": "Widya",
+      "profile_hint": "d",
+      "remark": "MYR-ST-003",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_WIDYA_5354",
+      "phone": "+60197515354",
+      "owner": "WIDYA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WIDYA_5354",
+      "user_name": "Widya",
+      "profile_hint": "d",
+      "remark": "MYR-ST-003",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_WIDYA_0127",
+      "phone": "+60196930127",
+      "owner": "WIDYA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WIDYA_0127",
+      "user_name": "Widya",
+      "profile_hint": "Dennis",
+      "remark": "MYR-ST-003",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_RINTO_8901",
+      "phone": "+60146048901",
+      "owner": "RINTO",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_RINTO_8901",
+      "user_name": "Rinto",
+      "profile_hint": "D",
+      "remark": "MYR-ST-004",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_RINTO_1955",
+      "phone": "+60194851955",
+      "owner": "RINTO",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_RINTO_1955",
+      "user_name": "Rinto",
+      "profile_hint": "D",
+      "remark": "MYR-ST-004",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_RINTO_6958",
+      "phone": "+60198526958",
+      "owner": "RINTO",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_RINTO_6958",
+      "user_name": "Rinto",
+      "profile_hint": "nasyal",
+      "remark": "MYR-ST-004",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_RINTO_0827",
+      "phone": "+60169500827",
+      "owner": "RINTO",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_RINTO_0827",
+      "user_name": "Rinto",
+      "profile_hint": "desi",
+      "remark": "MYR-ST-004",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_RINTO_8724",
+      "phone": "+60199038724",
+      "owner": "RINTO",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_RINTO_8724",
+      "user_name": "Rinto",
+      "profile_hint": "D",
+      "remark": "MYR-ST-004",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_ALDO_7452",
+      "phone": "+60194357452",
+      "owner": "ALDO",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_ALDO_7452",
+      "user_name": "Aldo",
+      "profile_hint": "fahmi",
+      "remark": "MYR-ST-005",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_ALDO_2539",
+      "phone": "+60194772539",
+      "owner": "ALDO",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_ALDO_2539",
+      "user_name": "Aldo",
+      "profile_hint": "chieka",
+      "remark": "MYR-ST-005",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_ALDO_7632",
+      "phone": "+60196927632",
+      "owner": "ALDO",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_ALDO_7632",
+      "user_name": "Aldo",
+      "profile_hint": "Marvin",
+      "remark": "MYR-ST-005",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_ALDO_3127",
+      "phone": "+60197693127",
+      "owner": "ALDO",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_ALDO_3127",
+      "user_name": "Aldo",
+      "profile_hint": "G",
+      "remark": "MYR-ST-005",
+      "brand": "STMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_KAREN_4862",
+      "phone": "+60134594862",
+      "owner": "KAREN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KAREN_4862",
+      "user_name": "Karen",
+      "profile_hint": "d",
+      "remark": "MYR-JM-002",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_KAREN_5684",
+      "phone": "+60135615684",
+      "owner": "KAREN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KAREN_5684",
+      "user_name": "Karen",
+      "profile_hint": "Z",
+      "remark": "MYR-JM-002",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_KAREN_8521",
+      "phone": "+60194958521",
+      "owner": "KAREN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KAREN_8521",
+      "user_name": "Karen",
+      "profile_hint": "F",
+      "remark": "MYR-JM-002",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_KAREN_2275",
+      "phone": "+60148472275",
+      "owner": "KAREN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KAREN_2275",
+      "user_name": "Karen",
+      "profile_hint": "L",
+      "remark": "MYR-JM-002",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_KAREN_8761",
+      "phone": "+60196978761",
+      "owner": "KAREN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KAREN_8761",
+      "user_name": "Karen",
+      "profile_hint": "H",
+      "remark": "MYR-JM-002",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_RIZKYR_5491",
+      "phone": "+60196935491",
+      "owner": "RIZKYR",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_RIZKYR_5491",
+      "user_name": "Rizky-R",
+      "profile_hint": "L haha",
+      "remark": "MYR-JM-003",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_RIZKYR_3160",
+      "phone": "+60196913160",
+      "owner": "RIZKYR",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_RIZKYR_3160",
+      "user_name": "Rizky-R",
+      "profile_hint": "harlim",
+      "remark": "MYR-JM-003",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_RIZKYR_5400",
+      "phone": "+60135615400",
+      "owner": "RIZKYR",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_RIZKYR_5400",
+      "user_name": "Rizky-R",
+      "profile_hint": "Hjh Rusydina",
+      "remark": "MYR-JM-003",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_RIZKYR_2549",
+      "phone": "+60139592549",
+      "owner": "RIZKYR",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_RIZKYR_2549",
+      "user_name": "Rizky-R",
+      "profile_hint": "G",
+      "remark": "MYR-JM-003",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_RIZKYR_3984",
+      "phone": "+60145273984",
+      "owner": "RIZKYR",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_RIZKYR_3984",
+      "user_name": "Rizky-R",
+      "profile_hint": "H",
+      "remark": "MYR-JM-003",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_VENAN_6501",
+      "phone": "+60146906501",
+      "owner": "VENAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_VENAN_6501",
+      "user_name": "Venan",
+      "profile_hint": "F",
+      "remark": "MYR-JM-004",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_VENAN_8058",
+      "phone": "+60146228058",
+      "owner": "VENAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_VENAN_8058",
+      "user_name": "Venan",
+      "profile_hint": "R",
+      "remark": "MYR-JM-004",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_VENAN_9435",
+      "phone": "+60145739435",
+      "owner": "VENAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_VENAN_9435",
+      "user_name": "Venan",
+      "profile_hint": "G",
+      "remark": "MYR-JM-004",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_VENAN_3989",
+      "phone": "+60148123989",
+      "owner": "VENAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_VENAN_3989",
+      "user_name": "Venan",
+      "profile_hint": "R",
+      "remark": "MYR-JM-004",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_VENAN_6843",
+      "phone": "+60146056843",
+      "owner": "VENAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_VENAN_6843",
+      "user_name": "Venan",
+      "profile_hint": "F",
+      "remark": "MYR-JM-004",
+      "brand": "JMMY",
+      "currency": "MYR"
+    },
+    {
+      "id": "SH_WINNIE_6637",
+      "phone": "+601137306637",
+      "owner": "WINNIE",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WINNIE_6637",
+      "user_name": "WINNIE",
+      "profile_hint": "G",
+      "remark": "SGD-WB-003",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_WINNIE_4832",
+      "phone": "+601137304832",
+      "owner": "WINNIE",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WINNIE_4832",
+      "user_name": "WINNIE",
+      "profile_hint": "H",
+      "remark": "SGD-WB-003",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_WINNIE_5102",
+      "phone": "+601137305102",
+      "owner": "WINNIE",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WINNIE_5102",
+      "user_name": "WINNIE",
+      "profile_hint": "D",
+      "remark": "SGD-WB-003",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_WINNIE_4947",
+      "phone": "+601137304947",
+      "owner": "WINNIE",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WINNIE_4947",
+      "user_name": "WINNIE",
+      "profile_hint": "D",
+      "remark": "SGD-WB-003",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_WINNIE_6822",
+      "phone": "+601137306822",
+      "owner": "WINNIE",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WINNIE_6822",
+      "user_name": "WINNIE",
+      "profile_hint": "G",
+      "remark": "SGD-WB-003",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_CHRISTINE_4398",
+      "phone": "+601161754398",
+      "owner": "CHRISTINE",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_CHRISTINE_4398",
+      "user_name": "Christine",
+      "profile_hint": "F",
+      "remark": "SGD-WB-005",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_CHRISTINE_4369",
+      "phone": "+601161754369",
+      "owner": "CHRISTINE",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_CHRISTINE_4369",
+      "user_name": "Christine",
+      "profile_hint": "F",
+      "remark": "SGD-WB-005",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_CHRISTINE_4625",
+      "phone": "+601161754625",
+      "owner": "CHRISTINE",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_CHRISTINE_4625",
+      "user_name": "Christine",
+      "profile_hint": "V",
+      "remark": "SGD-WB-005",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_CHRISTINE_4261",
+      "phone": "+601161754261",
+      "owner": "CHRISTINE",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_CHRISTINE_4261",
+      "user_name": "Christine",
+      "profile_hint": "G",
+      "remark": "SGD-WB-005",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_CHRISTINE_3498",
+      "phone": "+601161753498",
+      "owner": "CHRISTINE",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_CHRISTINE_3498",
+      "user_name": "Christine",
+      "profile_hint": "F",
+      "remark": "SGD-WB-005",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_CARINA_7781",
+      "phone": "+601161757781",
+      "owner": "CARINA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_CARINA_7781",
+      "user_name": "Carina",
+      "profile_hint": "H",
+      "remark": "SGD-WB-007",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_CARINA_5394",
+      "phone": "+601161755394",
+      "owner": "CARINA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_CARINA_5394",
+      "user_name": "Carina",
+      "profile_hint": "N",
+      "remark": "SGD-WB-007",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_CARINA_7161",
+      "phone": "+601161757161",
+      "owner": "CARINA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_CARINA_7161",
+      "user_name": "Carina",
+      "profile_hint": "G",
+      "remark": "SGD-WB-007",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_CARINA_6549",
+      "phone": "+601161756549",
+      "owner": "CARINA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_CARINA_6549",
+      "user_name": "Carina",
+      "profile_hint": "P",
+      "remark": "SGD-WB-007",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_CARINA_5572",
+      "phone": "+601137305572",
+      "owner": "CARINA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_CARINA_5572",
+      "user_name": "Carina",
+      "profile_hint": "F",
+      "remark": "SGD-WB-007",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_DIAN_1552",
+      "phone": "+601137311552",
+      "owner": "DIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_DIAN_1552",
+      "user_name": "DIAN",
+      "profile_hint": "g",
+      "remark": "SGD-WB-009",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_DIAN_1539",
+      "phone": "+601137311539",
+      "owner": "DIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_DIAN_1539",
+      "user_name": "DIAN",
+      "profile_hint": "g",
+      "remark": "SGD-WB-009",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_DIAN_1485",
+      "phone": "+601137311485",
+      "owner": "DIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_DIAN_1485",
+      "user_name": "DIAN",
+      "profile_hint": "g",
+      "remark": "SGD-WB-009",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_DIAN_1449",
+      "phone": "+601137311449",
+      "owner": "DIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_DIAN_1449",
+      "user_name": "DIAN",
+      "profile_hint": "H",
+      "remark": "SGD-WB-009",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_DIAN_1447",
+      "phone": "+601137311447",
+      "owner": "DIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_DIAN_1447",
+      "user_name": "DIAN",
+      "profile_hint": "G",
+      "remark": "SGD-WB-009",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_DIAN_1213",
+      "phone": "+601161761213",
+      "owner": "DIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_DIAN_1213",
+      "user_name": "DIAN",
+      "profile_hint": "G",
+      "remark": "SGD-WB-009",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_DIAN_1247",
+      "phone": "+601161761247",
+      "owner": "DIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_DIAN_1247",
+      "user_name": "DIAN",
+      "profile_hint": "C",
+      "remark": "SGD-WB-009",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_DIAN_1276",
+      "phone": "+601161761276",
+      "owner": "DIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_DIAN_1276",
+      "user_name": "DIAN",
+      "profile_hint": "D",
+      "remark": "SGD-WB-009",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_DIAN_2199",
+      "phone": "+601161762199",
+      "owner": "DIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_DIAN_2199",
+      "user_name": "DIAN",
+      "profile_hint": "J",
+      "remark": "SGD-WB-009",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_DIAN_2192",
+      "phone": "+601161762192",
+      "owner": "DIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_DIAN_2192",
+      "user_name": "DIAN",
+      "profile_hint": "H",
+      "remark": "SGD-WB-009",
+      "brand": "WBSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_EDMUND_4543",
+      "phone": "+601161754543",
+      "owner": "EDMUND",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_EDMUND_4543",
+      "user_name": "Edmund",
+      "profile_hint": "G",
+      "remark": "SGD-FW-003",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_EDMUND_6874",
+      "phone": "+601137306874",
+      "owner": "EDMUND",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_EDMUND_6874",
+      "user_name": "Edmund",
+      "profile_hint": "V",
+      "remark": "SGD-FW-003",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_EDMUND_7466",
+      "phone": "+601137307466",
+      "owner": "EDMUND",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_EDMUND_7466",
+      "user_name": "Edmund",
+      "profile_hint": "G",
+      "remark": "SGD-FW-003",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_EDMUND_7146",
+      "phone": "+601137307146",
+      "owner": "EDMUND",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_EDMUND_7146",
+      "user_name": "Edmund",
+      "profile_hint": "G",
+      "remark": "SGD-FW-003",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_EDMUND_5318",
+      "phone": "+601161755318",
+      "owner": "EDMUND",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_EDMUND_5318",
+      "user_name": "Edmund",
+      "profile_hint": "G",
+      "remark": "SGD-FW-003",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KAIXIAN_2766",
+      "phone": "+601161762766",
+      "owner": "KAIXIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KAIXIAN_2766",
+      "user_name": "Kaixian",
+      "profile_hint": "D",
+      "remark": "SGD-FW-005",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KAIXIAN_3022",
+      "phone": "+601161763022",
+      "owner": "KAIXIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KAIXIAN_3022",
+      "user_name": "Kaixian",
+      "profile_hint": "G",
+      "remark": "SGD-FW-005",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KAIXIAN_3349",
+      "phone": "+601161763349",
+      "owner": "KAIXIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KAIXIAN_3349",
+      "user_name": "Kaixian",
+      "profile_hint": "G",
+      "remark": "SGD-FW-005",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KAIXIAN_3352",
+      "phone": "+601161763352",
+      "owner": "KAIXIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KAIXIAN_3352",
+      "user_name": "Kaixian",
+      "profile_hint": "J",
+      "remark": "SGD-FW-005",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KAIXIAN_3714",
+      "phone": "+601161763714",
+      "owner": "KAIXIAN",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KAIXIAN_3714",
+      "user_name": "Kaixian",
+      "profile_hint": "H",
+      "remark": "SGD-FW-005",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KINGSLEY_7054",
+      "phone": "+601161757054",
+      "owner": "KINGSLEY",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KINGSLEY_7054",
+      "user_name": "Kingsley",
+      "profile_hint": "Y",
+      "remark": "SGD-FW-006",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KINGSLEY_7375",
+      "phone": "+601161757375",
+      "owner": "KINGSLEY",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KINGSLEY_7375",
+      "user_name": "Kingsley",
+      "profile_hint": "F",
+      "remark": "SGD-FW-006",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KINGSLEY_6335",
+      "phone": "+601161756335",
+      "owner": "KINGSLEY",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KINGSLEY_6335",
+      "user_name": "Kingsley",
+      "profile_hint": "G",
+      "remark": "SGD-FW-006",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KINGSLEY_7948",
+      "phone": "+601161757948",
+      "owner": "KINGSLEY",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KINGSLEY_7948",
+      "user_name": "Kingsley",
+      "profile_hint": "J",
+      "remark": "SGD-FW-006",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KINGSLEY_7383",
+      "phone": "+601161757383",
+      "owner": "KINGSLEY",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KINGSLEY_7383",
+      "user_name": "Kingsley",
+      "profile_hint": "H",
+      "remark": "SGD-FW-006",
+      "brand": "FWSG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_VINZ_5238",
+      "phone": "+601161755238",
+      "owner": "VINZ",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_VINZ_5238",
+      "user_name": "Vinz",
+      "profile_hint": "D",
+      "remark": "SGD-M24-003",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_VINZ_4536",
+      "phone": "+601161754536",
+      "owner": "VINZ",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_VINZ_4536",
+      "user_name": "Vinz",
+      "profile_hint": "H",
+      "remark": "SGD-M24-003",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_VINZ_3995",
+      "phone": "+601161753995",
+      "owner": "VINZ",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_VINZ_3995",
+      "user_name": "Vinz",
+      "profile_hint": "H",
+      "remark": "SGD-M24-003",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_VINZ_7335",
+      "phone": "+601137307335",
+      "owner": "VINZ",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_VINZ_7335",
+      "user_name": "Vinz",
+      "profile_hint": "H",
+      "remark": "SGD-M24-003",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_VINZ_8034",
+      "phone": "+601137308034",
+      "owner": "VINZ",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_VINZ_8034",
+      "user_name": "Vinz",
+      "profile_hint": "Z",
+      "remark": "SGD-M24-003",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_EDWARD_4173",
+      "phone": "+601161754173",
+      "owner": "EDWARD",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_EDWARD_4173",
+      "user_name": "Edward",
+      "profile_hint": "G",
+      "remark": "SGD-M24-005",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_EDWARD_9230",
+      "phone": "+601137309230",
+      "owner": "EDWARD",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_EDWARD_9230",
+      "user_name": "Edward",
+      "profile_hint": "G",
+      "remark": "SGD-M24-005",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_EDWARD_7235",
+      "phone": "+601137307235",
+      "owner": "EDWARD",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_EDWARD_7235",
+      "user_name": "Edward",
+      "profile_hint": "A",
+      "remark": "SGD-M24-005",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_EDWARD_6854",
+      "phone": "+601137306854",
+      "owner": "EDWARD",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_EDWARD_6854",
+      "user_name": "Edward",
+      "profile_hint": "S",
+      "remark": "SGD-M24-005",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_EDWARD_6813",
+      "phone": "+601137306813",
+      "owner": "EDWARD",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_EDWARD_6813",
+      "user_name": "Edward",
+      "profile_hint": "G",
+      "remark": "SGD-M24-005",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KIM_6817",
+      "phone": "+601137306817",
+      "owner": "KIM",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KIM_6817",
+      "user_name": "Kim",
+      "profile_hint": "G",
+      "remark": "SGD-M24-007",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KIM_5963",
+      "phone": "+601137305963",
+      "owner": "KIM",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KIM_5963",
+      "user_name": "Kim",
+      "profile_hint": "F",
+      "remark": "SGD-M24-007",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KIM_6438",
+      "phone": "+601137306438",
+      "owner": "KIM",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KIM_6438",
+      "user_name": "Kim",
+      "profile_hint": "H",
+      "remark": "SGD-M24-007",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KIM_6331",
+      "phone": "+601137306331",
+      "owner": "KIM",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KIM_6331",
+      "user_name": "Kim",
+      "profile_hint": "G",
+      "remark": "SGD-M24-007",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_KIM_2682",
+      "phone": "+601161762682",
+      "owner": "KIM",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_KIM_2682",
+      "user_name": "Kim",
+      "profile_hint": "C",
+      "remark": "SGD-M24-007",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_ALDA_9960",
+      "phone": "+601137309960",
+      "owner": "ALDA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_ALDA_9960",
+      "user_name": "Alda",
+      "profile_hint": "h",
+      "remark": "SGD-M24-008",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_ALDA_9367",
+      "phone": "+601137309367",
+      "owner": "ALDA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_ALDA_9367",
+      "user_name": "Alda",
+      "profile_hint": "h",
+      "remark": "SGD-M24-008",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_ALDA_9241",
+      "phone": "+601137309241",
+      "owner": "ALDA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_ALDA_9241",
+      "user_name": "Alda",
+      "profile_hint": "b",
+      "remark": "SGD-M24-008",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_ALDA_8246",
+      "phone": "+601137308246",
+      "owner": "ALDA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_ALDA_8246",
+      "user_name": "Alda",
+      "profile_hint": "f",
+      "remark": "SGD-M24-008",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_ALDA_8232",
+      "phone": "+601137308232",
+      "owner": "ALDA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_ALDA_8232",
+      "user_name": "Alda",
+      "profile_hint": "g",
+      "remark": "SGD-M24-008",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_ALDA_1052",
+      "phone": "+601161761052",
+      "owner": "ALDA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_ALDA_1052",
+      "user_name": "Alda",
+      "profile_hint": "H",
+      "remark": "SGD-M24-008",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_ALDA_0965",
+      "phone": "+601161760965",
+      "owner": "ALDA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_ALDA_0965",
+      "user_name": "Alda",
+      "profile_hint": "H",
+      "remark": "SGD-M24-008",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_ALDA_0943",
+      "phone": "+601161760943",
+      "owner": "ALDA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_ALDA_0943",
+      "user_name": "Alda",
+      "profile_hint": "H",
+      "remark": "SGD-M24-008",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_ALDA_0641",
+      "phone": "+601161760641",
+      "owner": "ALDA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_ALDA_0641",
+      "user_name": "Alda",
+      "profile_hint": "Z",
+      "remark": "SGD-M24-008",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_ALDA_0621",
+      "phone": "+601161760621",
+      "owner": "ALDA",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_ALDA_0621",
+      "user_name": "Alda",
+      "profile_hint": "R",
+      "remark": "SGD-M24-008",
+      "brand": "M24SG",
+      "currency": "SGD"
+    },
+    {
+      "id": "SH_WPLUS_2481",
+      "phone": "+60136452481",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_2481",
+      "user_name": "W+ plus",
+      "profile_hint": "Liwenn",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_9626",
+      "phone": "+60105879626",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_9626",
+      "user_name": "W+ plus",
+      "profile_hint": "Asley",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_9340",
+      "phone": "+60146139340",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_9340",
+      "user_name": "W+ plus",
+      "profile_hint": "Anna",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_5688",
+      "phone": "+60136055688",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_5688",
+      "user_name": "W+ plus",
+      "profile_hint": "Diana",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_3598",
+      "phone": "+60194823598",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_3598",
+      "user_name": "W+ plus",
+      "profile_hint": "Hannah",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_5341",
+      "phone": "+60148535341",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_5341",
+      "user_name": "W+ plus",
+      "profile_hint": "Angela",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_9338",
+      "phone": "+60136409338",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_9338",
+      "user_name": "W+ plus",
+      "profile_hint": "Christine",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_7081",
+      "phone": "+60146347081",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_7081",
+      "user_name": "W+ plus",
+      "profile_hint": "B",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_8521",
+      "phone": "+60105848521",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_8521",
+      "user_name": "W+ plus",
+      "profile_hint": "Elsa",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_2688",
+      "phone": "+60194232688",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_2688",
+      "user_name": "W+ plus",
+      "profile_hint": "Cayla",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_8665",
+      "phone": "+60146508665",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_8665",
+      "user_name": "W+ plus",
+      "profile_hint": "Darron +",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_6439",
+      "phone": "+60148306439",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_6439",
+      "user_name": "W+ plus",
+      "profile_hint": "Athirah",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_2048",
+      "phone": "+60143402048",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_2048",
+      "user_name": "W+ plus",
+      "profile_hint": "Celine",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_3515",
+      "phone": "+601116773515",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_3515",
+      "user_name": "W+ plus",
+      "profile_hint": "Hannah",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_7832",
+      "phone": "+60108247832",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_7832",
+      "user_name": "W+ plus",
+      "profile_hint": "Angeline",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_7502",
+      "phone": "+60103797502",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_7502",
+      "user_name": "W+ plus",
+      "profile_hint": "Michael.J_Banking",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_6637",
+      "phone": "+601161416637",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_6637",
+      "user_name": "W+ plus",
+      "profile_hint": "Epstein_FinanceSolution",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_3649",
+      "phone": "+60102463649",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_3649",
+      "user_name": "W+ plus",
+      "profile_hint": "wealth",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_3569",
+      "phone": "+60146013569",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_3569",
+      "user_name": "W+ plus",
+      "profile_hint": "Darron",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_7419",
+      "phone": "+60143577419",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_7419",
+      "user_name": "W+ plus",
+      "profile_hint": "Gyan",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_7048",
+      "phone": "+601116917048",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_7048",
+      "user_name": "W+ plus",
+      "profile_hint": "Nisya",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_7249",
+      "phone": "+60169207249",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_7249",
+      "user_name": "W+ plus",
+      "profile_hint": "Jack",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_4589",
+      "phone": "+60143284589",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_4589",
+      "user_name": "W+ plus",
+      "profile_hint": "Brian",
+      "remark": "wealth"
+    },
+    {
+      "id": "SH_WPLUS_5843",
+      "phone": "+601126695843",
+      "owner": "WPLUS",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_WPLUS_5843",
+      "user_name": "W+ plus",
+      "profile_hint": "Aaron",
+      "remark": "wealth"
     }
   ]
 }
