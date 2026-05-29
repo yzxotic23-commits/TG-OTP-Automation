@@ -1,6 +1,6 @@
 # ============================================================
-# START_PRODUCTION.PS1 — Stop old processes, open 3 PowerShell windows
-# BOT + LISTEN + LIVE-STATUS (not Cursor terminal)
+# START_PRODUCTION.PS1 - Stop old processes, open 4 PowerShell windows
+# BOT + LISTEN + LIVE-PULL + LIVE-STATUS (not Cursor terminal)
 # Run: powershell -ExecutionPolicy Bypass -File .\start_production.ps1
 # ============================================================
 $ErrorActionPreference = "Stop"
@@ -27,7 +27,7 @@ foreach ($f in @("accounts.json", "shooteraccounts.json")) {
     }
 }
 
-# --- Stop old OTP processes (bot/listen/live-status in this folder only) ---
+# --- Stop old OTP processes (bot/listen/live pull/live-status in this folder only) ---
 Write-Host "[1/4] Stopping old OTP processes..." -ForegroundColor Yellow
 $stopped = Stop-OtpProductionProcesses -ProjectRoot $root
 if ($stopped -gt 0) {
@@ -48,7 +48,7 @@ try {
     } else {
         $importOk = $true
         try {
-            $null = & $py -c "import telegram, telethon, filelock; from dotenv import load_dotenv" 2>&1
+            $null = & $py -c 'import telegram, telethon, filelock; from dotenv import load_dotenv' 2>&1
             if ($LASTEXITCODE -ne 0) { $importOk = $false }
         } catch { $importOk = $false }
         if (-not $importOk) {
@@ -79,9 +79,9 @@ if ($sessionCount -eq 0) {
     if ($ans -notmatch '^[yY]') { exit 0 }
 }
 
-# --- Open 3 external PowerShell windows ---
+# --- Open 4 external PowerShell windows ---
 Write-Host ""
-Write-Host "[4/4] Opening 3 PowerShell windows (BOT, LISTEN, LIVE-STATUS)..." -ForegroundColor Yellow
+Write-Host "[4/4] Opening 4 PowerShell windows (BOT, LISTEN, LIVE-PULL, LIVE-STATUS)..." -ForegroundColor Yellow
 
 $script = Join-Path $root "telegram_otp_allinone.py"
 
@@ -112,18 +112,21 @@ Start-OtpServiceWindow -WindowTitle "OTP - BOT" -PythonArgs @("bot")
 Start-Sleep -Seconds 2
 Start-OtpServiceWindow -WindowTitle "OTP - LISTEN" -PythonArgs @("listen")
 Start-Sleep -Seconds 2
+Start-OtpServiceWindow -WindowTitle "OTP - LIVE-PULL" -PythonArgs @("sync", "live")
+Start-Sleep -Seconds 2
 Start-OtpServiceWindow -WindowTitle "OTP - LIVE-STATUS" -PythonArgs @("sync", "live-status")
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  Production running (3 separate windows)" -ForegroundColor Green
+Write-Host "  Production running (4 separate windows)" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  1 = BOT          (/login, /accounts, /ping)" -ForegroundColor White
 Write-Host "  2 = LISTEN       (OTP + status to Sheet)" -ForegroundColor White
-Write-Host "  3 = LIVE-STATUS  (push delta status to Sheet)" -ForegroundColor White
+Write-Host "  3 = LIVE-PULL    (Sheet -> JSON, auto register)" -ForegroundColor White
+Write-Host "  4 = LIVE-STATUS  (queue -> Sheet, delta push)" -ForegroundColor White
 Write-Host ""
 Write-Host "  Close a PowerShell window to stop that service." -ForegroundColor Yellow
-Write-Host "  Do NOT run this script again while all 3 windows are open." -ForegroundColor Red
+Write-Host "  Do NOT run this script again while all 4 windows are open." -ForegroundColor Red
 Write-Host "  Do NOT start the bot from Cursor terminal (avoids 409 Conflict)." -ForegroundColor Red
 Write-Host ""

@@ -4,7 +4,7 @@
 
 PowerShell (Windows):
   .\setup.ps1              → setup laptop baru (sekali)
-  .\start_production.ps1   → stop lama + buka 3 jendela (BOT+LISTEN+LIVE-STATUS)
+  .\start_production.ps1   → stop lama + buka 4 jendela (BOT+LISTEN+LIVE-PULL+LIVE-STATUS)
 
 JANGAN commit / sync lewat Git:
   .env, telegram_session/, tg-otp-automation-*.json, *.lock, state.json
@@ -14,14 +14,15 @@ JANGAN jalankan bot dari terminal Cursor — pakai start_production.ps1.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  PRODUCTION (3 jendela PowerShell terpisah)
+  PRODUCTION (4 jendela PowerShell terpisah)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   powershell -ExecutionPolicy Bypass -File .\start_production.ps1
 
   Jendela 1 = BOT
   Jendela 2 = LISTEN
-  Jendela 3 = LIVE-STATUS (delta push Sheet)
+  Jendela 3 = LIVE-PULL   (Sheet -> JSON, auto register)
+  Jendela 4 = LIVE-STATUS (queue -> Sheet, delta push)
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

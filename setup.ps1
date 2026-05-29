@@ -1,5 +1,5 @@
 # ============================================================
-# SETUP.PS1 — Full auto-setup + shared venv helpers
+# SETUP.PS1 - Full auto-setup + shared venv helpers
 # Run: powershell -ExecutionPolicy Bypass -File setup.ps1
 # Can be dot-sourced from start_production.ps1 (loads functions only)
 # ============================================================
@@ -70,7 +70,7 @@ function Ensure-ProjectVenv {
     $broken = Test-ProjectVenvBroken -ProjectRoot $ProjectRoot -VenvPython $venvPy
     if ($ForceRecreate -or $broken) {
         if ($broken -and (Test-Path -LiteralPath (Join-Path $ProjectRoot ".venv"))) {
-            Write-Host "[!] .venv broken / from another PC — recreating..." -ForegroundColor Yellow
+            Write-Host '[!] .venv broken / copied from another PC - recreating...' -ForegroundColor Yellow
             Remove-Item -LiteralPath (Join-Path $ProjectRoot ".venv") -Recurse -Force -ErrorAction SilentlyContinue
         }
         $pythonExe = Get-SystemPythonExe
@@ -94,7 +94,7 @@ function Install-ProjectRequirements {
     if (-not (Test-Path -LiteralPath $req)) { throw "requirements.txt not found." }
     & $venvPy -m pip install -U pip wheel -q 2>&1 | Out-Null
     & $venvPy -m pip install -r $req -q
-    $check = "import telegram, telethon, filelock; from dotenv import load_dotenv"
+    $check = 'import telegram, telethon, filelock; from dotenv import load_dotenv'
     & $venvPy -c $check 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) {
         throw "Module verification failed after pip install."
@@ -103,7 +103,7 @@ function Install-ProjectRequirements {
 
 function Stop-OtpProductionProcesses {
     param([string]$ProjectRoot)
-    $pattern = [regex]::Escape($ProjectRoot) + '.*telegram_otp_allinone\.py (bot|listen|sync live-status)'
+    $pattern = [regex]::Escape($ProjectRoot) + '.*telegram_otp_allinone\.py (bot|listen|sync live-status|sync live)'
     $procs = Get-CimInstance Win32_Process -Filter "Name='python.exe'" -ErrorAction SilentlyContinue |
         Where-Object { $_.CommandLine -match $pattern }
     $rootPids = @()
@@ -213,10 +213,10 @@ if ($MyInvocation.InvocationName -ne '.' -and $PSCommandPath -eq $MyInvocation.M
     $sessionDir = Join-Path $root "telegram_session"
     if (Test-Path $sessionDir) {
         $count = (Get-ChildItem $sessionDir -Filter "*.session" -Recurse -File -ErrorAction SilentlyContinue).Count
-        Write-Host "       telegram_session/ OK ($count session files)" -ForegroundColor Green
+        Write-Host ('       telegram_session/ OK (' + $count + ' session files)') -ForegroundColor Green
     } else {
         New-Item -ItemType Directory -Path $sessionDir -Force | Out-Null
-        Write-Host "       telegram_session/ created (empty — run login-all)" -ForegroundColor Yellow
+        Write-Host '       telegram_session/ created (empty - run login-all)' -ForegroundColor Yellow
     }
 
     Write-Host ""
@@ -229,7 +229,7 @@ if ($MyInvocation.InvocationName -ne '.' -and $PSCommandPath -eq $MyInvocation.M
     Write-Host "     .\.venv\Scripts\python.exe telegram_otp_allinone.py login-all" -ForegroundColor White
     Write-Host "     .\.venv\Scripts\python.exe telegram_otp_allinone.py login-all-shooter" -ForegroundColor White
     Write-Host ""
-    Write-Host "  2. Start production (3 separate PowerShell windows):" -ForegroundColor White
+    Write-Host '  2. Start production (4 separate PowerShell windows):' -ForegroundColor White
     Write-Host "     powershell -ExecutionPolicy Bypass -File .\start_production.ps1" -ForegroundColor White
     Write-Host ""
     Write-Host "  Manual sync (this window, one-off):" -ForegroundColor White

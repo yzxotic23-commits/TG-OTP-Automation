@@ -32,15 +32,15 @@ telegram_session\**\*.session
 .\.venv\Scripts\python.exe telegram_otp_allinone.py login-all-shooter
 ```
 
-### 4. Jalankan production (3 jendela PowerShell terpisah)
+### 4. Jalankan production (4 jendela PowerShell terpisah)
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\start_production.ps1
 ```
 
 Script ini akan:
-- Stop proses OTP lama (bot/listen/live-status) jika masih jalan
-- Buka **3 jendela PowerShell eksternal** (bukan terminal Cursor)
+- Stop proses OTP lama (bot/listen/live-pull/live-status) jika masih jalan
+- Buka **4 jendela PowerShell eksternal** (bukan terminal Cursor): BOT, LISTEN, LIVE-PULL, LIVE-STATUS
 
 ---
 
@@ -60,7 +60,7 @@ Script ini akan:
 | Script | Fungsi |
 |--------|--------|
 | `setup.ps1` | Setup pertama kali + helper venv (bisa di-dot-source) |
-| `start_production.ps1` | Stop proses lama + start BOT + LISTEN + LIVE-STATUS |
+| `start_production.ps1` | Stop proses lama + start BOT + LISTEN + LIVE-PULL + LIVE-STATUS |
 
 ## Sync manual (jendela PowerShell biasa)
 
