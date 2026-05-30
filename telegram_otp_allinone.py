@@ -1248,6 +1248,78 @@ def account_staff_display_name(acc: dict[str, Any], accounts_doc: dict[str, Any]
     return "—"
 
 
+def build_live_login_event_html(
+    event: str,
+    acc: dict[str, Any],
+    accounts_doc: dict[str, Any],
+    *,
+    label: str = "",
+    profile: str = "",
+    detail: str = "",
+) -> str:
+    titles: dict[str, tuple[str, str]] = {
+        "sms": ("📲", "Live Login — SMS Requested"),
+        "otp": ("🔑", "Live Login — OTP Detected"),
+        "success": ("✅", "Live Login — Success"),
+        "failed": ("❌", "Live Login — Failed"),
+        "finalize": ("✅", "Live Login — Finalized"),
+        "wrong_otp": ("⚠️", "Live Login — Wrong OTP"),
+        "waiting": ("⏳", "Live Login — Waiting OTP"),
+    }
+    emoji, title_text = titles.get(event, ("ℹ️", f"Live Login — {event}"))
+    acc_id = str(acc.get("id") or "?")
+    pool = "shooter" if label.upper() == "SHOOTER" else account_pool(acc)
+    prof = profile or str(acc.get("profile_hint") or acc_id)
+    pool_tag = pool_account_type_label(pool)
+    staff = account_staff_display_name(acc, accounts_doc)
+    number = format_phone_display(str(acc.get("phone") or ""))
+    lines = [
+        f"{emoji} <b>{html.escape(title_text)}</b>",
+        "━━━━━━━━━━━━━━━━━━",
+        f"Account: <b>{html.escape(acc_id)}</b> — {html.escape(prof)} <i>({html.escape(pool_tag)})</i>",
+        f"Number: <b>{html.escape(number)}</b>",
+        f"User: <b>{html.escape(staff)}</b>",
+    ]
+    if detail.strip():
+        lines.append(f"Detail: <b>{html.escape(detail.strip())}</b>")
+    return "\n".join(lines)
+
+
+def _live_login_notify_enabled() -> bool:
+    return os.environ.get("TELEGRAM_LIVE_LOGIN_NOTIFY", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def notify_live_login_event(
+    acc: dict[str, Any],
+    event: str,
+    *,
+    label: str = "",
+    profile: str = "",
+    detail: str = "",
+    accounts_doc: dict[str, Any] | None = None,
+) -> None:
+    if not _live_login_notify_enabled():
+        return
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    if not token:
+        return
+    doc = accounts_doc if accounts_doc is not None else load_json(accounts_json_path())
+    msg = build_live_login_event_html(
+        event,
+        acc,
+        doc,
+        label=label,
+        profile=profile,
+        detail=detail,
+    )
+    send_login_status_message(token, msg, doc, acc)
+
+
 def build_system_status_html(
     status: str,
     *,
@@ -1298,7 +1370,7 @@ def build_listener_started_html(
     active_count = gcs_active + shooter_active
     total_accounts = gcs_total + shooter_total
     lines: list[str] = [
-        "🔔 <b>Listener Started</b>",
+        "<b>Listener Started</b> 🔔",
         "━━━━━━━━━━━━━━━━━━",
         f"Active: <b>{active_count}</b>",
         f"  · GCS: <b>{gcs_active} / {gcs_total}</b>",
@@ -1315,6 +1387,39 @@ def build_listener_started_html(
         lines.append(f"Skipped: <b>{len(skipped)}</b> (not logged in)")
     lines.append(f"Total: <b>{total_accounts}</b> accounts")
     return "\n".join(lines)
+
+
+def build_listener_stopped_html(
+    gcs_active: int,
+    shooter_active: int,
+    gcs_total: int,
+    shooter_total: int,
+    *,
+    reason: str = "",
+) -> str:
+    active_count = gcs_active + shooter_active
+    total_accounts = gcs_total + shooter_total
+    lines: list[str] = [
+        "<b>Listener Stopped</b> ❌",
+        "━━━━━━━━━━━━━━━━━━",
+        f"Was active: <b>{active_count}</b>",
+        f"  · GCS: <b>{gcs_active} / {gcs_total}</b>",
+        f"  · Shooter: <b>{shooter_active} / {shooter_total}</b>",
+        "",
+        f"Total: <b>{total_accounts}</b> accounts",
+    ]
+    if reason.strip():
+        lines.append(f"Reason: <b>{html.escape(reason.strip())}</b>")
+    return "\n".join(lines)
+
+
+def _listener_stop_notify_enabled() -> bool:
+    return os.environ.get("TELEGRAM_LISTEN_STOP_NOTIFY", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
 
 
 def build_session_disconnected_html(
@@ -3257,6 +3362,27 @@ def _session_file_ready(acc: dict[str, Any]) -> bool:
     return sf.is_file() and sf.stat().st_size >= 1024
 
 
+def _wait_session_file_ready(
+    session_file: Path,
+    *,
+    min_bytes: int = 512,
+    timeout_sec: float = 5.0,
+) -> bool:
+    """Wait for Telethon SQLite session to flush after login."""
+    deadline = time.time() + max(0.5, timeout_sec)
+    while time.time() < deadline:
+        try:
+            if session_file.is_file() and session_file.stat().st_size >= min_bytes:
+                return True
+        except OSError:
+            pass
+        time.sleep(0.25)
+    try:
+        return session_file.is_file() and session_file.stat().st_size >= min_bytes
+    except OSError:
+        return False
+
+
 def _session_working(acc: dict[str, Any]) -> bool:
     """True if .session exists and Telethon is authorized (not expired)."""
     if not _session_file_ready(acc):
@@ -3632,6 +3758,7 @@ def _make_login_code_callback(
     max_otp_retries: int,
     preset_code: str = "",
     quiet: bool = False,
+    on_wrong_code: Callable[[int, int], None] | None = None,
 ) -> Callable[[], str]:
     """Wait for OTP column (L) in Google Sheet; optional terminal fallback."""
     otp_attempt = [0]
@@ -3653,6 +3780,8 @@ def _make_login_code_callback(
                 f"(update OTP column in Sheet)...",
                 flush=True,
             )
+            if on_wrong_code:
+                on_wrong_code(otp_attempt[0], max_otp_retries)
         if otp_attempt[0] > max_otp_retries:
             raise RuntimeError(f"OTP failed after {max_otp_retries} attempts")
 
@@ -3769,7 +3898,8 @@ def _login_single_account(
     *,
     preset_code: str = "",
     quiet: bool = False,
-) -> bool:
+    live_notify: bool = False,
+) -> tuple[bool, str]:
     """Telethon login for one account; code from Sheet (poll) or preset_code."""
     root = project_root()
     logging.getLogger("telethon").setLevel(logging.WARNING)
@@ -3784,7 +3914,7 @@ def _login_single_account(
     if _session_working(acc):
         if not quiet:
             print(f"  ✓ {acc_id} — session already authorized", flush=True)
-        return True
+        return True, ""
     if session_file.is_file():
         _safe_unlink_session_file(session_file)
         if not quiet:
@@ -3809,6 +3939,16 @@ def _login_single_account(
         kw["password"] = sheet_pw
 
     max_otp_retries = _env_int("TELEGRAM_LOGIN_OTP_RETRIES", 3, minimum=1)
+
+    def _on_wrong_code(attempt: int, max_r: int) -> None:
+        if live_notify:
+            notify_live_login_event(
+                acc,
+                "wrong_otp",
+                label=label,
+                detail=f"Retry {attempt}/{max_r} — update OTP column in Sheet",
+            )
+
     kw["code_callback"] = _make_login_code_callback(
         root,
         acc_id,
@@ -3816,6 +3956,7 @@ def _login_single_account(
         max_otp_retries=max_otp_retries,
         preset_code=preset_code.strip(),
         quiet=quiet,
+        on_wrong_code=_on_wrong_code if live_notify else None,
     )
 
     conn_retries = _env_int("TELETHON_CONNECTION_RETRIES", 5, minimum=1)
@@ -3862,7 +4003,7 @@ def _login_single_account(
                     f"ERROR: SQLite session locked for {acc_id} — stop LISTEN for this account.",
                     file=sys.stderr,
                 )
-                return False
+                return False, "SQLite session locked"
             time.sleep(min(3.0, 0.6 * (attempt + 1)))
         except RuntimeError as e:
             if not quiet:
@@ -3888,31 +4029,62 @@ def _login_single_account(
             break
 
     ok = False
+    fail_reason = ""
+    profile_name = acc_id
     if login_ok and client:
+        me = None
         try:
-            me = client.loop.run_until_complete(client.get_me())
+            if client.is_connected():
+                if not client.loop.run_until_complete(client.is_user_authorized()):
+                    fail_reason = "not authorized after start()"
+                else:
+                    me = client.loop.run_until_complete(client.get_me())
+                    if not me:
+                        fail_reason = "get_me() returned empty"
+        except Exception as e:
+            fail_reason = f"verify after login: {e!s}"
+        try:
+            if client.is_connected():
+                client.loop.run_until_complete(client.disconnect())
         except Exception:
-            me = None
+            pass
+        time.sleep(0.4)
         if me:
             profile_name = profile_name_from_me(me, acc_id)
             if not quiet:
                 print(f"  ✓ Verified: {profile_name}")
             update_json_profile_hint(json_path, json_list_key, acc_id, profile_name)
-            sf = session_file
-            if sf.is_file() and sf.stat().st_size >= 1024:
+        session_ok = _wait_session_file_ready(session_file)
+        if me and session_ok:
+            if not quiet:
+                print(f"  ✓ Session saved: {session_file.name} ({session_file.stat().st_size} bytes)")
+            ok = True
+        elif me and not session_ok:
+            time.sleep(1.0)
+            session_ok = _wait_session_file_ready(session_file, timeout_sec=4.0)
+            if session_ok:
                 if not quiet:
-                    print(f"  ✓ Session saved: {sf.name} ({sf.stat().st_size} bytes)")
-                pool = "shooter" if json_list_key == "shooter_accounts" else "gcs"
+                    print(f"  ✓ Session saved (delayed flush): {session_file.name}")
                 ok = True
-        try:
-            client.disconnect()
-        except Exception:
-            pass
+            elif _session_working(acc):
+                if not quiet:
+                    print(f"  ✓ Session authorized (file check skipped)", flush=True)
+                ok = True
+            else:
+                fail_reason = fail_reason or "session file not ready after login"
+        elif not me and _session_working(acc):
+            if not quiet:
+                print(f"  ✓ Session authorized (recovered after verify glitch)", flush=True)
+            ok = True
+        elif not fail_reason:
+            fail_reason = "login verification failed"
         if ok:
             pool_name = "shooter" if json_list_key == "shooter_accounts" else "gcs"
             _after_login_sync_status(acc, pool_name)
             _run_sync_push_delta(project_root(), verbose=False)
-    return ok
+    elif not fail_reason:
+        fail_reason = "Telegram login did not complete"
+    return ok, fail_reason
 
 
 def _collect_accounts_needing_session(root: Path) -> list[tuple[str, dict[str, Any], str]]:
@@ -4045,7 +4217,8 @@ def _run_login_all(accounts: list[dict[str, Any]], json_list_key: str, label: st
     for idx, acc in enumerate(need_login, start=1):
         acc_id = str(acc.get("id") or f"acc{idx}")
         print(f"\n[{idx}/{len(need_login)}]", end=" ", flush=True)
-        if _login_single_account(acc, json_list_key, label):
+        ok, _fail = _login_single_account(acc, json_list_key, label)
+        if ok:
             results_ok.append(acc_id)
         else:
             results_fail.append(acc_id)
@@ -4807,7 +4980,47 @@ async def run_listener_async() -> int:
     else:
         print("  Hot-reload: OFF (set TELEGRAM_LISTEN_HOT_RELOAD=1 for auto new accounts)", flush=True)
 
-    await asyncio.gather(*tasks)
+    stop_stats = {
+        "gcs_active": len(gcs_active),
+        "shooter_active": len(sh_active),
+        "gcs_total": len(gcs_accounts),
+        "shooter_total": len(shooter_accounts),
+    }
+    stop_sent = False
+
+    async def _notify_listener_stopped() -> None:
+        nonlocal stop_sent
+        if stop_sent or not _listener_stop_notify_enabled() or not notify_targets:
+            return
+        stop_sent = True
+        msg = build_listener_stopped_html(
+            stop_stats["gcs_active"],
+            stop_stats["shooter_active"],
+            stop_stats["gcs_total"],
+            stop_stats["shooter_total"],
+            reason="Lost Connection",
+        )
+        send_login_status_message(token, msg, accounts_doc)
+
+    async def _shutdown_listener_tasks() -> None:
+        for task in list(tasks):
+            if not task.done():
+                task.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+        for cl, acc_info in list(clients):
+            acc_id = str(acc_info.get("id") or "")
+            await _listen_disconnect_client(listen_kw, cl, acc_id)
+        clients.clear()
+        _listen_watch_tasks.clear()
+
+    try:
+        await asyncio.gather(*tasks)
+    except (asyncio.CancelledError, KeyboardInterrupt):
+        pass
+    finally:
+        await _shutdown_listener_tasks()
+        await _notify_listener_stopped()
     return 0
 
 
@@ -5657,37 +5870,85 @@ def run_sync_live_login() -> int:
                 _run_sync_pull_after_login(root)
                 _login_awaiting_otp.pop(acc_id, None)
                 _login_wait_otp_logged_at.pop(acc_id, None)
+                notify_live_login_event(acc, "finalize", label=label)
                 print(f"  ✓ {acc_id} Sheet updated (Ready / Active).", flush=True)
                 time.sleep(interval_busy)
                 continue
 
             if action == "otp":
                 print(f"\n[Live Login] {ts} -> OTP detected → login {acc_id} ({label})", flush=True)
+                notify_live_login_event(acc, "otp", label=label)
             elif action == "sms":
                 print(
                     f"\n[Live Login] {ts} -> SMS request {acc_id} ({label}) — fill OTP column when received",
                     flush=True,
                 )
                 _login_awaiting_otp[acc_id] = now
+                notify_live_login_event(acc, "sms", label=label)
 
             _apply_sheet_login_fields(acc, root)
-            ok = _login_single_account(
+            ok, fail_reason = _login_single_account(
                 acc,
                 json_key,
                 label,
                 preset_code=preset,
                 quiet=(action == "sms"),
+                live_notify=True,
             )
+            if not ok and _session_working(acc):
+                ok = True
+                fail_reason = ""
+                pool_name = "shooter" if pool == "shooter" else "gcs"
+                _after_login_sync_status(acc, pool_name)
+                _run_sync_push_delta(root, verbose=False)
+                print(
+                    f"  ✓ {acc_id} session verified (recovered — was marked failed incorrectly)",
+                    flush=True,
+                )
             if ok:
                 print(f"  ✓ {acc_id} session ready — LISTEN hot-reload will pick it up.", flush=True)
                 _login_fail_cooldown_until.pop(acc_id, None)
                 _login_awaiting_otp.pop(acc_id, None)
                 _login_wait_otp_logged_at.pop(acc_id, None)
+                profile = str(acc.get("profile_hint") or acc_id)
+                notify_live_login_event(
+                    acc,
+                    "success",
+                    label=label,
+                    profile=profile,
+                )
                 _run_sync_pull_after_login(root)
             else:
-                _login_fail_cooldown_until[acc_id] = now + fail_cooldown
-                _login_awaiting_otp.pop(acc_id, None)
-                print(f"  ✗ {acc_id} failed — cooldown {fail_cooldown}s", file=sys.stderr)
+                if _session_file_ready(acc):
+                    ok = True
+                    fail_reason = ""
+                    pool_name = "shooter" if pool == "shooter" else "gcs"
+                    _after_login_sync_status(acc, pool_name)
+                    _run_sync_push_delta(root, verbose=False)
+                    _login_fail_cooldown_until.pop(acc_id, None)
+                    _login_awaiting_otp.pop(acc_id, None)
+                    print(
+                        f"  ✓ {acc_id} session file OK — Sheet updated (recovered from verify error)",
+                        flush=True,
+                    )
+                    notify_live_login_event(
+                        acc,
+                        "success",
+                        label=label,
+                        detail="Recovered after verify glitch",
+                    )
+                    _run_sync_pull_after_login(root)
+                else:
+                    _login_fail_cooldown_until[acc_id] = now + fail_cooldown
+                    _login_awaiting_otp.pop(acc_id, None)
+                    detail = fail_reason or "login verification failed"
+                    print(f"  ✗ {acc_id} failed — {detail} — cooldown {fail_cooldown}s", file=sys.stderr)
+                    notify_live_login_event(
+                        acc,
+                        "failed",
+                        label=label,
+                        detail=f"{detail} (cooldown {fail_cooldown}s)",
+                    )
 
             time.sleep(interval_busy if ok else min(interval_busy, otp_poll))
     except KeyboardInterrupt:
