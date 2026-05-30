@@ -33,7 +33,7 @@ Copy manually (do **not** use Git): `.env`, `accounts.json`, `shooteraccounts.js
 
 | # | Service | Role |
 |---|---------|------|
-| 1 | BOT | `/login`, `/accounts`, `/ping` |
+| 1 | BOT | `/login`, `/main`, `/other`, `/ping` |
 | 2 | LISTEN | OTP forward + detect Banned/Frozen → queue |
 | 3 | LIVE-PULL | Pending + **new phone** → JSON only |
 | 4 | LIVE-LOGIN | SMS once → wait OTP in Sheet |
@@ -89,7 +89,8 @@ Add missing rows to Sheet before expecting status sync to work.
 
 | Command | Function |
 |---------|----------|
-| `/accounts [BRAND]` | List GCS accounts |
+| `/main [BRAND]` | List GCS accounts |
+| `/other [USER]` | List shooter accounts |
 | `/login ACCOUNT_ID` | Request OTP (staff must send in topic first if `TELEGRAM_REQUIRE_LOGIN_REQUEST=1`) |
 | `/ping` | Bot alive check |
 

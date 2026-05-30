@@ -671,28 +671,41 @@ def _row_telegram_usernames(row: dict[str, Any]) -> set[str]:
     return names
 
 
-def find_staff_row_for_user(user: Any) -> dict[str, Any] | None:
-    """Staff row in accounts.json for this Telegram user, or None."""
+def find_staff_rows_for_user(user: Any) -> list[dict[str, Any]]:
+    """All staff rows for this Telegram user (supports shared telegram_user_id)."""
     if not user:
-        return None
+        return []
     tg_id = str(getattr(user, "id", "") or "").strip()
     uname = (getattr(user, "username", None) or "").strip().lower().lstrip("@")
     try:
         doc = load_json(accounts_json_path())
     except Exception:
-        return None
+        return []
     rows = doc.get("accounts")
     if not isinstance(rows, list):
-        return None
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
+        return []
+    matched: list[dict[str, Any]] = []
+    seen: set[str] = set()
+
+    def _add(row: dict[str, Any]) -> None:
         aid = str(row.get("id", "")).strip().lower()
-        if not aid or aid == creator_account_id():
-            continue
-        stored_uid = str(row.get("telegram_user_id", "")).strip()
-        if tg_id and stored_uid and stored_uid == tg_id:
-            return row
+        if not aid or aid == creator_account_id() or aid in seen:
+            return
+        seen.add(aid)
+        matched.append(row)
+
+    if tg_id:
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            if str(row.get("telegram_user_id", "")).strip() == tg_id:
+                _add(row)
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            stored_chat = str(row.get("chat_id", "")).strip()
+            if stored_chat and stored_chat == tg_id:
+                _add(row)
     if uname:
         for row in rows:
             if not isinstance(row, dict):
@@ -701,7 +714,7 @@ def find_staff_row_for_user(user: Any) -> dict[str, Any] | None:
             if not aid or aid == creator_account_id():
                 continue
             if uname == aid or uname in _row_telegram_usernames(row):
-                return row
+                _add(row)
     full_name = (getattr(user, "full_name", None) or "").strip()
     uname_id = account_id_from_user(user)
     if full_name:
@@ -716,18 +729,42 @@ def find_staff_row_for_user(user: Any) -> dict[str, Any] | None:
             if _staff_row_matches_user_identity(
                 row, full_name=full_name, uname=uname, uname_id=uname_id
             ):
+                _add(row)
+    return matched
+
+
+def find_staff_row_for_user(
+    user: Any,
+    *,
+    shooter_owner_hint: str = "",
+) -> dict[str, Any] | None:
+    """Staff row in accounts.json for this Telegram user, or None."""
+    matched = find_staff_rows_for_user(user)
+    if not matched:
+        return None
+    hint = shooter_owner_hint.strip().upper()
+    if hint:
+        for row in matched:
+            so = str(row.get("shooter_owner") or "").strip().upper()
+            aid = str(row.get("id") or "").strip().upper()
+            lbl = str(row.get("label") or "").strip().upper()
+            if hint in (so, aid, lbl):
                 return row
-    if tg_id:
-        for row in rows:
-            if not isinstance(row, dict):
-                continue
-            aid = str(row.get("id", "")).strip().lower()
-            if not aid or aid == creator_account_id():
-                continue
-            stored_chat = str(row.get("chat_id", "")).strip()
-            if stored_chat and stored_chat == tg_id:
+            if staff_matches_shooter_owner(str(row.get("id") or ""), hint, staff_row=row):
                 return row
-    return None
+    return matched[0]
+
+
+def user_may_access_shooter_owner(user: Any, owner: str) -> bool:
+    target = str(owner or "").strip().upper()
+    if not target:
+        return False
+    if is_creator_user(user):
+        return True
+    for row in find_staff_rows_for_user(user):
+        if staff_matches_shooter_owner(str(row.get("id") or ""), target, staff_row=row):
+            return True
+    return False
 
 
 def ensure_staff_linked(user: Any) -> bool:
@@ -785,10 +822,14 @@ def effective_shooter_owner_filter(
     staff_row: dict[str, Any] | None,
     staff_shooter: str,
     owner_filter: str,
+    *,
+    user: Any | None = None,
 ) -> str:
     """Staff: typo owner → use own shooter owner (not Access Denied)."""
     key = str(owner_filter or "").strip().upper()
     if not key or staff == "__creator__":
+        return key
+    if user and user_may_access_shooter_owner(user, key):
         return key
     if not staff or not staff_shooter:
         return key
@@ -848,7 +889,7 @@ def build_staff_not_registered_html(user: Any) -> str:
         accounts_header_html("⛔ <b>Not Registered</b>")
         + "\n\n"
         + "Ask admin to add your Telegram in <code>accounts.json</code>, "
-        + "then use <code>/shooter</code> in the MYR group topic "
+        + "then use <code>/other</code> in the MYR group topic "
         + "(auto-link, no <code>/start</code> required)."
         + who
     )
@@ -925,7 +966,7 @@ def build_staff_access_denied_html(
         + "\n\n"
         + "Cannot show other shooter accounts.\n"
         + "Please re-command with your own account list.\n\n"
-        + f"<i>Example:</i> <code>/shooter {own.upper()}</code>"
+        + f"<i>Example:</i> <code>/other {own.upper()}</code>"
     )
 
 
@@ -933,17 +974,15 @@ def validate_shooter_owner_access(update: Update, owner: str) -> str | None:
     """Return HTML error if user may not access this shooter owner (login / someone else's account)."""
     user = update.effective_user
     ensure_staff_linked(user)
-    staff = resolve_requester_staff(user)
-    staff_row = find_staff_row_for_user(user)
     owner_u = str(owner or "").strip().upper()
     if not owner_u:
         return accounts_header_html("⚠️ <b>Error</b>") + "\n\nInvalid owner."
-    if staff == "__creator__":
+    if user_may_access_shooter_owner(user, owner_u):
         return None
+    staff_row = find_staff_row_for_user(user, shooter_owner_hint=owner_u)
+    staff = str(staff_row.get("id") or "").strip().lower() if staff_row else resolve_requester_staff(user)
     if staff is None:
         return build_staff_not_registered_html(user)
-    if staff_matches_shooter_owner(staff, owner_u, staff_row=staff_row):
-        return None
     own_key = resolve_shooter_owner_for_staff(staff, staff_row)
     label = _format_shooter_owner_label(own_key or staff)
     return build_staff_access_denied_html(label, _format_shooter_owner_label(owner_u))
@@ -1013,7 +1052,7 @@ def build_accounts_overview_html(
         for brand, rs in brands_in:
             lines.append(f"   ◦ {html.escape(brand)}  ·  {len(rs)}")
     lines.append("")
-    lines.append("<i>/account[s] &lt;BRAND&gt;</i>  ·  <code>/accounts STMY</code>")
+    lines.append("<i>/main &lt;BRAND&gt;</i>  ·  <code>/main STMY</code>")
     return "\n".join(lines)
 
 
@@ -1058,7 +1097,7 @@ def _format_shooter_owner_label(owner: str) -> str:
 
 
 def build_shooter_owners_list_html(shooter_rows: list[dict[str, Any]], currency: str = "MYR") -> str:
-    """Ringkasan /shooter tanpa argumen — format selaras dengan /accounts GCS."""
+    """Ringkasan /other tanpa argumen — format selaras dengan /main GCS."""
     counts: dict[str, int] = {}
     for row in shooter_rows:
         owner = str(row.get("owner") or "").strip().upper()
@@ -1079,7 +1118,7 @@ def build_shooter_owners_list_html(shooter_rows: list[dict[str, Any]], currency:
         label = _format_shooter_owner_label(owner)
         lines.append(f"◦ <b>{html.escape(label)}</b>  ·  {n}")
     lines.append("")
-    lines.append("<i>/shooter &lt;USER&gt;</i>  ·  <code>/shooter KAREN</code>")
+    lines.append("<i>/other &lt;USER&gt;</i>  ·  <code>/other KAREN</code>")
     return "\n".join(lines)
 
 
@@ -1122,7 +1161,7 @@ def build_shooter_user_accounts_html(
             idx += 1
             lines.append(format_shooter_account_line(r, idx))
     lines.append("")
-    lines.append("<i>GCS list:</i> <code>/accounts</code>")
+    lines.append("<i>GCS list:</i> <code>/main</code>")
     return "\n".join(lines)
 
 
@@ -1133,7 +1172,7 @@ def build_shooter_user_not_found_html(owner: str, known: list[str]) -> str:
         accounts_header_html("⚠️ <b>Shooter User Not Found</b>")
         + f"\n\nNo shooter accounts for <code>{html.escape(owner)}</code>.\n\n"
         + (f"<b>Users:</b> {preview}{more}\n\n" if known else "No shooter users configured.\n\n")
-        + "<i>Example:</i> <code>/shooter GERI</code>"
+        + "<i>Example:</i> <code>/other GERI</code>"
     )
 
 
@@ -1144,7 +1183,7 @@ def build_accounts_brand_not_found_html(brand_filter: str, known: list[str]) -> 
         accounts_header_html("⚠️ <b>Brand Not Found</b>")
         + f"\n\nNo brand <code>{html.escape(brand_filter)}</code>.\n\n"
         f"<b>Available:</b> {preview}{more}\n\n"
-        "<i>Example:</i> <code>/account STMY</code>"
+        "<i>Example:</i> <code>/main STMY</code>"
     )
 
 
@@ -1167,8 +1206,8 @@ def build_bot_welcome_html(
             "",
             "◦ <code>/ping</code> — status",
             "◦ <code>/login &lt;id&gt;</code> — request OTP",
-            "◦ <code>/account</code> / <code>/accounts</code> — GCS brands",
-            "◦ <code>/shooter &lt;USER&gt;</code> — shooter list",
+            "◦ <code>/main</code> — GCS brands",
+            "◦ <code>/other &lt;USER&gt;</code> — shooter list",
             "◦ <code>login-all-shooter</code> — login shooter (MYR)",
             "◦ <code>listen</code> — GCS + Shooter OTP",
         ]
@@ -1318,6 +1357,215 @@ def notify_live_login_event(
         detail=detail,
     )
     send_login_status_message(token, msg, doc, acc)
+
+
+_manual_login_last_alert: dict[str, float] = {}
+
+
+def _manual_login_alert_enabled() -> bool:
+    return os.environ.get("TELEGRAM_MANUAL_LOGIN_ALERT", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def _manual_login_alert_cooldown_sec() -> int:
+    return _env_int("TELEGRAM_MANUAL_LOGIN_ALERT_COOLDOWN_SEC", 300, minimum=30)
+
+
+def _manual_login_scan_delay_sec() -> int:
+    return _env_int("TELEGRAM_MANUAL_LOGIN_FOLLOWUP_SEC", 60, minimum=15)
+
+
+def _listen_keep_device_label() -> str:
+    return (os.environ.get("TELEGRAM_LISTEN_DEVICE_MODEL") or "FRIDAY_BO").strip() or "FRIDAY_BO"
+
+
+async def _collect_non_friday_authorizations(
+    client: TelegramClient,
+    *,
+    keep_device: str | None = None,
+) -> list[dict[str, Any]]:
+    from telethon.tl.functions.account import GetAuthorizationsRequest
+
+    keep = (keep_device or _listen_keep_device_label()).lower()
+    result = await client(GetAuthorizationsRequest())
+    out: list[dict[str, Any]] = []
+    for a in result.authorizations:
+        if getattr(a, "current", False):
+            continue
+        device = str(getattr(a, "device_model", "") or "")
+        if keep and keep in device.lower():
+            continue
+        date_active = getattr(a, "date_active", None)
+        out.append(
+            {
+                "hash": int(getattr(a, "hash", 0) or 0),
+                "device": device or "?",
+                "platform": str(getattr(a, "platform", "") or "?"),
+                "app_name": str(getattr(a, "app_name", "") or "?"),
+                "app_version": str(getattr(a, "app_version", "") or "?"),
+                "ip": str(getattr(a, "ip", "") or "?"),
+                "country": str(getattr(a, "country", "") or ""),
+                "region": str(getattr(a, "region", "") or ""),
+                "date_active": date_active,
+            }
+        )
+    return out
+
+
+def _auth_active_age_sec(date_active: Any) -> float | None:
+    if date_active is None:
+        return None
+    try:
+        if isinstance(date_active, datetime):
+            dt = date_active if date_active.tzinfo else date_active.replace(tzinfo=timezone.utc)
+        else:
+            dt = datetime.fromtimestamp(int(date_active), tz=timezone.utc)
+        return max(0.0, time.time() - dt.timestamp())
+    except (TypeError, ValueError, OSError):
+        return None
+
+
+def _manual_login_account_fields(
+    acc: dict[str, Any],
+    accounts_doc: dict[str, Any],
+) -> tuple[str, str, str, str, str]:
+    acc_id = str(acc.get("id") or "?")
+    pool = account_pool(acc)
+    prof = str(acc.get("profile_hint") or acc.get("detected_profile") or acc_id)
+    pool_tag = pool_account_type_label(pool)
+    staff = account_staff_display_name(acc, accounts_doc)
+    number = format_phone_display(str(acc.get("phone") or ""))
+    return acc_id, prof, pool_tag, staff, number
+
+
+def _format_session_kv_pre(pairs: list[tuple[str, str]]) -> str:
+    """Aligned key : value block (same style as list-sessions terminal output)."""
+    if not pairs:
+        return ""
+    label_w = max(max(len(k) for k, _ in pairs), 9)
+    body = "\n".join(f"{k:<{label_w}}: {v}" for k, v in pairs)
+    return f"<pre>{html.escape(body)}</pre>"
+
+
+def _format_ip_area_country(
+    ip: str,
+    region: str = "",
+    country: str = "",
+) -> str:
+    ip_clean = (ip or "").strip()
+    if ip_clean in ("?", "—", "-"):
+        ip_clean = ""
+    area = (region or "").strip()
+    country_clean = (country or "").strip()
+    loc = ", ".join(x for x in (area, country_clean) if x)
+    if ip_clean and loc:
+        return f"{ip_clean} ({loc})"
+    if ip_clean:
+        return ip_clean
+    if loc:
+        return f"({loc})"
+    return "—"
+
+
+def _session_auth_display_fields(session: dict[str, Any]) -> dict[str, str]:
+    device = str(session.get("device") or "?")
+    platform = str(session.get("platform") or "?")
+    app_name = str(session.get("app_name") or "?")
+    app_version = str(session.get("app_version") or "").strip()
+    app = f"{app_name} {app_version}".strip()
+    hash_val = str(session.get("hash") if session.get("hash") is not None else "—")
+    return {
+        "device": f"{device} / {platform}",
+        "app": app,
+        "ip": _format_ip_area_country(
+            str(session.get("ip") or ""),
+            str(session.get("region") or ""),
+            str(session.get("country") or ""),
+        ),
+        "hash": hash_val,
+    }
+
+
+def build_manual_login_detected_html(
+    acc: dict[str, Any],
+    accounts_doc: dict[str, Any],
+    session: dict[str, Any],
+) -> str:
+    acc_id, prof, pool_tag, staff, number = _manual_login_account_fields(acc, accounts_doc)
+    fields = _session_auth_display_fields(session)
+    pairs: list[tuple[str, str]] = [
+        ("Account", f"{acc_id} ({prof} · {pool_tag})"),
+        ("Phone", number),
+        ("Staff", staff or "—"),
+        ("Status", "OTP received without Friday"),
+        ("Device", fields["device"]),
+        ("App", fields["app"]),
+        ("IP", fields["ip"]),
+        ("Hash", fields["hash"]),
+    ]
+    return "\n".join(
+        [
+            "⚠ <b>Manual Login Detected!</b>",
+            "",
+            _format_session_kv_pre(pairs),
+        ]
+    )
+
+
+def notify_manual_login_detected(
+    acc: dict[str, Any],
+    session: dict[str, Any],
+    *,
+    accounts_doc: dict[str, Any] | None = None,
+) -> None:
+    if not _manual_login_alert_enabled():
+        return
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    if not token:
+        return
+    doc = accounts_doc if accounts_doc is not None else load_json(accounts_json_path())
+    msg = build_manual_login_detected_html(acc, doc, session)
+    send_login_status_message(token, msg, doc, acc)
+
+
+async def _manual_login_success_scan(
+    client: TelegramClient,
+    acc: dict[str, Any],
+    accounts_doc: dict[str, Any],
+    baseline_hashes: set[int],
+) -> None:
+    if not _manual_login_alert_enabled():
+        return
+    await asyncio.sleep(_manual_login_scan_delay_sec())
+    try:
+        auths = await _collect_non_friday_authorizations(client)
+    except Exception as e:
+        logger.debug("manual login scan failed for %s: %s", acc.get("id"), e)
+        return
+    new_sessions = [
+        a
+        for a in auths
+        if int(a.get("hash") or 0) and int(a.get("hash") or 0) not in baseline_hashes
+    ]
+    if not new_sessions:
+        return
+    acc_id_str = str(acc.get("id") or "")
+    now = time.time()
+    cd = _manual_login_alert_cooldown_sec()
+    if now - _manual_login_last_alert.get(acc_id_str, 0.0) < cd:
+        return
+    _manual_login_last_alert[acc_id_str] = now
+
+    def _sort_key(s: dict[str, Any]) -> float:
+        age = _auth_active_age_sec(s.get("date_active"))
+        return age if age is not None else 999999.0
+
+    session = min(new_sessions, key=_sort_key)
+    notify_manual_login_detected(acc, session, accounts_doc=accounts_doc)
 
 
 def build_system_status_html(
@@ -2637,6 +2885,37 @@ def creator_account_id() -> str:
     return os.environ.get("TELEGRAM_CREATOR_ACCOUNT_ID", "geri_work").strip().lower()
 
 
+def _staff_row_is_admin(row: dict[str, Any]) -> bool:
+    role = str(row.get("role") or "").strip().lower()
+    if role in ("admin", "creator"):
+        return True
+    return str(row.get("is_admin", "")).strip().lower() in ("1", "true", "yes", "on")
+
+
+def is_creator_user(user: Any) -> bool:
+    if not user:
+        return False
+    if account_id_from_user(user).strip().lower() == creator_account_id():
+        return True
+    tg_id = str(getattr(user, "id", "") or "").strip()
+    uname = (getattr(user, "username", None) or "").strip().lower().lstrip("@")
+    if not tg_id and not uname:
+        return False
+    try:
+        for row in load_json(accounts_json_path()).get("accounts", []):
+            if not isinstance(row, dict) or not _staff_row_is_admin(row):
+                continue
+            if tg_id and str(row.get("telegram_user_id") or "").strip() == tg_id:
+                return True
+            if uname and uname in _row_telegram_usernames(row):
+                return True
+            if uname and uname == str(row.get("id") or "").strip().lower():
+                return True
+    except Exception:
+        pass
+    return False
+
+
 def creator_chat_ids() -> set[str]:
     ids: set[str] = set()
     for raw in (
@@ -2656,15 +2935,13 @@ def creator_chat_ids() -> set[str]:
                 cid = str(row.get("chat_id", "")).strip()
                 if cid:
                     ids.add(cid)
+            elif _staff_row_is_admin(row):
+                cid = str(row.get("chat_id", "")).strip()
+                if cid:
+                    ids.add(cid)
     except Exception:
         pass
     return ids
-
-
-def is_creator_user(user: Any) -> bool:
-    if not user:
-        return False
-    return account_id_from_user(user).strip().lower() == creator_account_id()
 
 
 def validate_otp_request_context(update: Update) -> str | None:
@@ -2696,7 +2973,7 @@ def build_staff_dm_closed_html() -> str:
         accounts_header_html("🔒 <b>DM — /start only</b>")
         + "\n\n"
         + "In bot private DM, staff may only use <code>/start</code> (registration).\n"
-        + "<code>/shooter</code>, <code>/login</code>, etc. must be used in the <b>group channel</b> (MYR topic).\n\n"
+        + "<code>/other</code>, <code>/login</code>, etc. must be used in the <b>group channel</b> (MYR topic).\n\n"
         + "<i>/start in the group/topic has no effect.</i>"
     )
 
@@ -2727,7 +3004,7 @@ async def guard_staff_private_dm(update: Update, context: ContextTypes.DEFAULT_T
             accounts_header_html("ℹ️ <b>Registrasi</b>")
             + "\n\n"
             + "Only <code>/start</code> is allowed in <b>bot DM</b> (not in group/topic).\n"
-            + "After ✅ Registered, use <code>/shooter</code> and <code>/login</code> in the group channel.",
+            + "After ✅ Registered, use <code>/other</code> and <code>/login</code> in the group channel.",
             parse_mode="HTML",
         )
     else:
@@ -2807,7 +3084,7 @@ async def cmd_accounts(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await em.reply_text(
             accounts_header_html("ℹ️ <b>Private Only</b>")
             + "\n\n"
-            "<code>/account</code> / <code>/accounts</code> is disabled in groups.\n"
+            "<code>/main</code> is disabled in groups.\n"
             "Use a private chat with this bot.",
             parse_mode="HTML",
         )
@@ -2890,13 +3167,13 @@ async def cmd_accounts(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 await context.bot.send_message(chat_id=chat.id, text=sec, parse_mode="HTML")
             await context.bot.send_message(
                 chat_id=chat.id,
-                text="<i>/account[s] &lt;BRAND&gt;</i>  ·  <code>/accounts STMY</code>",
+                text="<i>/main &lt;BRAND&gt;</i>  ·  <code>/main STMY</code>",
                 parse_mode="HTML",
             )
 
 
 async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Shooter accounts — /shooter GERI shows list for user GERI only."""
+    """Shooter accounts — /other GERI shows list for user GERI only."""
     em = update.effective_message
     chat = update.effective_chat
     if not em or not chat:
@@ -2911,7 +3188,7 @@ async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         await em.reply_text(
             accounts_header_html("ℹ️ <b>Private Only</b>")
             + "\n\n"
-            "<code>/shooter</code> is disabled in groups.\n"
+            "<code>/other</code> is disabled in groups.\n"
             "Use a private chat with this bot.",
             parse_mode="HTML",
         )
@@ -2922,25 +3199,53 @@ async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     owner_filter = " ".join(context.args).strip().upper() if context.args else ""
     user = update.effective_user
     ensure_staff_linked(user)
-    staff = resolve_requester_staff(user)
-    staff_row = find_staff_row_for_user(user)
-    staff_shooter = resolve_shooter_owner_for_staff(staff, staff_row) if staff else ""
+    if is_creator_user(user):
+        staff = "__creator__"
+        staff_row = None
+        staff_shooter = ""
+    else:
+        staff_row = find_staff_row_for_user(
+            user,
+            shooter_owner_hint=owner_filter,
+        )
+        staff = str(staff_row.get("id") or "").strip().lower() if staff_row else None
+        if staff is None:
+            staff = resolve_requester_staff(user)
+            staff_row = find_staff_row_for_user(user)
+        staff_shooter = resolve_shooter_owner_for_staff(staff, staff_row) if staff else ""
     if owner_filter:
         owner_filter = effective_shooter_owner_filter(
-            staff, staff_row, staff_shooter, owner_filter
+            staff,
+            staff_row,
+            staff_shooter,
+            owner_filter,
+            user=user,
         )
 
     if not owner_filter:
         if staff == "__creator__":
             list_rows = shooter_rows
-        elif staff and staff_shooter:
-            list_rows = filter_shooter_by_owner(shooter_rows, staff_shooter)
-        else:
-            await em.reply_text(
-                build_staff_not_registered_html(update.effective_user),
-                parse_mode="HTML",
-            )
-            return
+        elif staff:
+            user_rows = find_staff_rows_for_user(user)
+            if len(user_rows) > 1:
+                allowed = {
+                    str(r.get("shooter_owner") or "").strip().upper()
+                    for r in user_rows
+                    if str(r.get("shooter_owner") or "").strip()
+                }
+                list_rows = [
+                    r
+                    for r in shooter_rows
+                    if str(r.get("owner") or "").strip().upper() in allowed
+                ]
+            elif staff_shooter:
+                list_rows = filter_shooter_by_owner(shooter_rows, staff_shooter)
+            else:
+                await em.reply_text(
+                    build_staff_not_registered_html(update.effective_user),
+                    parse_mode="HTML",
+                )
+                return
         currency = str(shooter_doc.get("shooter_currency") or SHOOTER_DEFAULT_CURRENCY).strip().upper()
         await em.reply_text(
             build_shooter_owners_list_html(list_rows, currency),
@@ -3218,9 +3523,8 @@ def run_bot() -> int:
     app.add_handler(MessageHandler(filters.ChatType.PRIVATE, guard_staff_private_dm), group=-1)
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("ping", cmd_ping))
-    app.add_handler(CommandHandler("accounts", cmd_accounts))
-    app.add_handler(CommandHandler("account", cmd_accounts))
-    app.add_handler(CommandHandler("shooter", cmd_shooter))
+    app.add_handler(CommandHandler("main", cmd_accounts))
+    app.add_handler(CommandHandler("other", cmd_shooter))
     app.add_handler(CommandHandler("login", cmd_login))
     app.add_handler(MessageHandler(filters.ChatType.PRIVATE, track_private_chat), group=1)
     app.add_handler(
@@ -4340,6 +4644,22 @@ async def _listen_start_account(
                 _acc["id"],
                 _acc["id"],
             )
+            if _manual_login_alert_enabled():
+                acc_id_str = str(_acc["id"])
+                baseline_hashes: set[int] = set()
+                try:
+                    existing = await _collect_non_friday_authorizations(client)
+                    baseline_hashes = {int(x.get("hash") or 0) for x in existing if x.get("hash")}
+                except Exception as e:
+                    logger.debug("[%s] %s manual login auth scan: %s", _tag, acc_id_str, e)
+                asyncio.create_task(
+                    _manual_login_success_scan(
+                        client,
+                        _acc,
+                        accounts_doc,
+                        baseline_hashes,
+                    )
+                )
             return
         send_targets = build_otp_send_targets(accounts_doc, _acc, brands_cfg, req)
         if not send_targets:

@@ -1839,7 +1839,7 @@
       "id": "rizkyr",
       "chat_id": "8652491745",
       "label": "Zero Logic",
-      "telegram_username": "mikirkids28",
+      "telegram_username": "zero_logic666",
       "telegram_user_id": "8652491745",
       "shooter_owner": "RIZKYR"
     },
@@ -1928,11 +1928,11 @@
     },
     {
       "id": "sheva",
-      "chat_id": "6777946761",
-      "label": "Sheva",
+      "chat_id": "6316963043",
+      "label": "Stella~",
       "shooter_owner": "SHEVA",
-      "telegram_user_id": "6777946761",
-      "telegram_username": "Ben_SBMY"
+      "telegram_user_id": "6316963043",
+      "telegram_username": "Stellababe8"
     },
     {
       "id": "vennus",
@@ -1957,6 +1957,14 @@
       "shooter_owner": "JUN",
       "telegram_user_id": "6193965098",
       "telegram_username": "JunWork16"
+    },
+    {
+      "id": "sinyee",
+      "chat_id": "7630041243",
+      "label": "𝗦𝗶𝗻𝘆𝗲𝗲",
+      "telegram_user_id": "7630041243",
+      "telegram_username": "Sinyee_29",
+      "role": "admin"
     }
   ]
 }

@@ -125,7 +125,7 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  Production running (5 separate windows)" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  1 = BOT          (/login, /accounts, /ping)" -ForegroundColor White
+Write-Host "  1 = BOT          (/login, /main, /other, /ping)" -ForegroundColor White
 Write-Host "  2 = LISTEN       (OTP + status to Sheet)" -ForegroundColor White
 Write-Host "  3 = LIVE-PULL    (Sheet -> JSON, auto register)" -ForegroundColor White
 Write-Host "  4 = LIVE-LOGIN   (Sheet OTP column -> .session)" -ForegroundColor White

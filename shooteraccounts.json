@@ -873,7 +873,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_INDRI_2584",
       "user_name": "Indri",
-      "profile_hint": "Agnes",
+      "profile_hint": "agnes",
       "remark": "MYR-ST-002",
       "brand": "STMY",
       "currency": "MYR"
@@ -969,7 +969,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WIDYA_0127",
       "user_name": "Widya",
-      "profile_hint": "Dennis",
+      "profile_hint": "Denis",
       "remark": "MYR-ST-003",
       "brand": "STMY",
       "currency": "MYR"
@@ -1041,7 +1041,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_ALDO_7452",
       "user_name": "Aldo",
-      "profile_hint": "fahmi",
+      "profile_hint": "Fahmi",
       "remark": "MYR-ST-005",
       "brand": "STMY",
       "currency": "MYR"
@@ -1053,7 +1053,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_ALDO_2539",
       "user_name": "Aldo",
-      "profile_hint": "chieka",
+      "profile_hint": "Chieka",
       "remark": "MYR-ST-005",
       "brand": "STMY",
       "currency": "MYR"
@@ -1089,7 +1089,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_KAREN_4862",
       "user_name": "Karen",
-      "profile_hint": "d",
+      "profile_hint": "D",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR"
@@ -1137,7 +1137,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_KAREN_8761",
       "user_name": "Karen",
-      "profile_hint": "H",
+      "profile_hint": "B",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR"
@@ -1149,7 +1149,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_RIZKYR_5491",
       "user_name": "Rizky-R",
-      "profile_hint": "L haha",
+      "profile_hint": "L Haha",
       "remark": "MYR-JM-003",
       "brand": "JMMY",
       "currency": "MYR"
