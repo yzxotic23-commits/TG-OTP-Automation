@@ -1968,7 +1968,9 @@
     },
     {
       "id": "zaabryan",
+      "chat_id": "874015719",
       "label": "Zaabryan",
+      "telegram_user_id": "874015719",
       "telegram_username": "Zaabryan",
       "role": "admin"
     }
