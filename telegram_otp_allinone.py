@@ -1306,16 +1306,13 @@ def build_live_login_event_html(
         "waiting": ("⏳", "Live Login — Waiting OTP"),
     }
     emoji, title_text = titles.get(event, ("ℹ️", f"Live Login — {event}"))
-    acc_id = str(acc.get("id") or "?")
-    pool = "shooter" if label.upper() == "SHOOTER" else account_pool(acc)
-    prof = profile or str(acc.get("profile_hint") or acc_id)
-    pool_tag = pool_account_type_label(pool)
+    prof = profile or str(acc.get("profile_hint") or acc.get("id") or "?")
     staff = account_staff_display_name(acc, accounts_doc)
     number = format_phone_display(str(acc.get("phone") or ""))
     lines = [
         f"{emoji} <b>{html.escape(title_text)}</b>",
         "━━━━━━━━━━━━━━━━━━",
-        f"Account: <b>{html.escape(acc_id)}</b> — {html.escape(prof)} <i>({html.escape(pool_tag)})</i>",
+        f"Account: <b>{html.escape(prof)}</b>",
         f"Number: <b>{html.escape(number)}</b>",
         f"User: <b>{html.escape(staff)}</b>",
     ]
