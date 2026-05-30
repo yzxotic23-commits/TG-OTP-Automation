@@ -1490,15 +1490,56 @@ def _session_auth_display_fields(session: dict[str, Any]) -> dict[str, str]:
     }
 
 
+def _staff_mention_html(row: dict[str, Any]) -> str:
+    uname = str(row.get("telegram_username") or "").strip().lstrip("@")
+    if uname:
+        return f"@{html.escape(uname)}"
+    tg_id = str(row.get("telegram_user_id") or row.get("chat_id") or "").strip()
+    label = str(row.get("label") or row.get("id") or "user").strip()
+    if tg_id.isdigit():
+        return f'<a href="tg://user?id={tg_id}">{html.escape(label)}</a>'
+    aid = str(row.get("id") or "").strip()
+    if aid:
+        return f"@{html.escape(aid)}"
+    return ""
+
+
+def build_admin_creator_cc_html(accounts_doc: dict[str, Any]) -> str:
+    rows = accounts_doc.get("accounts", [])
+    if not isinstance(rows, list):
+        return ""
+    creator = creator_account_id()
+    seen: set[str] = set()
+    tags: list[str] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        aid = str(row.get("id") or "").strip().lower()
+        if not aid:
+            continue
+        if aid != creator and not _staff_row_is_admin(row):
+            continue
+        dedupe = str(row.get("telegram_user_id") or row.get("chat_id") or aid).strip()
+        if not dedupe or dedupe in seen:
+            continue
+        seen.add(dedupe)
+        tag = _staff_mention_html(row)
+        if tag:
+            tags.append(tag)
+    if not tags:
+        return ""
+    return "cc : " + " ".join(tags)
+
+
 def build_manual_login_detected_html(
     acc: dict[str, Any],
     accounts_doc: dict[str, Any],
     session: dict[str, Any],
 ) -> str:
-    acc_id, prof, pool_tag, staff, number = _manual_login_account_fields(acc, accounts_doc)
+    _, prof, _, staff, number = _manual_login_account_fields(acc, accounts_doc)
     fields = _session_auth_display_fields(session)
     pairs: list[tuple[str, str]] = [
-        ("Account", f"{acc_id} ({prof} · {pool_tag})"),
+        ("Account", prof),
         ("Phone", number),
         ("Staff", staff or "—"),
         ("Status", "OTP received without Friday"),
@@ -1507,13 +1548,15 @@ def build_manual_login_detected_html(
         ("IP", fields["ip"]),
         ("Hash", fields["hash"]),
     ]
-    return "\n".join(
-        [
-            "⚠ <b>Manual Login Detected!</b>",
-            "",
-            _format_session_kv_pre(pairs),
-        ]
-    )
+    lines = [
+        "⚠ <b>Manual Login Detected!</b>",
+        "",
+        _format_session_kv_pre(pairs),
+    ]
+    cc = build_admin_creator_cc_html(accounts_doc)
+    if cc:
+        lines.extend(["", cc])
+    return "\n".join(lines)
 
 
 def notify_manual_login_detected(
