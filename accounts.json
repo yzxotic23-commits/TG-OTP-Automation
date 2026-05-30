@@ -1965,6 +1965,12 @@
       "telegram_user_id": "7630041243",
       "telegram_username": "Sinyee_29",
       "role": "admin"
+    },
+    {
+      "id": "zaabryan",
+      "label": "Zaabryan",
+      "telegram_username": "Zaabryan",
+      "role": "admin"
     }
   ]
 }
