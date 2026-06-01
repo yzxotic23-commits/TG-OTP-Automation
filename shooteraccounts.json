@@ -15,7 +15,8 @@
     "VENAN",
     "VENNUS",
     "WAI",
-    "WIDYA"
+    "WIDYA",
+    "WPLUS"
   ],
   "shooter_accounts": [
     {
@@ -897,7 +898,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_INDRI_8737",
       "user_name": "Indri",
-      "profile_hint": "Selina",
+      "profile_hint": "J",
       "remark": "MYR-ST-002",
       "brand": "STMY",
       "currency": "MYR"
@@ -2050,7 +2051,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_2481",
       "user_name": "W+ plus",
       "profile_hint": "Liwenn",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_9626",
@@ -2060,7 +2062,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_9626",
       "user_name": "W+ plus",
       "profile_hint": "Asley",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_9340",
@@ -2070,7 +2073,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_9340",
       "user_name": "W+ plus",
       "profile_hint": "Anna",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_5688",
@@ -2080,7 +2084,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_5688",
       "user_name": "W+ plus",
       "profile_hint": "Diana",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_3598",
@@ -2090,7 +2095,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_3598",
       "user_name": "W+ plus",
       "profile_hint": "Hannah",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_5341",
@@ -2100,7 +2106,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_5341",
       "user_name": "W+ plus",
       "profile_hint": "Angela",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_9338",
@@ -2110,7 +2117,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_9338",
       "user_name": "W+ plus",
       "profile_hint": "Christine",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_7081",
@@ -2120,7 +2128,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_7081",
       "user_name": "W+ plus",
       "profile_hint": "B",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_8521",
@@ -2130,7 +2139,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_8521",
       "user_name": "W+ plus",
       "profile_hint": "Elsa",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_2688",
@@ -2140,7 +2150,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_2688",
       "user_name": "W+ plus",
       "profile_hint": "Cayla",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_8665",
@@ -2150,7 +2161,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_8665",
       "user_name": "W+ plus",
       "profile_hint": "Darron +",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_6439",
@@ -2160,7 +2172,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_6439",
       "user_name": "W+ plus",
       "profile_hint": "Athirah",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_2048",
@@ -2170,7 +2183,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_2048",
       "user_name": "W+ plus",
       "profile_hint": "Celine",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_3515",
@@ -2180,7 +2194,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_3515",
       "user_name": "W+ plus",
       "profile_hint": "Hannah",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_7832",
@@ -2190,7 +2205,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_7832",
       "user_name": "W+ plus",
       "profile_hint": "Angeline",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_7502",
@@ -2200,7 +2216,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_7502",
       "user_name": "W+ plus",
       "profile_hint": "Michael.J_Banking",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_6637",
@@ -2210,7 +2227,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_6637",
       "user_name": "W+ plus",
       "profile_hint": "Epstein_FinanceSolution",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_3649",
@@ -2220,7 +2238,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_3649",
       "user_name": "W+ plus",
       "profile_hint": "wealth",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_3569",
@@ -2230,7 +2249,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_3569",
       "user_name": "W+ plus",
       "profile_hint": "Darron",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_7419",
@@ -2240,7 +2260,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_7419",
       "user_name": "W+ plus",
       "profile_hint": "Gyan",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_7048",
@@ -2250,7 +2271,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_7048",
       "user_name": "W+ plus",
       "profile_hint": "Nisya",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_7249",
@@ -2260,7 +2282,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_7249",
       "user_name": "W+ plus",
       "profile_hint": "Jack",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_4589",
@@ -2270,7 +2293,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_4589",
       "user_name": "W+ plus",
       "profile_hint": "Brian",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     },
     {
       "id": "SH_WPLUS_5843",
@@ -2280,7 +2304,8 @@
       "session": "telegram_session/shooter/SH_WPLUS_5843",
       "user_name": "W+ plus",
       "profile_hint": "Aaron",
-      "remark": "wealth"
+      "remark": "wealth",
+      "currency": "WPLUS"
     }
   ]
 }

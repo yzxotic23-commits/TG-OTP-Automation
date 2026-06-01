@@ -1130,28 +1130,23 @@ def build_shooter_user_accounts_html(
     rows_sorted = sorted(rows, key=lambda r: (str(r.get("phone") or "")).lower())
     lines: list[str] = [
         accounts_header_html(f"🎯 <b>Shooter · {html.escape(owner)}</b>"),
-        "",
-        f"📊 <b>{len(rows)}</b> accounts",
     ]
     idx = 0
     if shooter_rows_have_brand(rows_sorted):
         grouped = group_shooter_rows_by_brand(rows_sorted)
         unbranded = [r for r in rows_sorted if not shooter_row_has_brand(r)]
-        if grouped:
-            lines[2] = (
-                f"📊 <b>{len(rows)}</b> accounts"
-                f"  ·  <b>{len(grouped)}</b> brands"
-            )
         for brand, brand_rows in grouped.items():
             currency = derive_brand_currency(brand, brands_cfg)
             lines.append("")
-            lines.append(f"🔹 <b>{html.escape(brand)}</b>  ·  {html.escape(currency)}  ·  {len(brand_rows)}")
+            lines.append(f"🔹 <b>{html.escape(brand)}</b>  ·  {html.escape(currency)}")
+            lines.append("")
             for r in brand_rows:
                 idx += 1
                 lines.append(format_shooter_account_line(r, idx))
         if unbranded:
             lines.append("")
-            lines.append(f"◦ <b>Shooter accounts</b>  ·  {len(unbranded)}")
+            lines.append("◦ <b>Shooter accounts</b>")
+            lines.append("")
             for r in unbranded:
                 idx += 1
                 lines.append(format_shooter_account_line(r, idx))
@@ -2253,6 +2248,7 @@ def load_shooter_accounts(raw: dict[str, Any]) -> list[dict[str, Any]]:
                 "phone": str(row.get("phone") or "").strip() or None,
                 "brand": brand_raw.upper() if brand_raw else None,
                 "remark": str(row.get("remark") or "").strip() or None,
+                "currency": str(row.get("currency") or raw.get("shooter_currency") or "MYR").strip().upper(),
             }
         )
     return out
@@ -2423,6 +2419,17 @@ def list_shooter_owners(raw: dict[str, Any], shooter_rows: list[dict[str, Any]])
 def filter_shooter_by_owner(shooter_rows: list[dict[str, Any]], owner: str) -> list[dict[str, Any]]:
     key = owner.strip().upper()
     return [r for r in shooter_rows if str(r.get("owner") or "").strip().upper() == key]
+
+
+def filter_shooter_by_currency(shooter_rows: list[dict[str, Any]], currency: str) -> list[dict[str, Any]]:
+    key = str(currency or "").strip().upper()
+    if not key:
+        return shooter_rows
+    return [
+        r
+        for r in shooter_rows
+        if str(r.get("currency") or SHOOTER_DEFAULT_CURRENCY).strip().upper() == key
+    ]
 
 
 def shooter_row_has_brand(row: dict[str, Any]) -> bool:
@@ -3239,6 +3246,11 @@ async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     shooter_rows = load_shooter_accounts(shooter_doc)
     owners = list_shooter_owners(shooter_doc, shooter_rows)
     owner_filter = " ".join(context.args).strip().upper() if context.args else ""
+    thread_id = getattr(em, "message_thread_id", None)
+    accounts_doc = load_json(accounts_json_path())
+    topic_currency = (
+        _forum_thread_to_currency(accounts_doc, chat.id, thread_id) if thread_id else None
+    )
     user = update.effective_user
     ensure_staff_linked(user)
     if is_creator_user(user):
@@ -3288,7 +3300,18 @@ async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
                     parse_mode="HTML",
                 )
                 return
-        currency = str(shooter_doc.get("shooter_currency") or SHOOTER_DEFAULT_CURRENCY).strip().upper()
+        if topic_currency:
+            list_rows = filter_shooter_by_currency(list_rows, topic_currency)
+        currency = topic_currency or str(
+            shooter_doc.get("shooter_currency") or SHOOTER_DEFAULT_CURRENCY
+        ).strip().upper()
+        if topic_currency and not list_rows:
+            await em.reply_text(
+                accounts_header_html(f"⚠️ <b>{html.escape(topic_currency)} Shooter</b>")
+                + f"\n\nNo shooter accounts for this topic.",
+                parse_mode="HTML",
+            )
+            return
         await em.reply_text(
             build_shooter_owners_list_html(list_rows, currency),
             parse_mode="HTML",
@@ -3303,35 +3326,46 @@ async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         return
 
     matched = filter_shooter_by_owner(shooter_rows, owner_filter)
+    if topic_currency:
+        matched = filter_shooter_by_currency(matched, topic_currency)
     if not matched:
+        if topic_currency:
+            await em.reply_text(
+                accounts_header_html(f"⚠️ <b>{html.escape(topic_currency)} Shooter</b>")
+                + f"\n\nNo shooter accounts for <code>{html.escape(owner_filter)}</code> in this topic.",
+                parse_mode="HTML",
+            )
+            return
         await em.reply_text(
             build_shooter_user_not_found_html(owner_filter, owners),
             parse_mode="HTML",
         )
         return
 
-    raw = load_json(accounts_json_path())
+    raw = accounts_doc
     brands_cfg = load_brands_config(raw)
     full = build_shooter_user_accounts_html(owner_filter, matched, brands_cfg)
     if len(full) <= 4096:
         await em.reply_text(full, parse_mode="HTML")
     else:
         header = accounts_header_html(f"🎯 <b>Shooter · {html.escape(owner_filter)}</b>")
-        stats = f"\n\n📊 <b>{len(matched)}</b> accounts"
-        await em.reply_text(header + stats, parse_mode="HTML")
+        await em.reply_text(header, parse_mode="HTML")
         idx = 0
         if shooter_rows_have_brand(matched):
             grouped = group_shooter_rows_by_brand(matched)
             unbranded = [r for r in matched if not shooter_row_has_brand(r)]
             for brand, brand_rows in grouped.items():
                 currency = derive_brand_currency(brand, brands_cfg)
-                sec_lines = [f"🔹 <b>{html.escape(brand)}</b>  ·  {html.escape(currency)}"]
+                sec_lines = [
+                    f"🔹 <b>{html.escape(brand)}</b>  ·  {html.escape(currency)}",
+                    "",
+                ]
                 for r in brand_rows:
                     idx += 1
                     sec_lines.append(format_shooter_account_line(r, idx))
                 await context.bot.send_message(chat_id=chat.id, text="\n".join(sec_lines), parse_mode="HTML")
             if unbranded:
-                sec_lines = [f"◦ <b>Shooter accounts</b>  ·  {len(unbranded)}"]
+                sec_lines = ["◦ <b>Shooter accounts</b>", ""]
                 for r in unbranded:
                     idx += 1
                     sec_lines.append(format_shooter_account_line(r, idx))
