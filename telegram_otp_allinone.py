@@ -1450,12 +1450,19 @@ def _format_ip_area_country(
     region: str = "",
     country: str = "",
 ) -> str:
+    """Format IP + location from Telegram Authorization.country / .region (Telegram geolocation)."""
     ip_clean = (ip or "").strip()
-    if ip_clean in ("?", "—", "-"):
+    if ip_clean in ("?", "—", "-", ""):
         ip_clean = ""
     area = (region or "").strip()
     country_clean = (country or "").strip()
-    loc = ", ".join(x for x in (area, country_clean) if x)
+    parts: list[str] = []
+    for part in (area, country_clean):
+        if not part:
+            continue
+        if part.lower() not in {p.lower() for p in parts}:
+            parts.append(part)
+    loc = ", ".join(parts)
     if ip_clean and loc:
         return f"{ip_clean} ({loc})"
     if ip_clean:

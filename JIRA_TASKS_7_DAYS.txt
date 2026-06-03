@@ -1,0 +1,244 @@
+================================================================================
+TELEGRAM OTP AUTOMATION — 7-DAY TASK PLAN (1 TASK PER DAY)
+================================================================================
+Project: Telegram BOT OTP (BOT, LISTEN, LIVE-PULL, LIVE-LOGIN, LIVE-STATUS)
+Focus: Monitoring, optimization, stability, stress testing, production ops
+================================================================================
+
+
+--------------------------------------------------------------------------------
+DAY 1 — System Status Monitoring Audit
+--------------------------------------------------------------------------------
+
+Header (Epic / Summary line):
+01/06/2026 - Telegram OTP — System Status Monitoring Audit - Due: 9:00 PM (GMT+7)
+
+Task Title:
+Telegram OTP — System Status Monitoring Audit
+
+Category (Please Choose):
+Do
+
+Task Description:
+Audit all notifications sent to the System Status forum topic: Listener Started/Stopped,
+Live Login events, Manual Login Detected, and session disconnect alerts. Verify each
+critical event has an alert, consistent formatting, and correct admin CC mentions.
+Document any gaps (events with no alert).
+
+Tools:
+Telegram, Python, .env, accounts.json
+
+Expected Outcome / Result:
+Complete mapping of events vs alerts; no critical production event goes unnoticed;
+format and admin CC tags verified in the live channel.
+
+Deliverables:
+- Monitoring checklist (event → alert → channel/topic)
+- Screenshot or sample message per alert type
+- List of required env flags (TELEGRAM_*_NOTIFY, TELEGRAM_MANUAL_LOGIN_*)
+- Short list of minor improvements (if any)
+
+
+--------------------------------------------------------------------------------
+DAY 2 — LISTEN Performance & Hot-Reload Optimization
+--------------------------------------------------------------------------------
+
+Header (Epic / Summary line):
+02/06/2026 - Telegram OTP — LISTEN Performance & Hot-Reload Optimization - Due: 9:00 PM (GMT+7)
+
+Task Title:
+Telegram OTP — LISTEN Performance & Hot-Reload Optimization
+
+Category (Please Choose):
+Do
+
+Task Description:
+Review LISTEN service performance: hot-reload interval, disconnect reconnect logic,
+OTP deduplication, and alert cooldowns. Reduce unnecessary mass reconnects and log
+spam. Confirm incremental hot-reload only adds/removes changed accounts without
+dropping healthy listeners.
+
+Tools:
+Python, Telethon, PowerShell (restart_service.ps1 listen)
+
+Expected Outcome / Result:
+LISTEN remains stable when accounts.json or sessions change; no flood of disconnect
+alerts; hot-reload is incremental only.
+
+Deliverables:
+- Before/after notes (active listeners, reconnect count, log noise)
+- Recommended .env settings (TELEGRAM_LISTEN_*, TELEGRAM_DISCONNECT_*)
+- One hot-reload test (add or remove a single account in JSON)
+
+
+--------------------------------------------------------------------------------
+DAY 3 — Error Handling & Log Review
+--------------------------------------------------------------------------------
+
+Header (Epic / Summary line):
+03/06/2026 - Telegram OTP — Error Handling & Log Review - Due: 9:00 PM (GMT+7)
+
+Task Title:
+Telegram OTP — Error Handling & Log Review
+
+Category (Please Choose):
+Do
+
+Task Description:
+Review error paths across BOT, LISTEN, LIVE-LOGIN, LIVE-PULL, and LIVE-STATUS:
+Google Sheet quota (429), expired sessions, AuthKey duplicated, bot 409 Conflict.
+Ensure failures are not silent and logs or System Status messages allow tracing.
+
+Tools:
+Python, Google Sheets API, terminal logs
+
+Expected Outcome / Result:
+Common errors documented with cause and remediation; no OTP/login failure without
+a trace in logs or System Status.
+
+Deliverables:
+- Error table: error → cause → fix / restart action
+- List of small bug fixes (if found) or confirmation already handled
+- Sample log snippets for 3 scenarios (Sheet error, session expired, duplicate bot)
+
+
+--------------------------------------------------------------------------------
+DAY 4 — OTP & Login Flow Stress Test
+--------------------------------------------------------------------------------
+
+Header (Epic / Summary line):
+04/06/2026 - Telegram OTP — OTP & Login Flow Stress Test - Due: 9:00 PM (GMT+7)
+
+Task Title:
+Telegram OTP — OTP & Login Flow Stress Test
+
+Category (Please Choose):
+Do
+
+Task Description:
+Stress-test flows: /login → OTP forward; OTP without /login (manual login alert);
+LIVE-LOGIN Pending → OTP in Sheet; duplicate OTP within TELEGRAM_OTP_DEDUP_SEC.
+Test 5–10 sample accounts (GCS + Shooter, MYR + SGD).
+
+Tools:
+Telegram, BOT, LISTEN, Google Sheet
+
+Expected Outcome / Result:
+No duplicate OTP forwards; manual login sends one notification only after successful
+unauthorized login; /login flow does not conflict with LIVE-LOGIN Pending accounts.
+
+Deliverables:
+- Test matrix (scenario × pass/fail)
+- Notes on cooldown and dedup behavior
+- Issue list with severity (if any)
+- Confirmation that new Pending accounts do not trigger false manual-login alerts
+
+
+--------------------------------------------------------------------------------
+DAY 5 — Shooter List by Market (MYR / SGD / WPLUS) Validation
+--------------------------------------------------------------------------------
+
+Header (Epic / Summary line):
+05/06/2026 - Telegram OTP — Shooter List by Market Validation - Due: 9:00 PM (GMT+7)
+
+Task Title:
+Telegram OTP — Shooter List by Market (MYR / SGD / WPLUS) Validation
+
+Category (Please Choose):
+Do
+
+Task Description:
+Validate /other and /other <USER> per forum topic: MYR shows MYR shooters only,
+SGD shows SGD only, WPLUS excluded from MYR list. Configure WPLUS forum topic in
+accounts.json when thread ID is available.
+
+Tools:
+Telegram, accounts.json, shooteraccounts.json, BOT
+
+Expected Outcome / Result:
+List titles match market; currency filter is correct; WPLUS remains separate until
+dedicated topic is enabled.
+
+Deliverables:
+- Screenshots of /other in MYR and SGD topics (and WPLUS when ready)
+- Account count confirmation per market
+- forum.topics.WPLUS entry + test /other in that topic (when thread is ready)
+
+
+--------------------------------------------------------------------------------
+DAY 6 — LIVE Services & Sheet Sync Load Test
+--------------------------------------------------------------------------------
+
+Header (Epic / Summary line):
+06/06/2026 - Telegram OTP — LIVE-PULL / LIVE-LOGIN / LIVE-STATUS Load Test - Due: 9:00 PM (GMT+7)
+
+Task Title:
+Telegram OTP — LIVE-PULL / LIVE-LOGIN / LIVE-STATUS Load Test
+
+Category (Please Choose):
+Do
+
+Task Description:
+Load-test LIVE-PULL (Pending → JSON), LIVE-LOGIN (SMS + Sheet OTP), and LIVE-STATUS
+(queue → Sheet, scheduled health check). Monitor Sheet API quota, batch pause, and
+sheet_status_queue.jsonl growth.
+
+Tools:
+Python, Google Sheets, 5 production service windows
+
+Expected Outcome / Result:
+No queue data loss; Sheet status updates stay consistent; Live Login notifications
+do not spam while waiting for OTP.
+
+Deliverables:
+- Short log summary for one pull cycle, one Pending login, and one status push
+- Verification of Status and Session Friday columns in Sheet
+- Recommended .env intervals if needed (TELEGRAM_SYNC_*, GOOGLE_SHEET_*)
+
+
+--------------------------------------------------------------------------------
+DAY 7 — Production Runbook & Weekly Health Check
+--------------------------------------------------------------------------------
+
+Header (Epic / Summary line):
+07/06/2026 - Telegram OTP — Production Runbook & Weekly Health Check - Due: 9:00 PM (GMT+7)
+
+Task Title:
+Telegram OTP — Production Runbook & Weekly Health Check
+
+Category (Please Choose):
+Do
+
+Task Description:
+Create an operational runbook: start/stop/restart per service, /ping check, Listener
+Started verification, System Status samples. Define a weekly checklist: session
+health, expired accounts, Banned purge, telegram_session folder size.
+
+Tools:
+start_production.ps1, restart_service.ps1, README.md, COMMANDS.txt
+
+Expected Outcome / Result:
+Team can operate production without developer hand-holding; repeatable weekly health
+check process.
+
+Deliverables:
+- One-page runbook (start all services, restart single service, common troubleshooting)
+- Weekly checklist (5 services alive, /ping, /other MYR+SGD smoke test, queue file size)
+- Small README/COMMANDS updates if documentation gaps are found
+
+
+================================================================================
+7-DAY SUMMARY
+================================================================================
+
+Day 1 | Monitoring & alert audit
+Day 2 | LISTEN / hot-reload optimization
+Day 3 | Error handling & logs
+Day 4 | OTP & login stress test
+Day 5 | Shooter per market (MYR / SGD / WPLUS)
+Day 6 | LIVE services & Sheet sync load test
+Day 7 | Runbook & weekly health checklist
+
+================================================================================
+END OF FILE
+================================================================================
