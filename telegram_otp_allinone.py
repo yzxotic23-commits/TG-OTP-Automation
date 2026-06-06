@@ -1926,19 +1926,41 @@ def _mark_account_status_known(acc: dict[str, Any], status: str) -> None:
 
 
 _frozen_notify_last: dict[str, float] = {}
+_expired_notify_last: dict[str, float] = {}
 
 
-def _frozen_notify_cooldown_ok(acc: dict[str, Any]) -> bool:
-    sec = _env_int("TELEGRAM_NOTIFY_FROZEN_COOLDOWN_SEC", 86400, minimum=0)
+def _status_notify_cooldown_ok(acc: dict[str, Any], status: str) -> bool:
+    st = str(status or "").strip()
+    if st == "Frozen":
+        sec = _env_int("TELEGRAM_NOTIFY_FROZEN_COOLDOWN_SEC", 86400, minimum=0)
+        store = _frozen_notify_last
+    elif st == "Expired":
+        sec = _env_int("TELEGRAM_NOTIFY_EXPIRED_COOLDOWN_SEC", 86400, minimum=0)
+        store = _expired_notify_last
+    else:
+        return True
     if sec <= 0:
         return True
     key = _account_status_cache_key(acc)
-    last = _frozen_notify_last.get(key, 0.0)
+    last = store.get(key, 0.0)
     return time.time() - last >= sec
 
 
+def _frozen_notify_cooldown_ok(acc: dict[str, Any]) -> bool:
+    return _status_notify_cooldown_ok(acc, "Frozen")
+
+
+def _mark_status_notified(acc: dict[str, Any], status: str) -> None:
+    st = str(status or "").strip()
+    key = _account_status_cache_key(acc)
+    if st == "Frozen":
+        _frozen_notify_last[key] = time.time()
+    elif st == "Expired":
+        _expired_notify_last[key] = time.time()
+
+
 def _mark_frozen_notified(acc: dict[str, Any]) -> None:
-    _frozen_notify_last[_account_status_cache_key(acc)] = time.time()
+    _mark_status_notified(acc, "Frozen")
 
 
 def _should_notify_account_status(
@@ -1948,15 +1970,19 @@ def _should_notify_account_status(
     frozen_confirmed: bool = False,
     from_listen: bool = False,
 ) -> bool:
-    """Gate Telegram alerts — Frozen never from LISTEN; needs confirmed freeze + cooldown."""
-    if from_listen and str(status or "").strip() == "Frozen":
+    """Gate Telegram alerts — Frozen/Expired never from LISTEN; cooldown on repeat."""
+    st = str(status or "").strip()
+    if from_listen and st in ("Frozen", "Expired", "Disconnected"):
         return False
     if not _system_status_notify_enabled(status):
         return False
-    if str(status or "").strip() == "Frozen":
+    if st == "Frozen":
         if not frozen_confirmed:
             return False
         if not _frozen_notify_cooldown_ok(acc):
+            return False
+    elif st == "Expired":
+        if not _status_notify_cooldown_ok(acc, "Expired"):
             return False
     return True
 
@@ -2001,6 +2027,8 @@ def _publish_account_status(
         )
         if str(user_st or "").strip() == "Frozen":
             _mark_frozen_notified(acc)
+        elif str(user_st or "").strip() == "Expired":
+            _mark_status_notified(acc, "Expired")
     return True
 
 
@@ -2613,6 +2641,13 @@ def _system_status_notify_enabled(status: str) -> bool:
             "true",
             "yes",
             "on",
+        )
+    if st == "Expired":
+        return os.environ.get("TELEGRAM_NOTIFY_EXPIRED", "1").strip().lower() not in (
+            "0",
+            "false",
+            "no",
+            "off",
         )
     return True
 
@@ -5475,7 +5510,8 @@ async def _listen_start_account(
             accounts_doc=accounts_doc,
             profile=profile_hint,
             note=str(e)[:120],
-            notify=user_st in ("Banned", "Expired"),
+            notify=False,
+            from_listen=True,
         )
         try:
             await client.disconnect()
@@ -5521,6 +5557,8 @@ async def _listen_start_account(
             accounts_doc=accounts_doc,
             profile=profile_hint,
             note="get_me failed",
+            notify=False,
+            from_listen=True,
         )
         try:
             await client.disconnect()
@@ -5571,6 +5609,8 @@ async def _listen_start_account(
             token=token,
             accounts_doc=accounts_doc,
             profile=profile_name,
+            notify=user_st == "Banned",
+            from_listen=True,
         )
         try:
             await client.disconnect()

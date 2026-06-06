@@ -39,3 +39,6 @@ desktop.ini
 _diag_*.py
 _scan_*.py
 _scan_*.txt
+
+# Local planning docs (not for repo)
+JIRA_TASKS_7_DAYS.txt
