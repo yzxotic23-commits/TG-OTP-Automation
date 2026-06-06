@@ -323,7 +323,7 @@
       "id": "SH_SHEVA_01",
       "owner": "SHEVA",
       "phone": "+601137311457",
-      "profile_hint": "Celline",
+      "profile_hint": "g",
       "session": "telegram_session/shooter/SH_SHEVA_01",
       "enabled": true,
       "user_name": "Sheva",
@@ -335,7 +335,7 @@
       "id": "SH_SHEVA_02",
       "owner": "SHEVA",
       "phone": "+601161758292",
-      "profile_hint": "Sellina",
+      "profile_hint": "H",
       "session": "telegram_session/shooter/SH_SHEVA_02",
       "enabled": true,
       "user_name": "Sheva",
@@ -347,7 +347,7 @@
       "id": "SH_SHEVA_03",
       "owner": "SHEVA",
       "phone": "+601161758583",
-      "profile_hint": "Harlisa",
+      "profile_hint": "H",
       "session": "telegram_session/shooter/SH_SHEVA_03",
       "enabled": true,
       "user_name": "Sheva",
@@ -359,7 +359,7 @@
       "id": "SH_SHEVA_04",
       "owner": "SHEVA",
       "phone": "+601161759790",
-      "profile_hint": "Laura",
+      "profile_hint": "G",
       "session": "telegram_session/shooter/SH_SHEVA_04",
       "enabled": true,
       "user_name": "Sheva",
@@ -371,7 +371,7 @@
       "id": "SH_SHEVA_05",
       "owner": "SHEVA",
       "phone": "+601161760178",
-      "profile_hint": "Jesica",
+      "profile_hint": "H",
       "session": "telegram_session/shooter/SH_SHEVA_05",
       "enabled": true,
       "user_name": "Sheva",
@@ -509,13 +509,14 @@
       "user_name": "Widya",
       "remark": "MYR-ST-003",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_WIDYA_02",
       "owner": "WIDYA",
       "phone": "+601162276962",
-      "profile_hint": "😎 STMY ALI",
+      "profile_hint": "STMY  ALI",
       "session": "telegram_session/shooter/SH_WIDYA_02",
       "enabled": true,
       "user_name": "Widya",
@@ -551,7 +552,7 @@
       "id": "SH_WIDYA_05",
       "owner": "WIDYA",
       "phone": "+601162276248",
-      "profile_hint": "aletya",
+      "profile_hint": "Aletya",
       "session": "telegram_session/shooter/SH_WIDYA_05",
       "enabled": true,
       "user_name": "Widya",
@@ -679,7 +680,7 @@
       "id": "SH_KAREN_01",
       "owner": "KAREN",
       "phone": "+60135394613",
-      "profile_hint": "gina",
+      "profile_hint": "Gina",
       "session": "telegram_session/shooter/SH_KAREN_01",
       "enabled": true,
       "user_name": "Karen",
@@ -697,7 +698,8 @@
       "user_name": "Karen",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_KAREN_03",
@@ -715,7 +717,7 @@
       "id": "SH_KAREN_04",
       "owner": "KAREN",
       "phone": "+60145626084",
-      "profile_hint": "jennie",
+      "profile_hint": "Jennie",
       "session": "telegram_session/shooter/SH_KAREN_04",
       "enabled": true,
       "user_name": "Karen",
@@ -739,7 +741,7 @@
       "id": "SH_RIZKYR_01",
       "owner": "RIZKYR",
       "phone": "+601162276035",
-      "profile_hint": "Steven",
+      "profile_hint": "steven",
       "session": "telegram_session/shooter/SH_RIZKYR_01",
       "enabled": true,
       "user_name": "Rizky-R",
@@ -763,7 +765,7 @@
       "id": "SH_RIZKYR_03",
       "owner": "RIZKYR",
       "phone": "+601162276380",
-      "profile_hint": "Asran Name",
+      "profile_hint": "Asran name",
       "session": "telegram_session/shooter/SH_RIZKYR_03",
       "enabled": true,
       "user_name": "Rizky-R",
@@ -799,7 +801,7 @@
       "id": "SH_VENAN_01",
       "owner": "VENAN",
       "phone": "+601162275984",
-      "profile_hint": "Bb",
+      "profile_hint": "bb",
       "session": "telegram_session/shooter/SH_VENAN_01",
       "enabled": true,
       "user_name": "Venan",
@@ -823,7 +825,7 @@
       "id": "SH_VENAN_03",
       "owner": "VENAN",
       "phone": "+601162276079",
-      "profile_hint": "Haris",
+      "profile_hint": "H",
       "session": "telegram_session/shooter/SH_VENAN_03",
       "enabled": true,
       "user_name": "Venan",
@@ -847,7 +849,7 @@
       "id": "SH_VENAN_05",
       "owner": "VENAN",
       "phone": "+601162276233",
-      "profile_hint": "Ronald",
+      "profile_hint": "G",
       "session": "telegram_session/shooter/SH_VENAN_05",
       "enabled": true,
       "user_name": "Venan",
@@ -865,7 +867,8 @@
       "profile_hint": "G",
       "remark": "MYR-ST-002",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_INDRI_2584",
@@ -874,10 +877,11 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_INDRI_2584",
       "user_name": "Indri",
-      "profile_hint": "agnes",
+      "profile_hint": "Agnes",
       "remark": "MYR-ST-002",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_INDRI_6647",
@@ -901,7 +905,8 @@
       "profile_hint": "J",
       "remark": "MYR-ST-002",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_INDRI_0117",
@@ -913,7 +918,8 @@
       "profile_hint": "M",
       "remark": "MYR-ST-002",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_WIDYA_2711",
@@ -925,7 +931,8 @@
       "profile_hint": "R",
       "remark": "MYR-ST-003",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_WIDYA_8303",
@@ -937,7 +944,8 @@
       "profile_hint": "H",
       "remark": "MYR-ST-003",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_WIDYA_5762",
@@ -949,7 +957,8 @@
       "profile_hint": "d",
       "remark": "MYR-ST-003",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_WIDYA_5354",
@@ -961,7 +970,8 @@
       "profile_hint": "d",
       "remark": "MYR-ST-003",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_WIDYA_0127",
@@ -970,10 +980,11 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WIDYA_0127",
       "user_name": "Widya",
-      "profile_hint": "Denis",
+      "profile_hint": "Dennis",
       "remark": "MYR-ST-003",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_RINTO_8901",
@@ -985,7 +996,8 @@
       "profile_hint": "D",
       "remark": "MYR-ST-004",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_RINTO_1955",
@@ -997,7 +1009,8 @@
       "profile_hint": "D",
       "remark": "MYR-ST-004",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_RINTO_6958",
@@ -1009,7 +1022,8 @@
       "profile_hint": "nasyal",
       "remark": "MYR-ST-004",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_RINTO_0827",
@@ -1021,7 +1035,8 @@
       "profile_hint": "desi",
       "remark": "MYR-ST-004",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_RINTO_8724",
@@ -1033,7 +1048,8 @@
       "profile_hint": "D",
       "remark": "MYR-ST-004",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_ALDO_7452",
@@ -1042,10 +1058,11 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_ALDO_7452",
       "user_name": "Aldo",
-      "profile_hint": "Fahmi",
+      "profile_hint": "fahmi",
       "remark": "MYR-ST-005",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_ALDO_2539",
@@ -1054,10 +1071,11 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_ALDO_2539",
       "user_name": "Aldo",
-      "profile_hint": "Chieka",
+      "profile_hint": "chieka",
       "remark": "MYR-ST-005",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_ALDO_7632",
@@ -1069,7 +1087,8 @@
       "profile_hint": "Marvin",
       "remark": "MYR-ST-005",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_ALDO_3127",
@@ -1081,7 +1100,8 @@
       "profile_hint": "G",
       "remark": "MYR-ST-005",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_KAREN_4862",
@@ -1090,10 +1110,11 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_KAREN_4862",
       "user_name": "Karen",
-      "profile_hint": "D",
+      "profile_hint": "d",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_KAREN_5684",
@@ -1105,7 +1126,8 @@
       "profile_hint": "Z",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_KAREN_8521",
@@ -1117,7 +1139,8 @@
       "profile_hint": "F",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_KAREN_2275",
@@ -1141,7 +1164,8 @@
       "profile_hint": "B",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_RIZKYR_5491",
@@ -1150,10 +1174,11 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_RIZKYR_5491",
       "user_name": "Rizky-R",
-      "profile_hint": "L Haha",
+      "profile_hint": "L haha",
       "remark": "MYR-JM-003",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_RIZKYR_3160",
@@ -1165,7 +1190,8 @@
       "profile_hint": "harlim",
       "remark": "MYR-JM-003",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_RIZKYR_5400",
@@ -1177,7 +1203,8 @@
       "profile_hint": "Hjh Rusydina",
       "remark": "MYR-JM-003",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_RIZKYR_2549",
@@ -1189,7 +1216,8 @@
       "profile_hint": "G",
       "remark": "MYR-JM-003",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_RIZKYR_3984",
@@ -1201,7 +1229,8 @@
       "profile_hint": "H",
       "remark": "MYR-JM-003",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_VENAN_6501",
@@ -1213,7 +1242,8 @@
       "profile_hint": "F",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_VENAN_8058",
@@ -1225,7 +1255,8 @@
       "profile_hint": "R",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_VENAN_9435",
@@ -1237,7 +1268,8 @@
       "profile_hint": "G",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_VENAN_3989",
@@ -1249,7 +1281,8 @@
       "profile_hint": "R",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_VENAN_6843",
@@ -1261,7 +1294,8 @@
       "profile_hint": "F",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000"
     },
     {
       "id": "SH_WINNIE_6637",
@@ -1684,60 +1718,60 @@
       "currency": "SGD"
     },
     {
-      "id": "SH_KINGSLEY_7054",
+      "id": "SH_NIKKI_7054",
       "phone": "+601161757054",
-      "owner": "KINGSLEY",
+      "owner": "NIKKI",
       "enabled": true,
-      "session": "telegram_session/shooter/SH_KINGSLEY_7054",
-      "user_name": "Kingsley",
+      "session": "telegram_session/shooter/SH_NIKKI_7054",
+      "user_name": "Nikki",
       "profile_hint": "Y",
       "remark": "SGD-FW-006",
       "brand": "FWSG",
       "currency": "SGD"
     },
     {
-      "id": "SH_KINGSLEY_7375",
+      "id": "SH_NIKKI_7375",
       "phone": "+601161757375",
-      "owner": "KINGSLEY",
+      "owner": "NIKKI",
       "enabled": true,
-      "session": "telegram_session/shooter/SH_KINGSLEY_7375",
-      "user_name": "Kingsley",
+      "session": "telegram_session/shooter/SH_NIKKI_7375",
+      "user_name": "Nikki",
       "profile_hint": "F",
       "remark": "SGD-FW-006",
       "brand": "FWSG",
       "currency": "SGD"
     },
     {
-      "id": "SH_KINGSLEY_6335",
+      "id": "SH_NIKKI_6335",
       "phone": "+601161756335",
-      "owner": "KINGSLEY",
+      "owner": "NIKKI",
       "enabled": true,
-      "session": "telegram_session/shooter/SH_KINGSLEY_6335",
-      "user_name": "Kingsley",
+      "session": "telegram_session/shooter/SH_NIKKI_6335",
+      "user_name": "Nikki",
       "profile_hint": "G",
       "remark": "SGD-FW-006",
       "brand": "FWSG",
       "currency": "SGD"
     },
     {
-      "id": "SH_KINGSLEY_7948",
+      "id": "SH_NIKKI_7948",
       "phone": "+601161757948",
-      "owner": "KINGSLEY",
+      "owner": "NIKKI",
       "enabled": true,
-      "session": "telegram_session/shooter/SH_KINGSLEY_7948",
-      "user_name": "Kingsley",
+      "session": "telegram_session/shooter/SH_NIKKI_7948",
+      "user_name": "Nikki",
       "profile_hint": "J",
       "remark": "SGD-FW-006",
       "brand": "FWSG",
       "currency": "SGD"
     },
     {
-      "id": "SH_KINGSLEY_7383",
+      "id": "SH_NIKKI_7383",
       "phone": "+601161757383",
-      "owner": "KINGSLEY",
+      "owner": "NIKKI",
       "enabled": true,
-      "session": "telegram_session/shooter/SH_KINGSLEY_7383",
-      "user_name": "Kingsley",
+      "session": "telegram_session/shooter/SH_NIKKI_7383",
+      "user_name": "Nikki",
       "profile_hint": "H",
       "remark": "SGD-FW-006",
       "brand": "FWSG",

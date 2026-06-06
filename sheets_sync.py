@@ -937,10 +937,54 @@ def _new_gcs_id(
     return f"{base}_{n}"
 
 
+def shooter_rename_on_owner_change() -> bool:
+    """Full pull: rename SH_OLD_* → SH_NEW_* when Sheet User/owner changes."""
+    v = os.environ.get("TELEGRAM_SYNC_SHOOTER_RENAME_ON_OWNER", "1").strip().lower()
+    return v not in ("0", "false", "no", "off")
+
+
+def _shooter_id_numeric_suffix(old_id: str, phone: str) -> str:
+    """Keep _01 / _02 from existing id; fallback to last 4 digits of phone."""
+    m = re.match(r"^SH_[A-Z0-9]+_(.+)$", str(old_id or "").strip(), re.I)
+    if m:
+        return str(m.group(1)).strip().upper()
+    return re.sub(r"\D", "", phone)[-4:] or "0000"
+
+
+def _canonical_shooter_id(owner: str, suffix: str) -> str:
+    owner_u = _normalize_owner_name(owner) or str(owner or "").strip().upper() or "UNKNOWN"
+    suf = str(suffix or "").strip().upper() or "0000"
+    return f"SH_{owner_u}_{suf}"
+
+
+def _resolve_shooter_id_with_suffix(
+    owner: str,
+    suffix: str,
+    existing: list[dict[str, Any]],
+    *,
+    current_id: str = "",
+    phone: str = "",
+) -> str:
+    canonical = _canonical_shooter_id(owner, suffix)
+    if not canonical:
+        return _new_shooter_id(owner, phone, existing)
+    for r in existing:
+        if not isinstance(r, dict):
+            continue
+        rid = str(r.get("id") or "").strip()
+        if rid != canonical:
+            continue
+        if current_id and rid == current_id:
+            return canonical
+        if current_id and rid != current_id:
+            return _new_shooter_id(owner, phone, existing)
+        return canonical
+    return canonical
+
+
 def _new_shooter_id(owner: str, phone: str, existing: list[dict[str, Any]]) -> str:
-    owner_u = owner or "UNKNOWN"
     suffix = re.sub(r"\D", "", phone)[-4:] or "0000"
-    base = f"SH_{owner_u}_{suffix}"
+    base = _canonical_shooter_id(owner, suffix)
     ids = {str(r.get("id") or "") for r in existing if isinstance(r, dict)}
     if base not in ids:
         return base
@@ -948,6 +992,25 @@ def _new_shooter_id(owner: str, phone: str, existing: list[dict[str, Any]]) -> s
     while f"{base}_{n}" in ids:
         n += 1
     return f"{base}_{n}"
+
+
+def _migrate_shooter_session_files(root: Path, old_id: str, new_id: str) -> None:
+    """Move Telethon session files when shooter account id changes."""
+    if not old_id or not new_id or old_id == new_id:
+        return
+    shooter_dir = root / "telegram_session" / "shooter"
+    for name in (f"{old_id}.session", f"{old_id}.session-journal"):
+        src = shooter_dir / name
+        if not src.is_file():
+            continue
+        dst_name = name.replace(old_id, new_id, 1)
+        dst = shooter_dir / dst_name
+        if dst.is_file():
+            continue
+        try:
+            src.rename(dst)
+        except OSError:
+            pass
 
 
 def _should_skip_wealth_gcs_row(row: dict[str, str]) -> bool:
@@ -1108,23 +1171,42 @@ def _telegram_row_to_shooter(row: dict[str, str], raw: dict[str, Any], existing:
     account_status = effective_row_status(row)
 
     matched = _find_by_phone(existing, phone)
-    aid = str(matched.get("id") if matched else "").strip()
+    old_id = str(matched.get("id") if matched else "").strip()
+    final_owner = owner or _normalize_owner_name(str(matched.get("owner") or "") if matched else "")
+    aid = old_id
     if not aid:
-        if not owner:
+        if not final_owner:
             return None
-        aid = _new_shooter_id(owner, phone, existing)
+        aid = _new_shooter_id(final_owner, phone, existing)
+    elif (
+        matched
+        and shooter_rename_on_owner_change()
+        and final_owner
+        and final_owner != _normalize_owner_name(str(matched.get("owner") or ""))
+    ):
+        suffix = _shooter_id_numeric_suffix(old_id, phone)
+        aid = _resolve_shooter_id_with_suffix(
+            final_owner,
+            suffix,
+            existing,
+            current_id=old_id,
+            phone=phone,
+        )
 
     enabled = _truthy(row.get("enabled", "1"))
     if _session_user_disabled(account_status):
         enabled = False
 
     session_default = f"telegram_session/shooter/{aid}"
+    session_val = session_default
+    if matched and aid == old_id:
+        session_val = str(matched.get("session") or "").strip() or session_default
     out: dict[str, Any] = {
         "id": aid,
         "phone": phone,
-        "owner": owner or (str(matched.get("owner") if matched else "") or "UNKNOWN"),
+        "owner": final_owner or (str(matched.get("owner") if matched else "") or "UNKNOWN"),
         "enabled": enabled,
-        "session": (matched.get("session") if matched else None) or session_default,
+        "session": session_val,
     }
     row_user = str(row.get("user") or row.get("owner") or "").strip()
     if row_user:
@@ -1161,6 +1243,7 @@ def _pull_telegram_acc(
     mutate_accounts: Callable[[dict[str, Any]], bool],
     mutate_shooter: Callable[[dict[str, Any]], bool],
     *,
+    root: Path | None = None,
     headers_lines: tuple[list[str], list[list[str]]] | None = None,
     pending_only: bool = False,
 ) -> dict[str, int]:
@@ -1170,6 +1253,7 @@ def _pull_telegram_acc(
         headers, lines = _read_tab_raw(wb, _tab_telegram())
     stats = {
         "shooter_added": 0, "shooter_updated": 0, "shooter_skipped": 0,
+        "shooter_renamed": 0,
         "gcs_added": 0, "gcs_updated": 0, "gcs_skipped": 0,
     }
 
@@ -1245,11 +1329,36 @@ def _pull_telegram_acc(
                     stats["shooter_skipped"] += 1
                 continue
             phone = entry["phone"]
-            before = _find_by_phone(lst, phone) is not None
-            _upsert_list(lst, entry, key="id")
-            if before:
+            matched = _find_by_phone(lst, phone)
+            before = matched is not None
+            old_id = str(matched.get("id") or "").strip() if matched else ""
+            new_id = str(entry.get("id") or "").strip()
+            if root and old_id and new_id and old_id != new_id:
+                _migrate_shooter_session_files(root, old_id, new_id)
+                stats["shooter_renamed"] += 1
+            if matched:
+                for i, r in enumerate(lst):
+                    if not isinstance(r, dict):
+                        continue
+                    if norm_phone(str(r.get("phone") or "")) != norm_phone(phone):
+                        continue
+                    merged = dict(r)
+                    merged.update(entry)
+                    merged["id"] = new_id
+                    merged["session"] = f"telegram_session/shooter/{new_id}"
+                    lst[i] = merged
+                    break
+                if old_id and new_id != old_id:
+                    lst[:] = [
+                        r
+                        for r in lst
+                        if not (
+                            isinstance(r, dict) and str(r.get("id") or "").strip() == old_id
+                        )
+                    ]
                 stats["shooter_updated"] += 1
             else:
+                _upsert_list(lst, entry, key="id")
                 stats["shooter_added"] += 1
 
     if not mutate_accounts(_apply_gcs):
@@ -1324,6 +1433,7 @@ def pull_from_sheet(
             wb,
             mutate_accounts,
             mutate_shooter,
+            root=root,
             headers_lines=(headers, lines),
             pending_only=pending_only,
         )

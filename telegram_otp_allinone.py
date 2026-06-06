@@ -5886,9 +5886,11 @@ def _run_sync_pull(
                 f"  GCS     +{stats['gcs_added']} new, ~{stats['gcs_updated']} updated"
                 f" (skip {stats['gcs_skipped']})"
             )
+            renamed = stats.get("shooter_renamed", 0)
+            rename_note = f", {renamed} owner→id renamed" if renamed else ""
             print(
                 f"  Shooter +{stats['shooter_added']} new, ~{stats['shooter_updated']} updated"
-                f" (skip {stats['shooter_skipped']})"
+                f"{rename_note} (skip {stats['shooter_skipped']})"
             )
         elif stats.get("gcs_added") or stats.get("shooter_added"):
             print(
