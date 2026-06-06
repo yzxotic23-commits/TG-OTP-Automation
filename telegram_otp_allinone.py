@@ -22,6 +22,7 @@ from typing import Any, Callable
 from dotenv import load_dotenv
 from filelock import FileLock, Timeout as FileLockTimeout
 from telethon import TelegramClient, events
+from telethon.tl.types import UpdateUserName
 from telegram import Update
 from telegram.constants import ChatType
 from telegram.error import Conflict
@@ -2335,6 +2336,60 @@ def profile_name_from_me(me: Any, fallback: str = "") -> str:
     ).strip()
     uname = getattr(me, "username", None) or ""
     return full or uname or fallback
+
+
+def _apply_listen_profile_update(
+    acc: dict[str, Any],
+    profile_name: str,
+    *,
+    list_key: str,
+    json_path: Path,
+    tag: str,
+) -> None:
+    """Write Telegram display name to JSON when Telethon pushes a profile update."""
+    acc_id = str(acc.get("id") or "").strip()
+    hint = profile_name.strip()
+    if not acc_id or not hint:
+        return
+    old_hint = str(acc.get("profile_hint") or "").strip()
+    acc["detected_profile"] = hint
+    if hint == old_hint:
+        return
+    if update_json_profile_hint(json_path, list_key, acc_id, hint):
+        acc["profile_hint"] = hint
+        print(f"  [{tag}] {acc_id} profile → {hint}", flush=True)
+
+
+def _register_listen_profile_handlers(
+    client: TelegramClient,
+    acc: dict[str, Any],
+    *,
+    me_id: int,
+    list_key: str,
+    json_path: Path,
+    tag: str,
+) -> None:
+    """Detect own display-name changes via Telethon updates (no polling)."""
+
+    @client.on(events.Raw)
+    async def profile_raw_handler(update: Any, _acc=acc, _tag=tag, _me_id=me_id) -> None:
+        try:
+            if not isinstance(update, UpdateUserName):
+                return
+            if update.user_id != _me_id:
+                return
+            profile_name = profile_name_from_me(update, str(_acc.get("id") or ""))
+            if not profile_name:
+                return
+            _apply_listen_profile_update(
+                _acc,
+                profile_name,
+                list_key=list_key,
+                json_path=json_path,
+                tag=_tag,
+            )
+        except Exception as e:
+            logger.debug("[%s] profile update handler: %s", _tag, e)
 
 
 def update_json_profile_hint(path: Path, list_key: str, account_id: str, profile_hint: str) -> bool:
@@ -4940,6 +4995,15 @@ async def _listen_start_account(
             acc["profile_hint"] = profile_name
             if profile_name != old_hint:
                 profile_synced.append(acc_id)
+        if me:
+            _register_listen_profile_handlers(
+                client,
+                acc,
+                me_id=me.id,
+                list_key=list_key,
+                json_path=json_path,
+                tag=tag,
+            )
     active.append(f"{acc_id} ({profile_name})")
     if not quiet:
         print(f"  [{tag}] ✓ {acc_id} → {profile_name}", flush=True)
@@ -5330,6 +5394,7 @@ async def run_listener_async() -> int:
         print(
             f"  JSON sync: GCS {len(gcs_sync)} → accounts.json"
             f" | Shooter {len(sh_sync)} → shooteraccounts.json"
+            f" | live profile updates via Telethon"
         )
     print("=" * 40 + "\n")
 
