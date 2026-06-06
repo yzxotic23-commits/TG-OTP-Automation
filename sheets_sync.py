@@ -517,6 +517,7 @@ def classify_account_status(exc: BaseException | None = None, *, message: str = 
         return "Banned"
     if (
         "frozen_participant" in name
+        or "frozen_method_invalid" in name
         or "account is frozen" in combined
         or "your account is frozen" in combined
     ):

@@ -1945,16 +1945,16 @@ def _should_notify_account_status(
     acc: dict[str, Any],
     status: str,
     *,
-    me_restricted: bool = False,
+    frozen_confirmed: bool = False,
     from_listen: bool = False,
 ) -> bool:
-    """Gate Telegram alerts — Frozen never from LISTEN; needs get_me().restricted + cooldown."""
+    """Gate Telegram alerts — Frozen never from LISTEN; needs confirmed freeze + cooldown."""
     if from_listen and str(status or "").strip() == "Frozen":
         return False
     if not _system_status_notify_enabled(status):
         return False
     if str(status or "").strip() == "Frozen":
-        if not me_restricted:
+        if not frozen_confirmed:
             return False
         if not _frozen_notify_cooldown_ok(acc):
             return False
@@ -1971,7 +1971,7 @@ def _publish_account_status(
     profile: str = "",
     note: str = "",
     notify: bool = True,
-    me_restricted: bool = False,
+    frozen_confirmed: bool = False,
     from_listen: bool = False,
 ) -> bool:
     """Queue Sheet + Telegram only when status actually changed."""
@@ -1990,7 +1990,7 @@ def _publish_account_status(
         allow_instant=False,
     )
     if notify and _should_notify_account_status(
-        acc, user_st, me_restricted=me_restricted, from_listen=from_listen
+        acc, user_st, frozen_confirmed=frozen_confirmed, from_listen=from_listen
     ):
         notify_system_account_status(
             token,
@@ -2486,6 +2486,64 @@ def account_status_from_me(me: Any) -> str:
     return "Active"
 
 
+def frozen_ui_probe_enabled() -> bool:
+    """Health-check only: probe Saved Messages for UI freeze (FROZEN_* errors)."""
+    return os.environ.get("TELEGRAM_FROZEN_UI_PROBE", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def _exception_is_telegram_frozen(exc: BaseException) -> bool:
+    name = type(exc).__name__.lower()
+    msg = str(exc).lower()
+    combined = f"{name} {msg}"
+    if "frozen_method_invalid" in name or "frozen_participant" in combined:
+        return True
+    if "account is frozen" in combined or "your account is frozen" in combined:
+        return True
+    try:
+        import sheets_sync
+
+        return sheets_sync.classify_account_status(exc) == "Frozen"
+    except Exception:
+        return False
+
+
+async def probe_frozen_ui_via_saved_messages(client: TelegramClient) -> bool | None:
+    """
+    Harmless active probe for Telegram UI freeze (get_me().restricted may stay False).
+    True=Frozen, False=Active, None=unknown (keep Active).
+    """
+    probe_text = (os.environ.get("TELEGRAM_FROZEN_UI_PROBE_TEXT") or ".").strip() or "."
+    try:
+        sent = await client.send_message("me", probe_text)
+        try:
+            mid = int(getattr(sent, "id", 0) or 0)
+            if mid:
+                await client.delete_messages("me", [mid])
+        except Exception:
+            pass
+        return False
+    except Exception as e:
+        if _exception_is_telegram_frozen(e):
+            return True
+        logger.debug("frozen ui probe non-frozen error: %s", e)
+        return None
+
+
+def sync_probe_frozen_ui(client: TelegramClient) -> bool | None:
+    """Sync wrapper for health-check temp client."""
+    try:
+        if client.is_connected():
+            return client.loop.run_until_complete(probe_frozen_ui_via_saved_messages(client))
+    except Exception as e:
+        logger.debug("sync frozen ui probe failed: %s", e)
+    return None
+
+
 SPAMBOT_PEER = "SpamBot"
 
 _SPAMBOT_OK_PHRASES = (
@@ -2496,13 +2554,21 @@ _SPAMBOT_OK_PHRASES = (
     "not frozen",
 )
 
-# Full UI freeze only — soft anti-spam limits must NOT match here.
+# UI freeze + Terms violation block (SpamBot). NOT generic "limited" soft-limit.
 _SPAMBOT_FROZEN_PHRASES = (
     "your account is frozen",
     "account is frozen",
     "this account is frozen",
     "account was frozen",
     "accounts are frozen",
+    "account was blocked",
+    "was blocked for violations",
+    "violations of the telegram",
+    "read-only mode",
+    "can't send messages or take actions",
+    "cannot send messages or take actions",
+    "appeal via @spambot before",
+    "your account will be deleted",
 )
 
 _SPAMBOT_SOFT_LIMIT_PHRASES = (
@@ -2516,6 +2582,16 @@ _SPAMBOT_SOFT_LIMIT_PHRASES = (
     "bad news",
     "done something that triggered",
 )
+
+
+def frozen_spambot_probe_enabled() -> bool:
+    """Health-check @SpamBot probe — strict parser, newest reply only (not LISTEN)."""
+    return os.environ.get("TELEGRAM_FROZEN_SPAMBOT_PROBE", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
 
 
 def spambot_frozen_check_enabled() -> bool:
@@ -5457,6 +5533,8 @@ async def _listen_start_account(
     user_st = account_status_from_me(me)
 
     if user_st == "Frozen":
+        # Confirmed via get_me().restricted=True only — purge JSON + disconnect listener.
+        expired.append(listener_account_display_name(acc, acc_id, profile_name))
         _publish_account_status(
             acc,
             pool,
@@ -5465,13 +5543,21 @@ async def _listen_start_account(
             accounts_doc=accounts_doc,
             profile=profile_name,
             notify=False,
-            me_restricted=True,
+            frozen_confirmed=True,
             from_listen=True,
         )
         if not quiet:
-            print(f"  [{tag}] ⚠ {acc_id} — restricted (listener kept, no spam alert)", flush=True)
+            print(
+                f"  [{tag}] 🗑 {acc_id} — Frozen (removed from JSON · re-login via Sheet Pending)",
+                flush=True,
+            )
         else:
-            logger.info("[%s] %s restricted — listener kept", tag, acc_id)
+            logger.info("[%s] %s frozen — removed from JSON", tag, acc_id)
+        try:
+            await client.disconnect()
+        except Exception:
+            pass
+        return
     elif user_st in ("Banned", "Expired"):
         expired.append(listener_account_display_name(acc, acc_id, profile_name))
         if not quiet:
@@ -6031,8 +6117,22 @@ def _purge_banned_accounts_enabled() -> bool:
     )
 
 
+def _purge_frozen_accounts_enabled() -> bool:
+    """Remove confirmed Frozen accounts from JSON + session (re-login via Sheet Pending)."""
+    return os.environ.get("TELEGRAM_PURGE_FROZEN_ACCOUNTS", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
 def _status_is_banned(raw: str) -> bool:
     return str(raw or "").strip().lower() == "banned"
+
+
+def _status_is_frozen(raw: str) -> bool:
+    return str(raw or "").strip().lower() == "frozen"
 
 
 def _delete_account_session_files(acc: dict[str, Any]) -> None:
@@ -6057,13 +6157,14 @@ def _delete_account_session_files(acc: dict[str, Any]) -> None:
             _safe_unlink_session_file(Path(str(pattern) + "-journal"))
 
 
-def purge_banned_account_from_json(
+def purge_account_from_json(
     account_id: str,
     pool: str,
     *,
     phone: str = "",
+    reason: str = "Banned",
 ) -> bool:
-    """Hapus akun Banned dari otp_accounts / shooter_accounts + session file."""
+    """Hapus akun Banned/Frozen dari otp_accounts / shooter_accounts + session file."""
     import sheets_sync
 
     list_key = "shooter_accounts" if str(pool or "").strip().lower() == "shooter" else "otp_accounts"
@@ -6095,8 +6196,40 @@ def purge_banned_account_from_json(
 
     _delete_account_session_files(removed_row)
     label = aid or np or "?"
-    print(f"  🗑 Banned account removed from {path.name}: {label}", flush=True)
+    print(f"  🗑 {reason} account removed from {path.name}: {label}", flush=True)
     return True
+
+
+def purge_banned_account_from_json(
+    account_id: str,
+    pool: str,
+    *,
+    phone: str = "",
+) -> bool:
+    return purge_account_from_json(account_id, pool, phone=phone, reason="Banned")
+
+
+def purge_frozen_account_from_json(
+    account_id: str,
+    pool: str,
+    *,
+    phone: str = "",
+) -> bool:
+    return purge_account_from_json(account_id, pool, phone=phone, reason="Frozen")
+
+
+def _maybe_purge_account_from_json(
+    account_id: str,
+    pool: str,
+    *,
+    phone: str = "",
+    status: str = "",
+) -> None:
+    st = str(status or "").strip()
+    if _status_is_banned(st) and _purge_banned_accounts_enabled():
+        purge_banned_account_from_json(account_id, pool, phone=phone)
+    elif _status_is_frozen(st) and _purge_frozen_accounts_enabled():
+        purge_frozen_account_from_json(account_id, pool, phone=phone)
 
 
 def _queue_sheet_status(
@@ -6132,8 +6265,7 @@ def _queue_sheet_status(
         st = str(session_user or status or "").strip()
         if st.lower() == "pending login":
             st = ""
-        if _purge_banned_accounts_enabled() and _status_is_banned(st):
-            purge_banned_account_from_json(account_id, pool, phone=phone)
+        _maybe_purge_account_from_json(account_id, pool, phone=phone, status=st)
     except Exception:
         pass
 
@@ -6170,22 +6302,36 @@ def _session_friday_for_account_status(user_st: str, *, no_session: bool = False
 
 
 def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str, bool]:
-    """Return (session_user, session_friday, me_restricted)."""
+    """Return (session_user, session_friday, frozen_confirmed)."""
     if not _session_file_ready(acc):
         return "", "Pending Login", False
 
     client, tmp_dir = _make_telethon_client_temp(acc)
     user_st = "Unknown"
     friday_st = "Active"
-    me_restricted = False
+    frozen_confirmed = False
     try:
         client.connect()
         if not client.is_user_authorized():
             return "Expired", "Expired", False
         try:
             me = client.get_me()
-            me_restricted = bool(getattr(me, "restricted", False))
             user_st = account_status_from_me(me)
+            if user_st == "Frozen":
+                frozen_confirmed = True
+            elif user_st == "Active":
+                # UI freeze (popup read-only) often keeps get_me().restricted=False.
+                # Confirm via @SpamBot strict reply and/or Saved Messages probe.
+                if frozen_spambot_probe_enabled():
+                    sb = sync_probe_spambot_frozen(client)
+                    if sb is True:
+                        user_st = "Frozen"
+                        frozen_confirmed = True
+                if user_st == "Active" and frozen_ui_probe_enabled():
+                    ui = sync_probe_frozen_ui(client)
+                    if ui is True:
+                        user_st = "Frozen"
+                        frozen_confirmed = True
             friday_st = _session_friday_for_account_status(user_st)
         except Exception as e:
             user_st = _classify_account_sheet_status(e)
@@ -6212,7 +6358,7 @@ def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str, bool]:
     if str(user_st).strip().lower() == "unknown":
         user_st = "Disconnected"
     friday_st = _session_friday_for_account_status(user_st)
-    return user_st, friday_st, me_restricted
+    return user_st, friday_st, frozen_confirmed
 
 
 def _after_login_sync_status(acc: dict[str, Any], pool: str) -> tuple[str, str]:
@@ -6227,7 +6373,7 @@ def _after_login_sync_status(acc: dict[str, Any], pool: str) -> tuple[str, str]:
     phone = str(acc.get("phone") or "")
     print(f"  Recording Sheet status for {acc_id}...", flush=True)
 
-    user_st, friday_st, _me_restricted = _health_check_one_account(acc)
+    user_st, friday_st, _frozen_confirmed = _health_check_one_account(acc)
     try:
         import sheets_sync as _ss
 
@@ -6292,7 +6438,7 @@ def _health_check_print_section(
         acc_id = str(acc.get("id") or "?")
         phone = str(acc.get("phone") or "")
         profile = str(acc.get("profile_hint") or acc_id)
-        user_st, friday_st, me_restricted = _health_check_one_account(acc)
+        user_st, friday_st, frozen_confirmed = _health_check_one_account(acc)
         counts[user_st] = counts.get(user_st, 0) + 1
         if not quiet:
             print(f"  · {acc_id} ({profile})")
@@ -6337,7 +6483,7 @@ def _health_check_print_section(
                 accounts_doc=accounts_doc,
                 profile=profile,
                 notify=True,
-                me_restricted=me_restricted,
+                frozen_confirmed=frozen_confirmed,
             )
         else:
             _mark_account_status_known(acc, check_st)
@@ -6382,9 +6528,11 @@ def run_health_check(pool: str = "all", target_id: str = "all", *, quiet: bool =
 
     if not quiet:
         print("\n-- Health-check (temp copy, listen may keep running) --")
-        if spambot_frozen_check_enabled():
-            print("  @SpamBot: configured but NOT used for Frozen (false-positive guard)")
-        print("  Frozen = get_me().restricted only · Telegram alert on CHANGE + cooldown")
+        if frozen_spambot_probe_enabled():
+            print("  @SpamBot probe: ON (health-check · strict · newest reply only)")
+        if frozen_ui_probe_enabled():
+            print("  Saved Messages probe: ON (health-check · secondary)")
+        print("  Frozen alert: on CHANGE only · cooldown · never from LISTEN restart")
 
     total_gcs: dict[str, int] = {}
     total_sh: dict[str, int] = {}

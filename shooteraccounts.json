@@ -440,35 +440,11 @@
       "currency": "MYR"
     },
     {
-      "id": "SH_INDRI_01",
-      "owner": "INDRI",
-      "phone": "+60145619910",
-      "profile_hint": "f",
-      "session": "telegram_session/shooter/SH_INDRI_01",
-      "enabled": true,
-      "user_name": "Indri",
-      "remark": "MYR-ST-002",
-      "brand": "STMY",
-      "currency": "MYR"
-    },
-    {
       "id": "SH_INDRI_02",
       "owner": "INDRI",
       "phone": "+60192723625",
       "profile_hint": "G",
       "session": "telegram_session/shooter/SH_INDRI_02",
-      "enabled": true,
-      "user_name": "Indri",
-      "remark": "MYR-ST-002",
-      "brand": "STMY",
-      "currency": "MYR"
-    },
-    {
-      "id": "SH_INDRI_03",
-      "owner": "INDRI",
-      "phone": "+60145427949",
-      "profile_hint": "d",
-      "session": "telegram_session/shooter/SH_INDRI_03",
       "enabled": true,
       "user_name": "Indri",
       "remark": "MYR-ST-002",
