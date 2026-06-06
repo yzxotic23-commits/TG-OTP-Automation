@@ -515,8 +515,14 @@ def classify_account_status(exc: BaseException | None = None, *, message: str = 
     combined = f"{name} {msg}"
     if "phonenumberbanned" in name or "userdeactivatedban" in name or "banned" in combined:
         return "Banned"
-    if "frozen" in combined or "freeze" in combined or "frozen_participant" in combined:
+    if (
+        "frozen_participant" in name
+        or "account is frozen" in combined
+        or "your account is frozen" in combined
+    ):
         return "Frozen"
+    if "peerflood" in name or "userrestricted" in name or "userprivacyrestricted" in name:
+        return "Disconnected"
     if "account_banned" in combined or "user_banned" in combined:
         return "Banned"
     if "userdeactivated" in name or "deactivated" in combined:
@@ -559,16 +565,18 @@ def queue_status(
     session_user: str = "",
     session_friday: str = "",
     allow_instant: bool | None = None,
+    force_queue: bool = False,
 ) -> None:
     """
     Queue entry for Sheet push.
     session_user / status → Status column (dropdown). Script never writes Pending.
     session_friday → Session Friday column only.
     allow_instant=False → queue only (LISTEN); LIVE-STATUS bulk-pushes later.
+    force_queue=True → always append (e.g. recover false Frozen → Ready/Active).
     """
     su = _sheet_status_column_value(session_user or status)
     sf = _map_script_status(session_friday) if session_friday else ""
-    if allow_instant is False:
+    if allow_instant is False and not force_queue:
         su_l = su.lower()
         if su_l in ("active", "feeding", "ready") and (not sf or sf.lower() == "active"):
             return

@@ -1871,6 +1871,139 @@ async def _flush_disconnect_alerts(
         )
 
 
+_account_status_cache: dict[str, str] = {}
+
+
+def _account_status_cache_key(acc: dict[str, Any]) -> str:
+    try:
+        import sheets_sync
+
+        phone = sheets_sync.norm_phone(str(acc.get("phone") or ""))
+    except Exception:
+        phone = ""
+    return phone or str(acc.get("id") or "").strip() or "?"
+
+
+def _known_account_status(acc: dict[str, Any]) -> str:
+    key = _account_status_cache_key(acc)
+    if key in _account_status_cache:
+        return _account_status_cache[key]
+    try:
+        import sheets_sync
+
+        phone = sheets_sync.norm_phone(str(acc.get("phone") or ""))
+        row = sheets_sync.collect_status_from_queue(project_root()).get(phone, {})
+        st = str(row.get("session_friday") or row.get("session_user") or "").strip()
+        if st:
+            _account_status_cache[key] = st
+        return st
+    except Exception:
+        return ""
+
+
+def _warm_account_status_cache() -> None:
+    try:
+        import sheets_sync
+
+        for phone, row in sheets_sync.collect_status_from_queue(project_root()).items():
+            st = str(row.get("session_friday") or row.get("session_user") or "").strip()
+            if st and phone:
+                _account_status_cache[phone] = st
+    except Exception:
+        pass
+
+
+def _account_status_changed(acc: dict[str, Any], new_status: str) -> bool:
+    new = str(new_status or "").strip()
+    if not new:
+        return False
+    prev = _known_account_status(acc)
+    return not (prev and prev.lower() == new.lower())
+
+
+def _mark_account_status_known(acc: dict[str, Any], status: str) -> None:
+    _account_status_cache[_account_status_cache_key(acc)] = str(status or "").strip()
+
+
+_frozen_notify_last: dict[str, float] = {}
+
+
+def _frozen_notify_cooldown_ok(acc: dict[str, Any]) -> bool:
+    sec = _env_int("TELEGRAM_NOTIFY_FROZEN_COOLDOWN_SEC", 86400, minimum=0)
+    if sec <= 0:
+        return True
+    key = _account_status_cache_key(acc)
+    last = _frozen_notify_last.get(key, 0.0)
+    return time.time() - last >= sec
+
+
+def _mark_frozen_notified(acc: dict[str, Any]) -> None:
+    _frozen_notify_last[_account_status_cache_key(acc)] = time.time()
+
+
+def _should_notify_account_status(
+    acc: dict[str, Any],
+    status: str,
+    *,
+    me_restricted: bool = False,
+    from_listen: bool = False,
+) -> bool:
+    """Gate Telegram alerts — Frozen never from LISTEN; needs get_me().restricted + cooldown."""
+    if from_listen and str(status or "").strip() == "Frozen":
+        return False
+    if not _system_status_notify_enabled(status):
+        return False
+    if str(status or "").strip() == "Frozen":
+        if not me_restricted:
+            return False
+        if not _frozen_notify_cooldown_ok(acc):
+            return False
+    return True
+
+
+def _publish_account_status(
+    acc: dict[str, Any],
+    pool: str,
+    user_st: str,
+    *,
+    token: str,
+    accounts_doc: dict[str, Any],
+    profile: str = "",
+    note: str = "",
+    notify: bool = True,
+    me_restricted: bool = False,
+    from_listen: bool = False,
+) -> bool:
+    """Queue Sheet + Telegram only when status actually changed."""
+    if not _account_status_changed(acc, user_st):
+        return False
+    acc_id = str(acc.get("id") or "?")
+    _mark_account_status_known(acc, user_st)
+    _queue_sheet_status(
+        acc_id,
+        pool,
+        user_st.lower(),
+        note or profile,
+        phone=str(acc.get("phone") or ""),
+        session_user=user_st,
+        session_friday=_session_friday_for_account_status(user_st),
+        allow_instant=False,
+    )
+    if notify and _should_notify_account_status(
+        acc, user_st, me_restricted=me_restricted, from_listen=from_listen
+    ):
+        notify_system_account_status(
+            token,
+            accounts_doc,
+            acc,
+            user_st,
+            profile=profile or str(acc.get("profile_hint") or acc_id),
+        )
+        if str(user_st or "").strip() == "Frozen":
+            _mark_frozen_notified(acc)
+    return True
+
+
 def notify_system_account_status(
     token: str,
     accounts_doc: dict[str, Any],
@@ -2336,6 +2469,147 @@ def profile_name_from_me(me: Any, fallback: str = "") -> str:
     ).strip()
     uname = getattr(me, "username", None) or ""
     return full or uname or fallback
+
+
+def account_status_from_me(me: Any) -> str:
+    """Map get_me() → Active / Banned / Frozen / Expired.
+
+    Frozen only when Telegram sets restricted=True (full restriction flag).
+    restriction_reason alone is NOT used — too many false positives on CS accounts.
+    """
+    if not me:
+        return "Expired"
+    if getattr(me, "deleted", False):
+        return "Banned"
+    if getattr(me, "restricted", False):
+        return "Frozen"
+    return "Active"
+
+
+SPAMBOT_PEER = "SpamBot"
+
+_SPAMBOT_OK_PHRASES = (
+    "good news",
+    "no limits",
+    "free as a bird",
+    "not limited",
+    "not frozen",
+)
+
+# Full UI freeze only — soft anti-spam limits must NOT match here.
+_SPAMBOT_FROZEN_PHRASES = (
+    "your account is frozen",
+    "account is frozen",
+    "this account is frozen",
+    "account was frozen",
+    "accounts are frozen",
+)
+
+_SPAMBOT_SOFT_LIMIT_PHRASES = (
+    "limited",
+    "restrict",
+    "anti-spam",
+    "unfortunately",
+    "harsh response",
+    "won't be able to send",
+    "will not be able to send",
+    "bad news",
+    "done something that triggered",
+)
+
+
+def spambot_frozen_check_enabled() -> bool:
+    """Optional @SpamBot probe — off by default (too many false positives)."""
+    return os.environ.get("TELEGRAM_SPAMBOT_FROZEN_CHECK", "0").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def _system_status_notify_enabled(status: str) -> bool:
+    """Telegram System Status alerts per status type."""
+    st = str(status or "").strip()
+    if st == "Frozen":
+        return os.environ.get("TELEGRAM_NOTIFY_FROZEN", "0").strip().lower() in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        )
+    return True
+
+
+def _spambot_probe_timeout_sec() -> float:
+    return float(_env_int("TELEGRAM_SPAMBOT_PROBE_TIMEOUT_SEC", 4, minimum=2))
+
+
+def classify_spambot_reply(text: str) -> bool | None:
+    """
+    Parse @SpamBot reply.
+    True=full account frozen, False=active or soft spam limit, None=unknown.
+    """
+    t = str(text or "").strip().lower()
+    if not t or t == "/start":
+        return None
+    if any(p in t for p in _SPAMBOT_OK_PHRASES):
+        return False
+    if any(p in t for p in _SPAMBOT_FROZEN_PHRASES):
+        return True
+    if any(p in t for p in _SPAMBOT_SOFT_LIMIT_PHRASES):
+        return False
+    return None
+
+
+async def _fetch_spambot_reply_text(client: TelegramClient) -> str:
+    """Send /start and return the first incoming @SpamBot reply (skip our outgoing message)."""
+    start_id: int | None = None
+    try:
+        sent = await client.send_message(SPAMBOT_PEER, "/start")
+        start_id = int(getattr(sent, "id", 0) or 0) or None
+    except Exception:
+        return ""
+    deadline = time.monotonic() + _spambot_probe_timeout_sec()
+    while time.monotonic() < deadline:
+        await asyncio.sleep(0.4)
+        try:
+            msgs = await client.get_messages(SPAMBOT_PEER, limit=8)
+        except Exception:
+            continue
+        for msg in msgs:
+            if getattr(msg, "out", False):
+                continue
+            txt = str(getattr(msg, "message", None) or "").strip()
+            if not txt:
+                continue
+            mid = int(getattr(msg, "id", 0) or 0)
+            if start_id is not None and mid <= start_id:
+                continue
+            return txt
+    return ""
+
+
+async def probe_spambot_frozen(client: TelegramClient) -> bool | None:
+    """True=full spam freeze, False=clear/soft-limit, None=unknown (keep Active)."""
+    try:
+        text = await _fetch_spambot_reply_text(client)
+        if not text:
+            return None
+        return classify_spambot_reply(text)
+    except Exception as e:
+        logger.debug("spambot probe failed: %s", e)
+        return None
+
+
+def sync_probe_spambot_frozen(client: TelegramClient) -> bool | None:
+    """Sync wrapper for health-check (temp Telethon client)."""
+    try:
+        if client.is_connected():
+            return client.loop.run_until_complete(probe_spambot_frozen(client))
+    except Exception as e:
+        logger.debug("sync spambot probe failed: %s", e)
+    return None
 
 
 def _apply_listen_profile_update(
@@ -2996,11 +3270,247 @@ def creator_account_id() -> str:
     return os.environ.get("TELEGRAM_CREATOR_ACCOUNT_ID", "geri_work").strip().lower()
 
 
+def is_primary_creator_user(user: Any) -> bool:
+    """Hanya akun utama (default geri_work) — bukan admin staff lain."""
+    if not user:
+        return False
+    if account_id_from_user(user).strip().lower() == creator_account_id():
+        return True
+    tg_id = str(getattr(user, "id", "") or "").strip()
+    uname = (getattr(user, "username", None) or "").strip().lower().lstrip("@")
+    if not tg_id and not uname:
+        return False
+    try:
+        for row in load_json(accounts_json_path()).get("accounts", []):
+            if not isinstance(row, dict):
+                continue
+            if str(row.get("id", "")).strip().lower() != creator_account_id():
+                continue
+            if tg_id and str(row.get("telegram_user_id") or row.get("chat_id") or "").strip() == tg_id:
+                return True
+            if uname and uname in _row_telegram_usernames(row):
+                return True
+    except Exception:
+        pass
+    return False
+
+
+def _find_staff_row_by_admin_hint(hint: str) -> dict[str, Any] | None:
+    raw = str(hint or "").strip()
+    if not raw:
+        return None
+    key = raw.lstrip("@").lower()
+    key_u = raw.upper()
+    rows = load_json(accounts_json_path()).get("accounts") or []
+    for row in rows:
+        if isinstance(row, dict) and str(row.get("id", "")).strip().lower() == key:
+            return row
+    if raw.isdigit():
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            if str(row.get("telegram_user_id", "")).strip() == raw:
+                return row
+            if str(row.get("chat_id", "")).strip() == raw:
+                return row
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        if key in _row_telegram_usernames(row):
+            return row
+        if str(row.get("telegram_username", "")).strip().lower().lstrip("@") == key:
+            return row
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("shooter_owner", "")).strip().upper() == key_u:
+            return row
+        if str(row.get("label", "")).strip().upper() == key_u:
+            return row
+    return None
+
+
 def _staff_row_is_admin(row: dict[str, Any]) -> bool:
     role = str(row.get("role") or "").strip().lower()
     if role in ("admin", "creator"):
         return True
     return str(row.get("is_admin", "")).strip().lower() in ("1", "true", "yes", "on")
+
+
+def promote_staff_to_admin(hint: str) -> tuple[bool, str]:
+    """Promote staff yang sudah ada di accounts.json → role admin."""
+    row = _find_staff_row_by_admin_hint(hint)
+    if not row:
+        return False, (
+            accounts_header_html("⚠️ <b>Not Found</b>")
+            + "\n\nStaff belum ada di <code>accounts.json</code>.\n"
+            + "Tambahkan slot staff dulu (id + shooter_owner), lalu user daftar via <code>/start</code>."
+        )
+    target_id = str(row.get("id", "")).strip().lower()
+    if target_id == creator_account_id():
+        return True, (
+            accounts_header_html("ℹ️ <b>Creator</b>")
+            + f"\n\n<code>{html.escape(creator_account_id())}</code> sudah owner bot."
+        )
+    if _staff_row_is_admin(row):
+        label = str(row.get("label") or target_id)
+        return True, (
+            accounts_header_html("ℹ️ <b>Already Admin</b>")
+            + f"\n\n<code>{html.escape(target_id)}</code> ({html.escape(label)}) sudah admin."
+        )
+
+    result_id = target_id
+    result_label = str(row.get("label") or target_id)
+    result_owner = str(row.get("shooter_owner") or "")
+
+    def writer(data: dict[str, Any]) -> None:
+        nonlocal result_id, result_label, result_owner
+        rows = data.get("accounts")
+        if not isinstance(rows, list):
+            return
+        for matched in rows:
+            if not isinstance(matched, dict):
+                continue
+            if str(matched.get("id", "")).strip().lower() != target_id:
+                continue
+            matched["role"] = "admin"
+            result_id = str(matched.get("id") or result_id).strip()
+            result_label = str(matched.get("label") or result_label).strip()
+            result_owner = str(matched.get("shooter_owner") or "").strip()
+            return
+
+    if not _mutate_json_file(accounts_json_path(), writer):
+        return False, accounts_header_html("⚠️ <b>Error</b>") + "\n\nGagal menulis accounts.json."
+
+    lines = [
+        accounts_header_html("✅ <b>Admin Added</b>"),
+        "",
+        f"<b>id</b>     ·  <code>{html.escape(result_id)}</code>",
+        f"<b>label</b>  ·  <b>{html.escape(result_label)}</b>",
+        f"<b>role</b>   ·  <code>admin</code>",
+    ]
+    if result_owner:
+        lines.append(f"<b>shooter</b> ·  <code>{html.escape(result_owner.upper())}</code>")
+    lines.append("")
+    lines.append("<i>No restart needed.</i>")
+    return True, "\n".join(lines)
+
+
+def remove_staff_admin(hint: str) -> tuple[bool, str]:
+    """Cabut role admin — slot staff + shooter_owner tetap (daftar /start tetap jalan)."""
+    row = _find_staff_row_by_admin_hint(hint)
+    if not row:
+        return False, (
+            accounts_header_html("⚠️ <b>Not Found</b>")
+            + "\n\nStaff tidak ditemukan. Coba id, @username, atau chat_id."
+        )
+    target_id = str(row.get("id", "")).strip().lower()
+    if target_id == creator_account_id():
+        return False, (
+            accounts_header_html("⛔ <b>Blocked</b>")
+            + f"\n\nTidak bisa remove <code>{html.escape(creator_account_id())}</code>."
+        )
+    if not _staff_row_is_admin(row):
+        label = str(row.get("label") or target_id)
+        return True, (
+            accounts_header_html("ℹ️ <b>Not Admin</b>")
+            + f"\n\n<code>{html.escape(target_id)}</code> ({html.escape(label)}) bukan admin."
+        )
+
+    result_id = target_id
+    result_label = str(row.get("label") or target_id)
+    result_owner = str(row.get("shooter_owner") or "")
+
+    def writer(data: dict[str, Any]) -> None:
+        nonlocal result_id, result_label, result_owner
+        rows = data.get("accounts")
+        if not isinstance(rows, list):
+            return
+        for matched in rows:
+            if not isinstance(matched, dict):
+                continue
+            if str(matched.get("id", "")).strip().lower() != target_id:
+                continue
+            matched.pop("role", None)
+            matched.pop("is_admin", None)
+            result_id = str(matched.get("id") or result_id).strip()
+            result_label = str(matched.get("label") or result_label).strip()
+            result_owner = str(matched.get("shooter_owner") or "").strip()
+            return
+
+    if not _mutate_json_file(accounts_json_path(), writer):
+        return False, accounts_header_html("⚠️ <b>Error</b>") + "\n\nGagal menulis accounts.json."
+
+    lines = [
+        accounts_header_html("✅ <b>Admin Removed</b>"),
+        "",
+        f"<b>id</b>     ·  <code>{html.escape(result_id)}</code>",
+        f"<b>label</b>  ·  <b>{html.escape(result_label)}</b>",
+    ]
+    if result_owner:
+        lines.append(f"<b>shooter</b> ·  <code>{html.escape(result_owner.upper())}</code> (tetap)")
+    lines.append("")
+    lines.append("<i>Shooter /start &amp; /other tetap jalan — no restart needed.</i>")
+    return True, "\n".join(lines)
+
+
+def build_staff_admin_usage_html() -> str:
+    return (
+        accounts_header_html("ℹ️ <b>Staff Admin</b>")
+        + "\n\n"
+        + "<b>Usage (geri_work only):</b>\n"
+        + "◦ <code>/add admin jun</code>\n"
+        + "◦ <code>/add admin @JunWork16</code>\n"
+        + "◦ <code>/remove jun</code>\n"
+        + "◦ <code>/remove @JunWork16</code>\n\n"
+        + "<i>Staff harus sudah ada di accounts.json (+ daftar via /start). "
+        + "Command ini hanya set/cabut role admin.</i>"
+    )
+
+
+def _require_primary_creator(update: Update) -> bool:
+    user = update.effective_user
+    return bool(user and is_primary_creator_user(user))
+
+
+async def _reply_creator_only(em: Any) -> None:
+    await em.reply_text(
+        accounts_header_html("⛔ <b>Access Denied</b>")
+        + "\n\nCommand ini khusus owner bot (<code>"
+        + html.escape(creator_account_id())
+        + "</code>).",
+        parse_mode="HTML",
+    )
+
+
+async def cmd_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    em = update.effective_message
+    if not em:
+        return
+    if not _require_primary_creator(update):
+        await _reply_creator_only(em)
+        return
+    args = [str(a).strip() for a in (context.args or []) if str(a).strip()]
+    if len(args) != 2 or args[0].lower() != "admin" or not args[1]:
+        await em.reply_text(build_staff_admin_usage_html(), parse_mode="HTML")
+        return
+    _, msg = promote_staff_to_admin(args[1])
+    await em.reply_text(msg, parse_mode="HTML")
+
+
+async def cmd_remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    em = update.effective_message
+    if not em:
+        return
+    if not _require_primary_creator(update):
+        await _reply_creator_only(em)
+        return
+    hint = " ".join(context.args or []).strip()
+    if not hint:
+        await em.reply_text(build_staff_admin_usage_html(), parse_mode="HTML")
+        return
+    _, msg = remove_staff_admin(hint)
+    await em.reply_text(msg, parse_mode="HTML")
 
 
 def is_creator_user(user: Any) -> bool:
@@ -3107,6 +3617,8 @@ async def guard_staff_private_dm(update: Update, context: ContextTypes.DEFAULT_T
     text = (em.text or em.caption or "").strip()
     first = text.split()[0].split("@")[0].lower() if text else ""
     if first == "/start":
+        return
+    if first in ("/add", "/remove") and is_primary_creator_user(user):
         return
 
     staff = resolve_requester_staff(user)
@@ -3660,6 +4172,8 @@ def run_bot() -> int:
     app = Application.builder().token(token).build()
     app.add_handler(MessageHandler(filters.ChatType.PRIVATE, guard_staff_private_dm), group=-1)
     app.add_handler(CommandHandler("start", cmd_start))
+    app.add_handler(CommandHandler("add", cmd_add))
+    app.add_handler(CommandHandler("remove", cmd_remove))
     app.add_handler(CommandHandler("ping", cmd_ping))
     app.add_handler(CommandHandler("main", cmd_accounts))
     app.add_handler(CommandHandler("other", cmd_shooter))
@@ -4870,27 +5384,22 @@ async def _listen_start_account(
             return
         user_st = _classify_account_sheet_status(e)
         profile_hint = str(acc.get("profile_hint") or acc_id)
+        if user_st == "Frozen":
+            user_st = "Disconnected"
         expired.append(listener_account_display_name(acc, acc_id, profile_hint))
         if not quiet:
             print(f"  [{tag}] ✗ {acc_id} — {user_st}", flush=True)
         else:
             logger.info("[%s] %s hot-reload failed: %s", tag, acc_id, user_st)
-        _queue_sheet_status(
-            acc_id,
-            pool,
-            user_st.lower(),
-            str(e)[:120],
-            phone=str(acc.get("phone") or ""),
-            session_user=user_st,
-            session_friday=_session_friday_for_account_status(user_st),
-            allow_instant=False,
-        )
-        notify_system_account_status(
-            token,
-            accounts_doc,
+        _publish_account_status(
             acc,
+            pool,
             user_st,
+            token=token,
+            accounts_doc=accounts_doc,
             profile=profile_hint,
+            note=str(e)[:120],
+            notify=user_st in ("Banned", "Expired"),
         )
         try:
             await client.disconnect()
@@ -4928,22 +5437,14 @@ async def _listen_start_account(
             print(f"  [{tag}] ✗ {acc_id} — get_me() failed", flush=True)
         else:
             logger.info("[%s] %s hot-reload get_me() failed", tag, acc_id)
-        _queue_sheet_status(
-            acc_id,
-            pool,
-            "expired",
-            "get_me failed",
-            phone=str(acc.get("phone") or ""),
-            session_user="Expired",
-            session_friday="Expired",
-            allow_instant=False,
-        )
-        notify_system_account_status(
-            token,
-            accounts_doc,
+        _publish_account_status(
             acc,
+            pool,
             "Expired",
+            token=token,
+            accounts_doc=accounts_doc,
             profile=profile_hint,
+            note="get_me failed",
         )
         try:
             await client.disconnect()
@@ -4953,40 +5454,68 @@ async def _listen_start_account(
         return
 
     profile_name = profile_name_from_me(me, acc_id)
-    if getattr(me, "deleted", False):
-        user_st = "Banned"
-    elif getattr(me, "restricted", False):
-        user_st = "Frozen"
-    else:
-        user_st = "Active"
-    if user_st != "Active":
+    user_st = account_status_from_me(me)
+
+    if user_st == "Frozen":
+        _publish_account_status(
+            acc,
+            pool,
+            user_st,
+            token=token,
+            accounts_doc=accounts_doc,
+            profile=profile_name,
+            notify=False,
+            me_restricted=True,
+            from_listen=True,
+        )
+        if not quiet:
+            print(f"  [{tag}] ⚠ {acc_id} — restricted (listener kept, no spam alert)", flush=True)
+        else:
+            logger.info("[%s] %s restricted — listener kept", tag, acc_id)
+    elif user_st in ("Banned", "Expired"):
         expired.append(listener_account_display_name(acc, acc_id, profile_name))
         if not quiet:
             print(f"  [{tag}] ✗ {acc_id} — {user_st}", flush=True)
         else:
             logger.info("[%s] %s hot-reload status: %s", tag, acc_id, user_st)
-        _queue_sheet_status(
-            acc_id,
-            pool,
-            user_st.lower(),
-            profile_name,
-            phone=str(acc.get("phone") or ""),
-            session_user=user_st,
-            session_friday=user_st,
-            allow_instant=False,
-        )
-        notify_system_account_status(
-            token,
-            accounts_doc,
+        _publish_account_status(
             acc,
+            pool,
             user_st,
+            token=token,
+            accounts_doc=accounts_doc,
             profile=profile_name,
         )
         try:
             await client.disconnect()
         except Exception:
             pass
+        if user_st == "Expired":
+            _safe_unlink_session_file(session_file)
         return
+
+    prev_st = _known_account_status(acc)
+    if prev_st.lower() in ("frozen", "expired", "disconnected"):
+        try:
+            import sheets_sync
+
+            sheet_st = sheets_sync.sheet_status_after_login_value()
+        except Exception:
+            sheet_st = "Ready"
+        _mark_account_status_known(acc, "Active")
+        _queue_sheet_status(
+            acc_id,
+            pool,
+            sheet_st.lower(),
+            f"recovered from {prev_st}",
+            phone=str(acc.get("phone") or ""),
+            session_user=sheet_st,
+            session_friday="Active",
+            allow_instant=False,
+            force_queue=True,
+        )
+        if not quiet:
+            print(f"  [{tag}] ↺ {acc_id} — recovered ({prev_st} → {sheet_st}/Active)", flush=True)
 
     acc["detected_profile"] = profile_name
     if sync_profile_on_listen:
@@ -5265,6 +5794,7 @@ async def _watch_client_loop(
 async def run_listener_async() -> int:
     global _listen_watch_tasks
     _listen_watch_tasks.clear()
+    _warm_account_status_cache()
     root = project_root()
     accounts_doc = load_json(accounts_json_path())
     brands_cfg = load_brands_config(accounts_doc)
@@ -5579,6 +6109,7 @@ def _queue_sheet_status(
     session_user: str = "",
     session_friday: str = "",
     allow_instant: bool | None = None,
+    force_queue: bool = False,
 ) -> None:
     """Queue status for Sheet push → Status dropdown + Session Friday."""
     if not os.environ.get("GOOGLE_SHEET_ID", "").strip():
@@ -5596,6 +6127,7 @@ def _queue_sheet_status(
             session_user=session_user if session_user else (status if str(status or "").strip().lower() != "pending login" else ""),
             session_friday=session_friday,
             allow_instant=allow_instant,
+            force_queue=force_queue,
         )
         st = str(session_user or status or "").strip()
         if st.lower() == "pending login":
@@ -5637,28 +6169,23 @@ def _session_friday_for_account_status(user_st: str, *, no_session: bool = False
     return "Active"
 
 
-def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str]:
-    """Return (session_user, session_friday) for one account."""
+def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str, bool]:
+    """Return (session_user, session_friday, me_restricted)."""
     if not _session_file_ready(acc):
-        return "", "Pending Login"
+        return "", "Pending Login", False
 
     client, tmp_dir = _make_telethon_client_temp(acc)
     user_st = "Unknown"
     friday_st = "Active"
+    me_restricted = False
     try:
         client.connect()
         if not client.is_user_authorized():
-            return "Expired", "Expired"
+            return "Expired", "Expired", False
         try:
             me = client.get_me()
-            if not me:
-                user_st = "Expired"
-            elif getattr(me, "deleted", False):
-                user_st = "Banned"
-            elif getattr(me, "restricted", False):
-                user_st = "Frozen"
-            else:
-                user_st = "Active"
+            me_restricted = bool(getattr(me, "restricted", False))
+            user_st = account_status_from_me(me)
             friday_st = _session_friday_for_account_status(user_st)
         except Exception as e:
             user_st = _classify_account_sheet_status(e)
@@ -5685,7 +6212,7 @@ def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str]:
     if str(user_st).strip().lower() == "unknown":
         user_st = "Disconnected"
     friday_st = _session_friday_for_account_status(user_st)
-    return user_st, friday_st
+    return user_st, friday_st, me_restricted
 
 
 def _after_login_sync_status(acc: dict[str, Any], pool: str) -> tuple[str, str]:
@@ -5700,7 +6227,7 @@ def _after_login_sync_status(acc: dict[str, Any], pool: str) -> tuple[str, str]:
     phone = str(acc.get("phone") or "")
     print(f"  Recording Sheet status for {acc_id}...", flush=True)
 
-    user_st, friday_st = _health_check_one_account(acc)
+    user_st, friday_st, _me_restricted = _health_check_one_account(acc)
     try:
         import sheets_sync as _ss
 
@@ -5747,6 +6274,8 @@ def _health_check_print_section(
     pool_name: str,
     *,
     quiet: bool = False,
+    token: str = "",
+    accounts_doc: dict[str, Any] | None = None,
 ) -> dict[str, int]:
     """Print one GCS or Shooter block; return status counts."""
     counts: dict[str, int] = {}
@@ -5763,26 +6292,65 @@ def _health_check_print_section(
         acc_id = str(acc.get("id") or "?")
         phone = str(acc.get("phone") or "")
         profile = str(acc.get("profile_hint") or acc_id)
-        user_st, friday_st = _health_check_one_account(acc)
+        user_st, friday_st, me_restricted = _health_check_one_account(acc)
         counts[user_st] = counts.get(user_st, 0) + 1
         if not quiet:
             print(f"  · {acc_id} ({profile})")
             print(f"      Account Status : {user_st}")
             print(f"      Session Friday : {friday_st}")
         if user_st == "Active" and friday_st == "Active":
+            prev_st = _known_account_status(acc)
+            if prev_st.lower() in ("frozen", "expired", "disconnected"):
+                try:
+                    import sheets_sync
+
+                    sheet_st = sheets_sync.sheet_status_after_login_value()
+                except Exception:
+                    sheet_st = "Ready"
+                _mark_account_status_known(acc, "Active")
+                _queue_sheet_status(
+                    acc_id,
+                    pool_name,
+                    sheet_st.lower(),
+                    f"recovered from {prev_st}",
+                    phone=phone,
+                    session_user=sheet_st,
+                    session_friday="Active",
+                    allow_instant=False,
+                    force_queue=True,
+                )
+                if not quiet:
+                    print(f"      ↺ recovered {acc_id}: {prev_st} → {sheet_st}/Active", flush=True)
             continue
         if not user_st and friday_st == "Active":
             continue
-        _queue_sheet_status(
-            acc_id,
-            pool_name,
-            user_st.lower() if user_st else "",
-            profile,
-            phone=phone,
-            session_user=user_st,
-            session_friday=friday_st,
-            allow_instant=False,
-        )
+        check_st = user_st or friday_st
+        if not _account_status_changed(acc, check_st):
+            continue
+        alert_st = user_st if user_st in ("Frozen", "Banned", "Expired", "Disconnected") else check_st
+        if token and accounts_doc and alert_st in ("Frozen", "Banned", "Expired", "Disconnected"):
+            _publish_account_status(
+                acc,
+                pool_name,
+                alert_st,
+                token=token,
+                accounts_doc=accounts_doc,
+                profile=profile,
+                notify=True,
+                me_restricted=me_restricted,
+            )
+        else:
+            _mark_account_status_known(acc, check_st)
+            _queue_sheet_status(
+                acc_id,
+                pool_name,
+                user_st.lower() if user_st else "",
+                profile,
+                phone=phone,
+                session_user=user_st,
+                session_friday=friday_st,
+                allow_instant=False,
+            )
         time.sleep(0.25)
 
     if not quiet:
@@ -5807,16 +6375,28 @@ def run_health_check(pool: str = "all", target_id: str = "all", *, quiet: bool =
             print(f"No accounts for health-check (pool={pool}, id={target_id}).", file=sys.stderr)
         return 2
 
+    _warm_account_status_cache()
+
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    accounts_doc = load_json(accounts_json_path())
+
     if not quiet:
         print("\n-- Health-check (temp copy, listen may keep running) --")
+        if spambot_frozen_check_enabled():
+            print("  @SpamBot: configured but NOT used for Frozen (false-positive guard)")
+        print("  Frozen = get_me().restricted only · Telegram alert on CHANGE + cooldown")
 
     total_gcs: dict[str, int] = {}
     total_sh: dict[str, int] = {}
 
     if pool in ("all", "gcs"):
-        total_gcs = _health_check_print_section("GCS ACCOUNTS", gcs_list, "gcs", quiet=quiet)
+        total_gcs = _health_check_print_section(
+            "GCS ACCOUNTS", gcs_list, "gcs", quiet=quiet, token=token, accounts_doc=accounts_doc
+        )
     if pool in ("all", "shooter"):
-        total_sh = _health_check_print_section("SHOOTER ACCOUNTS", sh_list, "shooter", quiet=quiet)
+        total_sh = _health_check_print_section(
+            "SHOOTER ACCOUNTS", sh_list, "shooter", quiet=quiet, token=token, accounts_doc=accounts_doc
+        )
 
     merged: dict[str, int] = {}
     for bucket in (total_gcs, total_sh):
