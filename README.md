@@ -34,24 +34,50 @@ Copy manually (do **not** use Git): `.env`, `accounts.json`, `shooteraccounts.js
 | # | Service | Role |
 |---|---------|------|
 | 1 | BOT | `/login`, `/main`, `/other`, `/ping` |
-| 2 | LISTEN | OTP forward + detect Banned/Frozen → queue |
+| 2 | LISTEN | OTP forward + detect Banned/Frozen/Expired → queue (no status spam on reconnect) |
 | 3 | LIVE-PULL | Pending + **new phone** → JSON only |
 | 4 | LIVE-LOGIN | SMS once → wait OTP in Sheet |
-| 5 | LIVE-STATUS | Push queue → Sheet + health-check (2 days) |
+| 5 | LIVE-STATUS | Push queue → Sheet + scheduled health-check (**12h**, 2 shifts/day) |
 
 Restart **one** service only:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\restart_service.ps1 listen
+powershell -ExecutionPolicy Bypass -File .\restart_service.ps1 live-status
 ```
 
-Full reset (all 5 windows):
+Full reset (all 5 windows — stops duplicates):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\start_production.ps1
 ```
 
 **No restart needed** when editing `accounts.json` or Sheet rows (LISTEN hot-reload ~45s).
+
+---
+
+## Account status detection
+
+| Status | When detected | System Status alert |
+|--------|---------------|---------------------|
+| **Banned** | LISTEN on connect | Yes |
+| **Expired** (dead session) | LISTEN on connect fail | Yes (cooldown 24h; not from LISTEN reconnect spam) |
+| **Frozen** (`restricted=True`) | LISTEN on connect | Purge JSON; alert on change via health-check |
+| **Frozen** (UI / SpamBot only) | Health-check (@SpamBot + Saved Messages probe) | Yes (cooldown 24h) |
+| **Disconnected** | LISTEN reconnect fail | Queued to Sheet; no LISTEN alert spam |
+
+**LIVE-STATUS** startup banner shows **next scheduled health-check** time (local server clock).  
+Manual health-check anytime:
+
+```powershell
+.\.venv\Scripts\python.exe telegram_otp_allinone.py sync health --pool all
+```
+
+Check schedule from `state.json`:
+
+```powershell
+python -c "import time,json; from datetime import datetime,timezone,timedelta; st=json.load(open('state.json')); ts=st.get('last_health_check_ts',0); iv=43200; print('Last:',(datetime.fromtimestamp(ts,tz=timezone.utc)+timedelta(hours=7)).strftime('%d/%m/%Y %H:%M')); print('Next:',(datetime.fromtimestamp(ts+iv,tz=timezone.utc)+timedelta(hours=7)).strftime('%d/%m/%Y %H:%M'))"
+```
 
 ---
 
@@ -103,15 +129,30 @@ See **COMMANDS.txt** for full reference.
 | Issue | Fix |
 |-------|-----|
 | `409 Conflict` | Only one BOT instance; use `start_production.ps1` once |
-| LISTEN Unicode error | Fixed: UTF-8 stdout on Windows (restart LISTEN) |
-| OTP not delivered | LISTEN running + staff used `/login` |
+| `getaddrinfo failed` / Google timeout | DNS/network blip — set DNS `8.8.8.8` + `8.8.4.4`, then `ipconfig /flushdns` and restart services |
+| Duplicate services | `Get-CimInstance Win32_Process -Filter "Name='python.exe'"` — should be **1** per service |
+| OTP not delivered | LISTEN running + staff used `/login` first |
 | Status not syncing | Run `sync reconcile` — phone may be missing from Sheet |
 | `database is locked` | Stop LISTEN briefly, retry login |
+| Health-check seems late | Interval is **48h from last run**, not calendar days — check banner in LIVE-STATUS |
+
+---
+
+## Key env vars (see `.env.example`)
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `TELEGRAM_SYNC_HEALTH_INTERVAL_SEC` | `43200` | Health-check every 12 hours |
+| `TELEGRAM_SYNC_STATUS_INTERVAL_SEC` | `300` | Delta push queue → Sheet |
+| `TELEGRAM_SHEET_READ_CACHE_SEC` | `120` | Cache Sheet reads (LISTEN pending check) |
+| `TELEGRAM_NOTIFY_EXPIRED_COOLDOWN_SEC` | `86400` | Expired alert max once per day |
+| `TELEGRAM_NOTIFY_FROZEN_COOLDOWN_SEC` | `86400` | Frozen alert max once per day |
+| `TELEGRAM_PURGE_FROZEN_ACCOUNTS` | `1` | Remove frozen from bot list + JSON |
 
 ---
 
 ## Git safety
 
-Do not commit: `.env`, `telegram_session/`, credentials JSON, `*.lock`, `state.json`, `sheet_status_queue.jsonl`
+Do not commit: `.env`, `telegram_session/`, credentials JSON, `*.lock`, `state.json`, `sheet_status_queue.jsonl`, `deliverables*.txt`, `JIRA_TASKS_7_DAYS.txt`
 
 Optional env vars: see `.env.example`

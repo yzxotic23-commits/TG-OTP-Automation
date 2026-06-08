@@ -327,11 +327,11 @@ def invalidate_sheet_cache() -> None:
 
 
 def _sheet_read_cache_sec() -> float:
-    raw = os.environ.get("TELEGRAM_SHEET_READ_CACHE_SEC", "20").strip()
+    raw = os.environ.get("TELEGRAM_SHEET_READ_CACHE_SEC", "120").strip()
     try:
         return max(5.0, float(raw))
     except ValueError:
-        return 20.0
+        return 120.0
 
 
 def read_telegram_acc_tab(root: Path, *, force: bool = False) -> tuple[list[str], list[list[str]]]:

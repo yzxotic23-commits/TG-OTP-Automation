@@ -6624,12 +6624,12 @@ def _live_login_idle_log_interval_sec() -> float:
 
 
 def _health_check_interval_sec() -> int:
-    """0 = disabled in LIVE-STATUS loop. Default 172800 = 2 days."""
-    raw = os.environ.get("TELEGRAM_SYNC_HEALTH_INTERVAL_SEC", "172800").strip()
+    """0 = disabled in LIVE-STATUS loop. Default 43200 = 12 hours (2 shifts/day)."""
+    raw = os.environ.get("TELEGRAM_SYNC_HEALTH_INTERVAL_SEC", "43200").strip()
     try:
         return max(0, int(float(raw)))
     except ValueError:
-        return 172800
+        return 43200
 
 
 def _health_check_live_enabled() -> bool:
@@ -6666,6 +6666,42 @@ def _health_check_due() -> bool:
     if last <= 0:
         return True
     return (time.time() - last) >= interval
+
+
+def _health_check_next_due_ts() -> float | None:
+    """Unix timestamp when the next scheduled health-check is due, or None if disabled."""
+    if not _health_check_live_enabled():
+        return None
+    interval = _health_check_interval_sec()
+    last = _last_health_check_monotonic()
+    if last <= 0:
+        return time.time()
+    return last + interval
+
+
+def _format_local_ts(ts: float) -> str:
+    """Human-readable local time for ops banners (uses server timezone)."""
+    return datetime.fromtimestamp(ts, tz=timezone.utc).astimezone().strftime("%d/%m/%Y %H:%M")
+
+
+def _health_check_schedule_banner_lines() -> list[str]:
+    """Startup lines for LIVE-STATUS: interval + next run time."""
+    if not _health_check_live_enabled():
+        return ["Scheduled health-check: off (TELEGRAM_SYNC_HEALTH_INTERVAL_SEC=0)"]
+    interval = _health_check_interval_sec()
+    every = _format_health_interval(interval)
+    last = _last_health_check_monotonic()
+    lines = [f"Full health-check every {every} (all accounts)"]
+    if _health_check_due():
+        if last <= 0:
+            lines.append("Next health-check: now (first scheduled run)")
+        else:
+            lines.append(f"Next health-check: due now (last run {_format_local_ts(last)})")
+    else:
+        due_ts = _health_check_next_due_ts()
+        if due_ts is not None:
+            lines.append(f"Next health-check: {_format_local_ts(due_ts)} (last run {_format_local_ts(last)})")
+    return lines
 
 
 def _format_health_interval(sec: int) -> str:
@@ -7239,7 +7275,7 @@ def run_sync_live_status(
     account_id: str = "all",
 ) -> int:
     """
-    Live status: queue delta push + scheduled full health-check (default every 2 days).
+    Live status: queue delta push + scheduled full health-check (default every 12 hours).
     """
     if pool != "all" or account_id != "all":
         print("⚠ live-status ignores --pool/--id; this mode pushes global delta.", file=sys.stderr)
@@ -7251,7 +7287,8 @@ def run_sync_live_status(
     print("  LIVE STATUS — queue -> Google Sheet")
     print(f"  Delta push every {interval}s")
     if hc_on:
-        print(f"  Full health-check every {_format_health_interval(hc_interval)} (all accounts)")
+        for line in _health_check_schedule_banner_lines():
+            print(f"  {line}")
     else:
         print("  Scheduled health-check: off (TELEGRAM_SYNC_HEALTH_INTERVAL_SEC=0)")
     print("=" * 56)
@@ -7268,6 +7305,12 @@ def run_sync_live_status(
                 hc_rc = run_health_check(quiet=True)
                 if hc_rc == 0:
                     _save_last_health_check_ts()
+                    nxt = _health_check_next_due_ts()
+                    if nxt is not None:
+                        print(
+                            f"  Next health-check scheduled: {_format_local_ts(nxt)}",
+                            flush=True,
+                        )
                 else:
                     print("  ⚠ Health-check skipped or failed.", file=sys.stderr)
 

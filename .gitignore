@@ -42,3 +42,5 @@ _scan_*.txt
 
 # Local planning docs (not for repo)
 JIRA_TASKS_7_DAYS.txt
+deliverables.txt
+deliverables_kanban.txt
