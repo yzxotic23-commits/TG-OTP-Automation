@@ -1003,11 +1003,12 @@ def _new_shooter_id(owner: str, phone: str, existing: list[dict[str, Any]]) -> s
     return f"{base}_{n}"
 
 
-def _migrate_shooter_session_files(root: Path, old_id: str, new_id: str) -> None:
-    """Move Telethon session files when shooter account id changes."""
+def _migrate_shooter_session_files(root: Path, old_id: str, new_id: str) -> int:
+    """Move Telethon session files when shooter account id changes. Returns files moved."""
     if not old_id or not new_id or old_id == new_id:
-        return
+        return 0
     shooter_dir = root / "telegram_session" / "shooter"
+    moved = 0
     for name in (f"{old_id}.session", f"{old_id}.session-journal"):
         src = shooter_dir / name
         if not src.is_file():
@@ -1018,8 +1019,73 @@ def _migrate_shooter_session_files(root: Path, old_id: str, new_id: str) -> None
             continue
         try:
             src.rename(dst)
+            moved += 1
         except OSError:
             pass
+    return moved
+
+
+def _reconcile_shooter_session_files(
+    root: Path, accounts: list[dict[str, Any]]
+) -> tuple[int, list[tuple[str, str]]]:
+    """
+    Safety net: JSON id already updated (e.g. owner rename) but .session still under SH_OLD_*.
+    Match by account id suffix and rename to current account id.
+    Returns (count migrated, list of (old_id, new_id) pairs).
+    """
+    if not shooter_rename_on_owner_change():
+        return 0, []
+    shooter_dir = root / "telegram_session" / "shooter"
+    if not shooter_dir.is_dir():
+        return 0, []
+    reconciled = 0
+    migrated_pairs: list[tuple[str, str]] = []
+    for acc in accounts:
+        if not isinstance(acc, dict):
+            continue
+        new_id = str(acc.get("id") or "").strip()
+        phone = str(acc.get("phone") or "")
+        if not new_id.upper().startswith("SH_"):
+            continue
+        suffix = _shooter_id_numeric_suffix(new_id, phone)
+        expected = shooter_dir / f"{new_id}.session"
+        if expected.is_file() and expected.stat().st_size >= 1024:
+            continue
+        for src in sorted(shooter_dir.glob(f"SH_*_{suffix}.session")):
+            old_id = src.stem
+            if old_id.upper() == new_id.upper():
+                continue
+            if _migrate_shooter_session_files(root, old_id, new_id):
+                reconciled += 1
+                migrated_pairs.append((old_id, new_id))
+                break
+    return reconciled, migrated_pairs
+
+
+def _cleanup_migrated_shooter_sessions(
+    root: Path, migrated_pairs: list[tuple[str, str]]
+) -> int:
+    """Remove source session files only after a successful rename in the same pull."""
+    if not migrated_pairs:
+        return 0
+    shooter_dir = root / "telegram_session" / "shooter"
+    removed = 0
+    for old_id, new_id in migrated_pairs:
+        if not old_id or old_id == new_id:
+            continue
+        expected = shooter_dir / f"{new_id}.session"
+        if not expected.is_file():
+            continue
+        for name in (f"{old_id}.session", f"{old_id}.session-journal"):
+            src = shooter_dir / name
+            if not src.is_file():
+                continue
+            try:
+                src.unlink()
+                removed += 1
+            except OSError:
+                pass
+    return removed
 
 
 def _should_skip_wealth_gcs_row(row: dict[str, str]) -> bool:
@@ -1262,7 +1328,7 @@ def _pull_telegram_acc(
         headers, lines = _read_tab_raw(wb, _tab_telegram())
     stats = {
         "shooter_added": 0, "shooter_updated": 0, "shooter_skipped": 0,
-        "shooter_renamed": 0,
+        "shooter_renamed": 0, "shooter_session_migrated": 0, "shooter_session_cleaned": 0,
         "gcs_added": 0, "gcs_updated": 0, "gcs_skipped": 0,
     }
 
@@ -1369,6 +1435,12 @@ def _pull_telegram_acc(
             else:
                 _upsert_list(lst, entry, key="id")
                 stats["shooter_added"] += 1
+        if root:
+            migrated_n, migrated_pairs = _reconcile_shooter_session_files(root, lst)
+            stats["shooter_session_migrated"] += migrated_n
+            stats["shooter_session_cleaned"] += _cleanup_migrated_shooter_sessions(
+                root, migrated_pairs
+            )
 
     if not mutate_accounts(_apply_gcs):
         raise RuntimeError("Failed to write accounts.json (lock timeout?)")

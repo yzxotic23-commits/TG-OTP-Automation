@@ -875,7 +875,7 @@ def resolve_shooter_owner_for_staff(staff_id: str | None, row: dict[str, Any] | 
     return key
 
 
-def build_staff_not_registered_html(user: Any) -> str:
+def build_staff_not_registered_html(user: Any, *, topic_currency: str | None = None) -> str:
     who = ""
     if user:
         un = (getattr(user, "username", None) or "").strip()
@@ -884,14 +884,15 @@ def build_staff_not_registered_html(user: Any) -> str:
             who = (
                 f"\n\n<i>Your Telegram:</i> "
                 + (f"@{html.escape(un)} " if un else "")
-                + (f"<code>id={html.escape(uid)}</code>" if uid else "")
+                + (f"Telegram user ID: {html.escape(uid)}" if uid else "")
             )
     return (
         accounts_header_html("⛔ <b>Not Registered</b>")
         + "\n\n"
-        + "Ask admin to add your Telegram in <code>accounts.json</code>, "
-        + "then use <code>/other</code> in the MYR group topic "
-        + "(auto-link, no <code>/start</code> required)."
+        + "Ask your admin to add your Telegram to the <b>staff list</b>.\n"
+        + group_channel_topic_hint(topic_currency=topic_currency)
+        + "\nIf you are already on the list, open the matching group topic — linking is automatic "
+        + "(no <code>/start</code> required there)."
         + who
     )
 
@@ -908,7 +909,7 @@ def build_staff_not_allowlisted_html(user: Any | None = None) -> str:
         if un:
             parts.append(f"@{html.escape(un)}")
         if uid:
-            parts.append(f"<code>id={html.escape(uid)}</code>")
+            parts.append(f"Telegram user ID: {html.escape(uid)}")
         if parts:
             who = "\n\n<i>Your Telegram:</i> " + " · ".join(parts)
     return (
@@ -1192,22 +1193,11 @@ def build_bot_welcome_html(
     lines: list[str] = [
         accounts_header_html("🤖 <b>Bot Ready</b>"),
         "",
-        f"<b>chat_id</b>  ·  <code>{html.escape(str(chat_id))}</code>",
-        f"<b>auto_id</b>   ·  <code>{html.escape(uid)}</code>",
+        "◦ <code>/ping</code> — check bot is online",
+        "◦ <code>/login &lt;id&gt;</code> — request OTP",
+        "◦ <code>/main</code> — GCS account list",
+        "◦ <code>/other &lt;USER&gt;</code> — shooter account list",
     ]
-    if is_forum and thread_id:
-        lines.append(f"<b>thread</b>   ·  <code>{thread_id}</code>")
-    lines.extend(
-        [
-            "",
-            "◦ <code>/ping</code> — status",
-            "◦ <code>/login &lt;id&gt;</code> — request OTP",
-            "◦ <code>/main</code> — GCS brands",
-            "◦ <code>/other &lt;USER&gt;</code> — shooter list",
-            "◦ <code>login-all-shooter</code> — login shooter (MYR)",
-            "◦ <code>listen</code> — GCS + Shooter OTP",
-        ]
-    )
     return "\n".join(lines)
 
 
@@ -2481,6 +2471,38 @@ def load_shooter_login_accounts(
 SHOOTER_DEFAULT_CURRENCY = "MYR"
 
 
+def topic_currency_from_update(update: Update) -> str | None:
+    """Currency for the forum topic the user is in, or None (general chat / DM)."""
+    chat = update.effective_chat
+    em = update.effective_message
+    if not chat or not em:
+        return None
+    thread_id = getattr(em, "message_thread_id", None)
+    if not thread_id:
+        return None
+    try:
+        doc = load_json(accounts_json_path())
+        return _forum_thread_to_currency(doc, chat.id, thread_id)
+    except Exception:
+        return None
+
+
+def group_channel_topic_hint(*, topic_currency: str | None = None) -> str:
+    """Staff-facing hint: GCS uses matching topic; shooter stays on MYR topic."""
+    shooter = html.escape(SHOOTER_DEFAULT_CURRENCY)
+    if topic_currency:
+        cur = html.escape(str(topic_currency).strip().upper())
+        return (
+            f"You are in the <b>{cur}</b> topic — use <code>/main</code> and <code>/login</code> here "
+            f"for <b>{cur}</b> GCS accounts.\n"
+            f"Shooter accounts: use <code>/other</code> in the <b>{shooter}</b> topic."
+        )
+    return (
+        f"<b>GCS:</b> use the topic that matches the account (SGD, MYR, …).\n"
+        f"<b>Shooter:</b> use the <b>{shooter}</b> topic only."
+    )
+
+
 def account_pool(acc: dict[str, Any]) -> str:
     return str(acc.get("pool") or "gcs").strip().lower()
 
@@ -3454,8 +3476,8 @@ def promote_staff_to_admin(hint: str) -> tuple[bool, str]:
     if not row:
         return False, (
             accounts_header_html("⚠️ <b>Not Found</b>")
-            + "\n\nStaff belum ada di <code>accounts.json</code>.\n"
-            + "Tambahkan slot staff dulu (id + shooter_owner), lalu user daftar via <code>/start</code>."
+            + "\n\nStaff member not found on the staff list.\n"
+            + "Add them to the staff list first, then ask them to register via <code>/start</code>."
         )
     target_id = str(row.get("id", "")).strip().lower()
     if target_id == creator_account_id():
@@ -3491,7 +3513,7 @@ def promote_staff_to_admin(hint: str) -> tuple[bool, str]:
             return
 
     if not _mutate_json_file(accounts_json_path(), writer):
-        return False, accounts_header_html("⚠️ <b>Error</b>") + "\n\nGagal menulis accounts.json."
+        return False, accounts_header_html("⚠️ <b>Error</b>") + "\n\nCould not update staff record. Please try again."
 
     lines = [
         accounts_header_html("✅ <b>Admin Added</b>"),
@@ -3513,13 +3535,13 @@ def remove_staff_admin(hint: str) -> tuple[bool, str]:
     if not row:
         return False, (
             accounts_header_html("⚠️ <b>Not Found</b>")
-            + "\n\nStaff tidak ditemukan. Coba id, @username, atau chat_id."
+            + "\n\nStaff not found. Try staff name, @username, or Telegram user ID."
         )
     target_id = str(row.get("id", "")).strip().lower()
     if target_id == creator_account_id():
         return False, (
             accounts_header_html("⛔ <b>Blocked</b>")
-            + f"\n\nTidak bisa remove <code>{html.escape(creator_account_id())}</code>."
+            + "\n\nThe bot owner account cannot be removed."
         )
     if not _staff_row_is_admin(row):
         label = str(row.get("label") or target_id)
@@ -3550,7 +3572,7 @@ def remove_staff_admin(hint: str) -> tuple[bool, str]:
             return
 
     if not _mutate_json_file(accounts_json_path(), writer):
-        return False, accounts_header_html("⚠️ <b>Error</b>") + "\n\nGagal menulis accounts.json."
+        return False, accounts_header_html("⚠️ <b>Error</b>") + "\n\nCould not update staff record. Please try again."
 
     lines = [
         accounts_header_html("✅ <b>Admin Removed</b>"),
@@ -3569,13 +3591,13 @@ def build_staff_admin_usage_html() -> str:
     return (
         accounts_header_html("ℹ️ <b>Staff Admin</b>")
         + "\n\n"
-        + "<b>Usage (geri_work only):</b>\n"
+        + "<b>Usage (bot owner only):</b>\n"
         + "◦ <code>/add admin jun</code>\n"
         + "◦ <code>/add admin @JunWork16</code>\n"
         + "◦ <code>/remove jun</code>\n"
         + "◦ <code>/remove @JunWork16</code>\n\n"
-        + "<i>Staff harus sudah ada di accounts.json (+ daftar via /start). "
-        + "Command ini hanya set/cabut role admin.</i>"
+        + "<i>Staff must already be on the staff list (registered via <code>/start</code>). "
+        + "This command only grants or removes admin role.</i>"
     )
 
 
@@ -3587,9 +3609,7 @@ def _require_primary_creator(update: Update) -> bool:
 async def _reply_creator_only(em: Any) -> None:
     await em.reply_text(
         accounts_header_html("⛔ <b>Access Denied</b>")
-        + "\n\nCommand ini khusus owner bot (<code>"
-        + html.escape(creator_account_id())
-        + "</code>).",
+        + "\n\nThis command is for the <b>bot owner</b> only.",
         parse_mode="HTML",
     )
 
@@ -3693,20 +3713,20 @@ def validate_otp_request_context(update: Update) -> str | None:
             + "\n\n"
             + "OTP requests must be sent in the <b>group channel</b> (correct currency topic).\n"
             + "Private chat is not used for account requests.\n\n"
-            + "<i>To register your chat id, send</i> <code>/start</code> <i>in this DM.</i>"
+            + "<i>To register, send</i> <code>/start</code> <i>in this private chat.</i>"
         )
     if chat.type in (ChatType.GROUP, ChatType.SUPERGROUP):
         return None
     return accounts_header_html("⚠️ <b>Not Allowed</b>") + "\n\nUse the forum group channel."
 
 
-def build_staff_dm_closed_html() -> str:
+def build_staff_dm_closed_html(*, topic_currency: str | None = None) -> str:
     return (
         accounts_header_html("🔒 <b>DM — /start only</b>")
         + "\n\n"
         + "In bot private DM, staff may only use <code>/start</code> (registration).\n"
-        + "<code>/other</code>, <code>/login</code>, etc. must be used in the <b>group channel</b> (MYR topic).\n\n"
-        + "<i>/start in the group/topic has no effect.</i>"
+        + group_channel_topic_hint(topic_currency=topic_currency)
+        + "\n\n<i>/start in the group/topic has no effect.</i>"
     )
 
 
@@ -3735,14 +3755,17 @@ async def guard_staff_private_dm(update: Update, context: ContextTypes.DEFAULT_T
     staff = resolve_requester_staff(user)
     if staff is None:
         await em.reply_text(
-            accounts_header_html("ℹ️ <b>Registrasi</b>")
+            accounts_header_html("ℹ️ <b>Registration</b>")
             + "\n\n"
             + "Only <code>/start</code> is allowed in <b>bot DM</b> (not in group/topic).\n"
             + "After ✅ Registered, use <code>/other</code> and <code>/login</code> in the group channel.",
             parse_mode="HTML",
         )
     else:
-        await em.reply_text(build_staff_dm_closed_html(), parse_mode="HTML")
+        await em.reply_text(
+            build_staff_dm_closed_html(topic_currency=topic_currency_from_update(update)),
+            parse_mode="HTML",
+        )
     raise ApplicationHandlerStop()
 
 
@@ -3774,21 +3797,20 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if creator:
         welcome = build_bot_welcome_html(cid, uid, thread_id, bool(is_forum and thread_id))
         if registered:
-            welcome += (
-                "\n\n✅ <b>Registered</b>  ·  <code>"
-                + html.escape(str(cid))
-                + "</code>"
-            )
+            welcome += "\n\n✅ <b>Owner registered</b> for this chat."
     elif registered and update.effective_chat.type == ChatType.PRIVATE:
         staff_row = find_staff_row_for_user(update.effective_user)
         shooter_key = resolve_shooter_owner_for_staff(
             str((staff_row or {}).get("id") or uid), staff_row
         )
         welcome = (
-            f"<b>chat_id</b>  ·  <code>{html.escape(str(cid))}</code>\n"
-            f"<b>auto_id</b>   ·  <code>{html.escape(uid)}</code>\n\n"
-            "✅ <b>Registered</b>"
-            + (f"\n\n<i>Shooter owner:</i> <code>{html.escape(shooter_key)}</code>" if shooter_key else "")
+            "✅ <b>Registered</b>\n\n"
+            + group_channel_topic_hint()
+            + (
+                f"\n\n<i>Your shooter user:</i> <b>{html.escape(_format_shooter_owner_label(shooter_key))}</b>"
+                if shooter_key
+                else ""
+            )
         )
     elif update.effective_chat.type == ChatType.PRIVATE and staff_require_allowlist():
         hint_tip = (
@@ -3830,7 +3852,7 @@ async def cmd_accounts(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     rows = [r for r in rows if derive_otp_brand(r, brands_cfg) != "UNKNOWN"]
     if not rows:
         await em.reply_text(
-            accounts_header_html("⚠️ <b>No Accounts</b>") + "\n\nNo active <code>otp_accounts</code> in accounts.json.",
+            accounts_header_html("⚠️ <b>No Accounts</b>") + "\n\nNo active GCS accounts are available.",
             parse_mode="HTML",
         )
         return
@@ -3981,7 +4003,9 @@ async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
                 list_rows = filter_shooter_by_owner(shooter_rows, staff_shooter)
             else:
                 await em.reply_text(
-                    build_staff_not_registered_html(update.effective_user),
+                    build_staff_not_registered_html(
+                        update.effective_user, topic_currency=topic_currency
+                    ),
                     parse_mode="HTML",
                 )
                 return
@@ -4005,7 +4029,9 @@ async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
     if staff is None:
         await em.reply_text(
-            build_staff_not_registered_html(update.effective_user),
+            build_staff_not_registered_html(
+                update.effective_user, topic_currency=topic_currency
+            ),
             parse_mode="HTML",
         )
         return
@@ -4084,12 +4110,12 @@ async def cmd_login(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             accounts_header_html("ℹ️ <b>Login Usage</b>")
             + "\n\n"
             "<code>/login &lt;id or phone number&gt;</code>\n\n"
-            "<b>GCS</b> (MYR/SGD/USC topic matching the brand):\n"
+            "<b>GCS</b> — use the topic that matches the brand (SGD, MYR, USC, …):\n"
             "· <code>/login STMY_CS01</code>\n"
             "· <code>/login +60123456789</code>\n\n"
-            "<b>Shooter</b> (<b>MYR</b> topic only) — same format:\n"
+            f"<b>Shooter</b> — <b>{html.escape(SHOOTER_DEFAULT_CURRENCY)}</b> topic only:\n"
             "· <code>/login SH_VENAN_01</code>\n"
-            "· <code>/login +60123456789</code> <i>(phone number in shooteraccounts.json)</i>",
+            "· <code>/login +60123456789</code> <i>(registered phone number)</i>",
             parse_mode="HTML",
         )
         return
@@ -5401,11 +5427,13 @@ async def _listen_start_account(
             return
         req = get_active_login_request(str(_acc["id"]))
         if require_req and not req:
+            req_cur = account_currency_for_request(_acc, brands_cfg)
             logger.info(
-                "[%s] %s OTP received without login request — send /login %s in the MYR topic first.",
+                "[%s] %s OTP received without login request — send /login %s in the %s topic first.",
                 _tag,
                 _acc["id"],
                 _acc["id"],
+                req_cur,
             )
             if _manual_login_alert_enabled():
                 acc_id_str = str(_acc["id"])
@@ -6756,10 +6784,17 @@ def _run_sync_pull(
                 f" (skip {stats['gcs_skipped']})"
             )
             renamed = stats.get("shooter_renamed", 0)
+            migrated = stats.get("shooter_session_migrated", 0)
+            cleaned = stats.get("shooter_session_cleaned", 0)
             rename_note = f", {renamed} owner→id renamed" if renamed else ""
+            session_note = ""
+            if migrated:
+                session_note += f", {migrated} session file(s) renamed"
+            if cleaned:
+                session_note += f", {cleaned} orphan session(s) removed"
             print(
                 f"  Shooter +{stats['shooter_added']} new, ~{stats['shooter_updated']} updated"
-                f"{rename_note} (skip {stats['shooter_skipped']})"
+                f"{rename_note}{session_note} (skip {stats['shooter_skipped']})"
             )
         elif stats.get("gcs_added") or stats.get("shooter_added"):
             print(
