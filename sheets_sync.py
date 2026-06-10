@@ -733,6 +733,47 @@ def fetch_phones_by_sheet_status(root: Path, *status_values: str) -> set[str]:
         return set()
 
 
+def _sheet_row_hidden_from_bot_list(row: dict[str, str]) -> bool:
+    """True when account must not appear in Telegram /main or /other lists."""
+    st = _normalize_sheet_status_value(row.get("status", ""))
+    sf = _normalize_sheet_status_value(row.get("session_friday", ""))
+    pending_login = _normalize_sheet_status_value("Pending Login")
+    login_trigger = _normalize_sheet_status_value(
+        os.environ.get("TELEGRAM_SHEET_LOGIN_TRIGGER_STATUS", "Pending")
+    )
+    if st in (pending_login, login_trigger):
+        return True
+    if sf == pending_login:
+        return True
+    return False
+
+
+def fetch_phones_hidden_from_bot_list(root: Path) -> set[str]:
+    """
+    Phones excluded from bot account lists (/main, /other).
+    Pending / Pending Login (Status or Session Friday) — no session ready for staff OTP yet.
+    """
+    if not _sheet_id() or not use_telegram_acc_format():
+        return set()
+    try:
+        headers, lines = read_telegram_acc_tab(root)
+        if not headers:
+            return set()
+        out: set[str] = set()
+        for line in lines:
+            if not any(str(c).strip() for c in line):
+                continue
+            row = _row_dict(headers, line)
+            if not _sheet_row_hidden_from_bot_list(row):
+                continue
+            phone = norm_phone(row.get("phone", ""))
+            if phone:
+                out.add(phone)
+        return out
+    except Exception:
+        return set()
+
+
 def fetch_passwords_by_phone(root: Path, *, force: bool = False) -> dict[str, str]:
     """
     Read tab Telegram Acc: phone -> 2FA (header: 2FA / Password / Cloud Password).

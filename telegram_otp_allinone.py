@@ -1239,6 +1239,78 @@ def build_forum_topic_error_html(topic_currency: str, account_currency: str) -> 
     )
 
 
+_FORUM_NON_OTP_TOPIC_KEYS = frozenset({"SYSTEM", "FEEDBACK", "GENERAL"})
+
+
+def _forum_chat_id(accounts_doc: dict[str, Any]) -> str | None:
+    forum = accounts_doc.get("forum")
+    if not isinstance(forum, dict):
+        return None
+    cid = str(forum.get("chat_id") or "").strip()
+    return cid or None
+
+
+def _forum_otp_topic_currencies(accounts_doc: dict[str, Any]) -> frozenset[str]:
+    forum = accounts_doc.get("forum")
+    if not isinstance(forum, dict):
+        return frozenset()
+    topics = forum.get("topics")
+    if not isinstance(topics, dict):
+        return frozenset()
+    out: set[str] = set()
+    for key in topics:
+        ku = str(key or "").strip().upper()
+        if not ku or ku in _FORUM_NON_OTP_TOPIC_KEYS:
+            continue
+        out.add(ku)
+    return frozenset(out)
+
+
+def build_non_otp_forum_topic_html(accounts_doc: dict[str, Any] | None = None) -> str:
+    doc = accounts_doc if accounts_doc is not None else load_json(accounts_json_path())
+    allowed = sorted(_forum_otp_topic_currencies(doc))
+    topics_line = (
+        ", ".join(f"<b>{html.escape(c)}</b>" for c in allowed)
+        if allowed
+        else "MYR, SGD, USC"
+    )
+    shooter = html.escape(SHOOTER_DEFAULT_CURRENCY)
+    return (
+        accounts_header_html("⛔ <b>Wrong Topic</b>")
+        + "\n\n"
+        + "OTP requests are not allowed in this thread.\n"
+        + f"Use an OTP topic: {topics_line}.\n\n"
+        + "<b>GCS:</b> use the topic that matches the account brand.\n"
+        + f"<b>Shooter:</b> use <code>/other</code> in the <b>{shooter}</b> topic."
+    )
+
+
+def validate_otp_forum_thread(
+    chat: Any,
+    thread_id: int | None,
+    accounts_doc: dict[str, Any],
+) -> str | None:
+    """Block OTP commands in non-OTP forum threads (#feedback, System Status, General, …)."""
+    if not chat or getattr(chat, "type", None) != ChatType.SUPERGROUP:
+        return None
+    if not getattr(chat, "is_forum", False):
+        return None
+    forum_cid = _forum_chat_id(accounts_doc)
+    if not forum_cid or str(chat.id) != forum_cid:
+        return None
+    allowed = _forum_otp_topic_currencies(accounts_doc)
+    if not thread_id:
+        return build_non_otp_forum_topic_html(accounts_doc)
+    topic_key = _forum_thread_to_currency(accounts_doc, chat.id, thread_id)
+    if topic_key is None:
+        return build_non_otp_forum_topic_html(accounts_doc)
+    if topic_key.upper() in _FORUM_NON_OTP_TOPIC_KEYS:
+        return build_non_otp_forum_topic_html(accounts_doc)
+    if allowed and topic_key.upper() not in allowed:
+        return build_non_otp_forum_topic_html(accounts_doc)
+    return None
+
+
 _SYSTEM_STATUS_UI: dict[str, tuple[str, str]] = {
     "Banned": ("🚫", "Account Banned"),
     "Frozen": ("🧊", "Account Frozen"),
@@ -1483,11 +1555,13 @@ def _session_auth_display_fields(session: dict[str, Any]) -> dict[str, str]:
 
 
 def _staff_mention_html(row: dict[str, Any]) -> str:
+    tg_id = str(row.get("telegram_user_id") or row.get("chat_id") or "").strip()
     uname = str(row.get("telegram_username") or "").strip().lstrip("@")
+    label = str(row.get("label") or row.get("id") or "user").strip()
+    if tg_id.isdigit() and uname:
+        return f'<a href="tg://user?id={tg_id}">@{html.escape(uname)}</a>'
     if uname:
         return f"@{html.escape(uname)}"
-    tg_id = str(row.get("telegram_user_id") or row.get("chat_id") or "").strip()
-    label = str(row.get("label") or row.get("id") or "user").strip()
     if tg_id.isdigit():
         return f'<a href="tg://user?id={tg_id}">{html.escape(label)}</a>'
     aid = str(row.get("id") or "").strip()
@@ -1496,22 +1570,61 @@ def _staff_mention_html(row: dict[str, Any]) -> str:
     return ""
 
 
-def build_admin_creator_cc_html(accounts_doc: dict[str, Any]) -> str:
-    rows = accounts_doc.get("accounts", [])
-    if not isinstance(rows, list):
-        return ""
-    creator = creator_account_id()
-    seen: set[str] = set()
-    tags: list[str] = []
+def _find_staff_row_in_list(rows: list[Any], hint: str) -> dict[str, Any] | None:
+    raw = str(hint or "").strip()
+    if not raw:
+        return None
+    key = raw.lstrip("@").lower()
+    for row in rows:
+        if isinstance(row, dict) and str(row.get("id", "")).strip().lower() == key:
+            return row
+    if raw.isdigit():
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            if str(row.get("telegram_user_id", "")).strip() == raw:
+                return row
+            if str(row.get("chat_id", "")).strip() == raw:
+                return row
     for row in rows:
         if not isinstance(row, dict):
             continue
-        aid = str(row.get("id") or "").strip().lower()
-        if not aid:
+        if key in _row_telegram_usernames(row):
+            return row
+        if str(row.get("telegram_username", "")).strip().lower().lstrip("@") == key:
+            return row
+    return None
+
+
+def _manual_login_cc_hints_ordered() -> list[str]:
+    """Default CC: owner + Sinyee + Zaabryan. Override via TELEGRAM_MANUAL_LOGIN_CC."""
+    raw = os.environ.get("TELEGRAM_MANUAL_LOGIN_CC", "").strip()
+    if raw:
+        return [p.strip().lower().lstrip("@") for p in raw.split(",") if p.strip()]
+    out: list[str] = [creator_account_id(), "sinyee", "zaabryan"]
+    extra_raw = os.environ.get("TELEGRAM_MANUAL_LOGIN_CC_EXTRA", "").strip()
+    for part in extra_raw.split(","):
+        p = part.strip().lower().lstrip("@")
+        if p and p not in out:
+            out.append(p)
+    return out
+
+
+def build_manual_login_cc_html(accounts_doc: dict[str, Any]) -> str:
+    """
+    Tag fixed CC list on manual-login alerts (default: geri_work, Sinyee, Zaabryan).
+    /add admin does not change this list — use TELEGRAM_MANUAL_LOGIN_CC to override.
+    """
+    rows = accounts_doc.get("accounts", [])
+    if not isinstance(rows, list):
+        return ""
+    seen: set[str] = set()
+    tags: list[str] = []
+    for hint in _manual_login_cc_hints_ordered():
+        row = _find_staff_row_in_list(rows, hint)
+        if not row:
             continue
-        if aid != creator and not _staff_row_is_admin(row):
-            continue
-        dedupe = str(row.get("telegram_user_id") or row.get("chat_id") or aid).strip()
+        dedupe = str(row.get("telegram_user_id") or row.get("chat_id") or row.get("id") or "").strip()
         if not dedupe or dedupe in seen:
             continue
         seen.add(dedupe)
@@ -1545,7 +1658,7 @@ def build_manual_login_detected_html(
         "",
         _format_session_kv_pre(pairs),
     ]
-    cc = build_admin_creator_cc_html(accounts_doc)
+    cc = build_manual_login_cc_html(accounts_doc)
     if cc:
         lines.extend(["", cc])
     return "\n".join(lines)
@@ -2890,6 +3003,46 @@ def filter_shooter_by_owner(shooter_rows: list[dict[str, Any]], owner: str) -> l
     return [r for r in shooter_rows if str(r.get("owner") or "").strip().upper() == key]
 
 
+def _shooter_display_row_session_ready(row: dict[str, Any]) -> bool:
+    """True if shooter .session exists on disk (for bot list fallback without Sheet)."""
+    root = project_root()
+    aid = str(row.get("id") or "").strip()
+    if not aid:
+        return False
+    sp = root / "telegram_session" / "shooter" / f"{aid}.session"
+    try:
+        return sp.is_file() and sp.stat().st_size >= 1024
+    except OSError:
+        return False
+
+
+def _filter_bot_list_accounts(
+    root: Path,
+    rows: list[dict[str, Any]],
+    *,
+    pool: str,
+) -> list[dict[str, Any]]:
+    """Drop Pending Login / Pending (Sheet) and accounts without session from bot lists."""
+    import sheets_sync
+
+    hidden_phones = sheets_sync.fetch_phones_hidden_from_bot_list(root)
+    use_sheet = bool(os.environ.get("GOOGLE_SHEET_ID", "").strip()) and sheets_sync.use_telegram_acc_format()
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        phone = sheets_sync.norm_phone(str(row.get("phone") or ""))
+        if use_sheet and phone and phone in hidden_phones:
+            continue
+        if not use_sheet:
+            if pool == "shooter":
+                if not _shooter_display_row_session_ready(row):
+                    continue
+            elif pool == "gcs" and row.get("session") is not None:
+                if not _session_file_ready(row):
+                    continue
+        out.append(row)
+    return out
+
+
 def filter_shooter_by_currency(shooter_rows: list[dict[str, Any]], currency: str) -> list[dict[str, Any]]:
     key = str(currency or "").strip().upper()
     if not key:
@@ -2987,7 +3140,20 @@ def validate_forum_topic(
     account_currency: str,
     accounts_doc: dict[str, Any],
 ) -> str | None:
-    """Return warning message if account doesn't belong to this topic, None if OK."""
+    """Return warning message if request is not allowed for this topic, None if OK."""
+    forum_cid = _forum_chat_id(accounts_doc)
+    if forum_cid and str(chat_id) == forum_cid:
+        if not thread_id:
+            return build_non_otp_forum_topic_html(accounts_doc)
+        topic_currency = _forum_thread_to_currency(accounts_doc, chat_id, thread_id)
+        if not topic_currency or topic_currency.upper() in _FORUM_NON_OTP_TOPIC_KEYS:
+            return build_non_otp_forum_topic_html(accounts_doc)
+        allowed = _forum_otp_topic_currencies(accounts_doc)
+        if allowed and topic_currency.upper() not in allowed:
+            return build_non_otp_forum_topic_html(accounts_doc)
+        if account_currency.upper() == topic_currency.upper():
+            return None
+        return build_forum_topic_error_html(topic_currency, account_currency)
     if not thread_id:
         return None
     topic_currency = _forum_thread_to_currency(accounts_doc, chat_id, thread_id)
@@ -3716,6 +3882,15 @@ def validate_otp_request_context(update: Update) -> str | None:
             + "<i>To register, send</i> <code>/start</code> <i>in this private chat.</i>"
         )
     if chat.type in (ChatType.GROUP, ChatType.SUPERGROUP):
+        em = update.effective_message
+        thread_id = getattr(em, "message_thread_id", None) if em else None
+        try:
+            doc = load_json(accounts_json_path())
+        except Exception:
+            doc = {}
+        forum_denied = validate_otp_forum_thread(chat, thread_id, doc)
+        if forum_denied:
+            return forum_denied
         return None
     return accounts_header_html("⚠️ <b>Not Allowed</b>") + "\n\nUse the forum group channel."
 
@@ -3846,10 +4021,19 @@ async def cmd_accounts(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         )
         return
     raw = load_json(accounts_json_path())
+    if chat.type != ChatType.PRIVATE:
+        forum_denied = validate_otp_forum_thread(
+            chat, getattr(em, "message_thread_id", None), raw
+        )
+        if forum_denied:
+            await em.reply_text(forum_denied, parse_mode="HTML")
+            return
     default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
-    rows = load_otp_accounts(raw, project_root(), default_peers)
+    root = project_root()
+    rows = load_otp_accounts(raw, root, default_peers)
     brands_cfg = load_brands_config(raw)
     rows = [r for r in rows if derive_otp_brand(r, brands_cfg) != "UNKNOWN"]
+    rows = _filter_bot_list_accounts(root, rows, pool="gcs")
     if not rows:
         await em.reply_text(
             accounts_header_html("⚠️ <b>No Accounts</b>") + "\n\nNo active GCS accounts are available.",
@@ -3949,12 +4133,21 @@ async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             parse_mode="HTML",
         )
         return
+    accounts_doc = load_json(accounts_json_path())
+    if chat.type != ChatType.PRIVATE:
+        forum_denied = validate_otp_forum_thread(
+            chat, getattr(em, "message_thread_id", None), accounts_doc
+        )
+        if forum_denied:
+            await em.reply_text(forum_denied, parse_mode="HTML")
+            return
     shooter_doc = load_shooter_doc()
-    shooter_rows = load_shooter_accounts(shooter_doc)
+    shooter_rows = _filter_bot_list_accounts(
+        project_root(), load_shooter_accounts(shooter_doc), pool="shooter"
+    )
     owners = list_shooter_owners(shooter_doc, shooter_rows)
     owner_filter = " ".join(context.args).strip().upper() if context.args else ""
     thread_id = getattr(em, "message_thread_id", None)
-    accounts_doc = load_json(accounts_json_path())
     topic_currency = (
         _forum_thread_to_currency(accounts_doc, chat.id, thread_id) if thread_id else None
     )
