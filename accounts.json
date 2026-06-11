@@ -530,7 +530,7 @@
         777000
       ],
       "enabled": true,
-      "brand": "KH778KH",
+      "brand": "OK188KH",
       "user_name": "OK188KH",
       "device_id": "USC-OK188KH-Main"
     },
@@ -547,13 +547,13 @@
         777000
       ],
       "enabled": true,
-      "brand": "KH778KH",
+      "brand": "OK188KH",
       "user_name": "OK188KH",
       "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "KH778KH_MEYLY",
-      "profile_hint": "OK188KHmeyly",
+      "profile_hint": "KH778meyly",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855963954426",
@@ -564,7 +564,7 @@
         777000
       ],
       "enabled": true,
-      "brand": "KH778KH",
+      "brand": "OK188KH",
       "user_name": "OK188KH",
       "device_id": "USC-OK188KH-Main"
     },
@@ -581,7 +581,7 @@
         777000
       ],
       "enabled": true,
-      "brand": "KH778KH",
+      "brand": "OK188KH",
       "user_name": "OK188KH",
       "device_id": "USC-OK188KH-Main"
     },
@@ -598,7 +598,7 @@
         777000
       ],
       "enabled": true,
-      "brand": "KH888KH",
+      "brand": "OK188KH",
       "user_name": "OK188KH",
       "device_id": "USC-OK188KH-Main"
     },
@@ -615,7 +615,7 @@
         777000
       ],
       "enabled": true,
-      "brand": "KH888KH",
+      "brand": "OK188KH",
       "user_name": "OK188KH",
       "device_id": "USC-OK188KH-Main"
     },
@@ -632,7 +632,7 @@
         777000
       ],
       "enabled": true,
-      "brand": "KH888KH",
+      "brand": "OK188KH",
       "user_name": "OK188KH",
       "device_id": "USC-OK188KH-Main"
     },
@@ -976,7 +976,7 @@
         777000
       ],
       "enabled": true,
-      "brand": "OK888KH",
+      "brand": "OK188KH",
       "user_name": "OK188KH",
       "device_id": "USC-OK188KH-Main"
     },
@@ -993,7 +993,7 @@
         777000
       ],
       "enabled": true,
-      "brand": "OK888KH",
+      "brand": "OK188KH",
       "user_name": "OK188KH",
       "device_id": "USC-OK188KH-Main"
     },
@@ -1010,7 +1010,7 @@
         777000
       ],
       "enabled": true,
-      "brand": "OK888KH",
+      "brand": "OK188KH",
       "user_name": "OK188KH",
       "device_id": "USC-OK188KH-Main"
     },
@@ -1786,97 +1786,6 @@
       "notify_account": "geri_work",
       "user_name": "OK188KH",
       "profile_hint": "P",
-      "device_id": "USC-OK188-001",
-      "brand": "OK188KH"
-    },
-    {
-      "id": "OK188KH_OK188KH_5",
-      "phone": "+85567669056",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "enabled": true,
-      "session": "telegram_session/OK188KH_OK188KH_5",
-      "notify_account": "geri_work",
-      "user_name": "OK188KH",
-      "profile_hint": "Auri",
-      "device_id": "USC-OK188-001",
-      "brand": "OK188KH"
-    },
-    {
-      "id": "OK188KH_OK188KH_6",
-      "phone": "+85567660156",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "enabled": true,
-      "session": "telegram_session/OK188KH_OK188KH_6",
-      "notify_account": "geri_work",
-      "user_name": "OK188KH",
-      "profile_hint": "Burry​ OK88KH",
-      "device_id": "USC-OK188-001",
-      "brand": "OK188KH"
-    },
-    {
-      "id": "OK188KH_OK188KH_7",
-      "phone": "+855884290998",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "enabled": true,
-      "session": "telegram_session/OK188KH_OK188KH_7",
-      "notify_account": "geri_work",
-      "user_name": "OK188KH",
-      "profile_hint": "sreay neath",
-      "device_id": "USC-OK188-001",
-      "brand": "OK188KH"
-    },
-    {
-      "id": "OK188KH_OK188KH_8",
-      "phone": "+85567710732",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "enabled": true,
-      "session": "telegram_session/OK188KH_OK188KH_8",
-      "notify_account": "geri_work",
-      "user_name": "OK188KH",
-      "profile_hint": "ស្រីនាង",
-      "device_id": "USC-OK188-001",
-      "brand": "OK188KH"
-    },
-    {
-      "id": "OK188KH_OK188KH_9",
-      "phone": "+85567648146",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "enabled": true,
-      "session": "telegram_session/OK188KH_OK188KH_9",
-      "notify_account": "geri_work",
-      "user_name": "OK188KH",
-      "profile_hint": "Vichet OK188KH",
-      "device_id": "USC-OK188-001",
-      "brand": "OK188KH"
-    },
-    {
-      "id": "OK188KH_OK188KH_10",
-      "phone": "+85567636004",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "enabled": true,
-      "session": "telegram_session/OK188KH_OK188KH_10",
-      "notify_account": "geri_work",
-      "user_name": "OK188KH",
-      "profile_hint": "អូននាទ",
-      "device_id": "USC-OK188-001",
-      "brand": "OK188KH"
-    },
-    {
-      "id": "OK188KH_OK188KH_11",
-      "phone": "+85567723835",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "enabled": true,
-      "session": "telegram_session/OK188KH_OK188KH_11",
-      "notify_account": "geri_work",
-      "user_name": "OK188KH",
-      "profile_hint": "Diii",
       "device_id": "USC-OK188-001",
       "brand": "OK188KH"
     },

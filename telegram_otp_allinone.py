@@ -2470,6 +2470,10 @@ def derive_otp_brand(
     except Exception:
         sheets_sync = None  # type: ignore[assignment]
 
+    device_id = str(row.get("device_id") or "").strip().upper()
+    if device_id.startswith("USC-OK188KH"):
+        return "OK188KH"
+
     raw_b = row.get("brand")
     if raw_b is not None and str(raw_b).strip():
         b = str(raw_b).strip().upper()
@@ -3114,7 +3118,7 @@ def _filter_bot_list_accounts(
     """Drop Pending Login / Pending (Sheet) and accounts without session from bot lists."""
     import sheets_sync
 
-    hidden_phones = sheets_sync.fetch_phones_hidden_from_bot_list(root)
+    hidden_phones = sheets_sync.fetch_phones_hidden_from_bot_list(root, pool=pool)
     use_sheet = bool(os.environ.get("GOOGLE_SHEET_ID", "").strip()) and sheets_sync.use_telegram_acc_format()
     out: list[dict[str, Any]] = []
     for row in rows:

@@ -767,13 +767,17 @@ def _sheet_row_hidden_from_bot_list(row: dict[str, str]) -> bool:
     return False
 
 
-def fetch_phones_hidden_from_bot_list(root: Path) -> set[str]:
+def fetch_phones_hidden_from_bot_list(root: Path, *, pool: str | None = None) -> set[str]:
     """
     Phones excluded from bot account lists (/main, /other).
     Pending / Pending Login (Status or Session Friday) — no session ready for staff OTP yet.
+    pool=gcs|shooter: only rows matching that Sheet Group (Main vs Other).
     """
     if not _sheet_id() or not use_telegram_acc_format():
         return set()
+    pl = str(pool or "").strip().lower()
+    if pl not in ("gcs", "shooter"):
+        pl = ""
     try:
         headers, lines = read_telegram_acc_tab(root)
         if not headers:
@@ -783,6 +787,9 @@ def fetch_phones_hidden_from_bot_list(root: Path) -> set[str]:
             if not any(str(c).strip() for c in line):
                 continue
             row = _row_dict(headers, line)
+            row_pool = _pool_from_group(row.get("group", ""))
+            if pl and row_pool != pl:
+                continue
             if not _sheet_row_hidden_from_bot_list(row):
                 continue
             phone = norm_phone(row.get("phone", ""))
@@ -1193,6 +1200,30 @@ def _prune_excluded_gcs_accounts(lst: list[dict[str, Any]]) -> int:
     return before - len(lst)
 
 
+def _gcs_brand_from_sheet_row(
+    row: dict[str, str],
+    *,
+    account_id: str = "",
+    brands_cfg: dict[str, dict[str, Any]] | None = None,
+) -> str:
+    """Sheet brand / USC-OK188KH pool override (legacy brands merged under OK188KH)."""
+    device_id_raw = str(row.get("device_id") or "").strip().upper()
+    if device_id_raw.startswith("USC-OK188KH"):
+        return "OK188KH"
+    sheet_brand = str(row.get("brand") or "").strip().upper()
+    if sheet_brand and not is_currency_code(sheet_brand):
+        if not brands_cfg or sheet_brand in brands_cfg:
+            return sheet_brand
+    inferred = infer_gcs_brand(
+        device_id=str(row.get("device_id") or ""),
+        acc_name=str(row.get("acc_name") or row.get("profile_hint") or ""),
+        account_id=account_id,
+        brand=str(row.get("brand") or ""),
+        brands_cfg=brands_cfg,
+    )
+    return inferred or ""
+
+
 def _telegram_row_to_gcs(
     row: dict[str, str], raw: dict[str, Any], existing: list[dict[str, Any]]
 ) -> dict[str, Any] | None:
@@ -1266,21 +1297,31 @@ def _telegram_row_to_gcs(
     if device_id_raw:
         out["device_id"] = device_id_raw
     if matched:
-        prev_b = str(matched.get("brand") or "").strip().upper()
-        if prev_b and not is_currency_code(prev_b):
-            out["brand"] = prev_b
-        else:
-            resolved = resolve_brand_from_id(aid, brands_cfg)
-            if resolved:
-                out["brand"] = resolved
-    else:
-        inferred = infer_gcs_brand(
-            device_id=device_id_raw,
-            acc_name=acc_name,
-            account_id=aid,
-            brand=str(row.get("brand") or ""),
-            brands_cfg=brands_cfg,
+        merged_brand = _gcs_brand_from_sheet_row(
+            row, account_id=aid, brands_cfg=brands_cfg
         )
+        if merged_brand:
+            out["brand"] = merged_brand
+        else:
+            prev_b = str(matched.get("brand") or "").strip().upper()
+            if prev_b and not is_currency_code(prev_b):
+                out["brand"] = prev_b
+            else:
+                resolved = resolve_brand_from_id(aid, brands_cfg)
+                if resolved:
+                    out["brand"] = resolved
+    else:
+        inferred = _gcs_brand_from_sheet_row(
+            row, account_id=aid, brands_cfg=brands_cfg
+        )
+        if not inferred:
+            inferred = infer_gcs_brand(
+                device_id=device_id_raw,
+                acc_name=acc_name,
+                account_id=aid,
+                brand=str(row.get("brand") or ""),
+                brands_cfg=brands_cfg,
+            )
         if inferred:
             out["brand"] = inferred
     return out

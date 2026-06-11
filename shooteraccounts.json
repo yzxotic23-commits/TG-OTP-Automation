@@ -777,7 +777,7 @@
       "id": "SH_VENAN_01",
       "owner": "VENAN",
       "phone": "+601162275984",
-      "profile_hint": "Y",
+      "profile_hint": "bb",
       "session": "telegram_session/shooter/SH_VENAN_01",
       "enabled": true,
       "user_name": "Venan",
@@ -789,7 +789,7 @@
       "id": "SH_VENAN_02",
       "owner": "VENAN",
       "phone": "+601162276788",
-      "profile_hint": "F",
+      "profile_hint": "G",
       "session": "telegram_session/shooter/SH_VENAN_02",
       "enabled": true,
       "user_name": "Venan",
@@ -801,7 +801,7 @@
       "id": "SH_VENAN_03",
       "owner": "VENAN",
       "phone": "+601162276079",
-      "profile_hint": "V",
+      "profile_hint": "H",
       "session": "telegram_session/shooter/SH_VENAN_03",
       "enabled": true,
       "user_name": "Venan",
@@ -813,7 +813,7 @@
       "id": "SH_VENAN_04",
       "owner": "VENAN",
       "phone": "+601162276188",
-      "profile_hint": "G",
+      "profile_hint": "Fuq",
       "session": "telegram_session/shooter/SH_VENAN_04",
       "enabled": true,
       "user_name": "Venan",
@@ -853,7 +853,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_INDRI_2584",
       "user_name": "Indri",
-      "profile_hint": "agnes",
+      "profile_hint": "Agnes",
       "remark": "MYR-ST-002",
       "brand": "STMY",
       "currency": "MYR",
@@ -956,7 +956,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WIDYA_0127",
       "user_name": "Widya",
-      "profile_hint": "Denis",
+      "profile_hint": "Dennis",
       "remark": "MYR-ST-003",
       "brand": "STMY",
       "currency": "MYR",
@@ -1034,7 +1034,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_ALDO_7452",
       "user_name": "Aldo",
-      "profile_hint": "Fahmi",
+      "profile_hint": "fahmi",
       "remark": "MYR-ST-005",
       "brand": "STMY",
       "currency": "MYR",
@@ -1047,7 +1047,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_ALDO_2539",
       "user_name": "Aldo",
-      "profile_hint": "Chieka",
+      "profile_hint": "chieka",
       "remark": "MYR-ST-005",
       "brand": "STMY",
       "currency": "MYR",
@@ -1086,7 +1086,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_KAREN_4862",
       "user_name": "Karen",
-      "profile_hint": "D",
+      "profile_hint": "d",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR",
@@ -1150,7 +1150,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_RIZKYR_5491",
       "user_name": "Rizky-R",
-      "profile_hint": "L Haha",
+      "profile_hint": "L haha",
       "remark": "MYR-JM-003",
       "brand": "JMMY",
       "currency": "MYR",
@@ -2158,7 +2158,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WPLUS_8521",
       "user_name": "W+ plus",
-      "profile_hint": "F",
+      "profile_hint": "Elsa",
       "remark": "wealth",
       "currency": "WPLUS"
     },
@@ -2334,7 +2334,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WALLACE_8621",
       "user_name": "Wallace",
-      "profile_hint": "Jason",
+      "profile_hint": "Cj XI",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
       "currency": "MYR"
@@ -2346,7 +2346,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WALLACE_3987",
       "user_name": "Wallace",
-      "profile_hint": "Mandy",
+      "profile_hint": "T",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
       "currency": "MYR"
@@ -2358,7 +2358,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WALLACE_5214",
       "user_name": "Wallace",
-      "profile_hint": "Charles",
+      "profile_hint": "F",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
       "currency": "MYR"
@@ -2370,7 +2370,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WALLACE_3688",
       "user_name": "Wallace",
-      "profile_hint": "Leo",
+      "profile_hint": "Hamir othman",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
       "currency": "MYR"
@@ -2382,7 +2382,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WALLACE_5364",
       "user_name": "Wallace",
-      "profile_hint": "Dylan",
+      "profile_hint": "F",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
       "currency": "MYR"
@@ -2394,7 +2394,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WALLACE_2358",
       "user_name": "Wallace",
-      "profile_hint": "Stella",
+      "profile_hint": "U",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
       "currency": "MYR"
@@ -2490,7 +2490,8 @@
       "user_name": "OK188KH",
       "profile_hint": "DavDaV",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "password": "778899"
     },
     {
       "id": "SH_OK188KH_3835",
@@ -2499,7 +2500,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_3835",
       "user_name": "OK188KH",
-      "profile_hint": "K",
+      "profile_hint": "Dii",
       "remark": "USC-OK188KH-Other",
       "currency": "USC"
     },
@@ -2510,7 +2511,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_8146",
       "user_name": "OK188KH",
-      "profile_hint": "M",
+      "profile_hint": "Vichet OK188KH",
       "remark": "USC-OK188KH-Other",
       "currency": "USC"
     },
@@ -2523,7 +2524,8 @@
       "user_name": "OK188KH",
       "profile_hint": "MeyLang😻",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "password": "778899"
     },
     {
       "id": "SH_OK188KH_6004",
@@ -2532,7 +2534,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_6004",
       "user_name": "OK188KH",
-      "profile_hint": "O",
+      "profile_hint": "oun neat",
       "remark": "USC-OK188KH-Other",
       "currency": "USC"
     },
@@ -2545,7 +2547,8 @@
       "user_name": "OK188KH",
       "profile_hint": "Srey Leap Channel",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "password": "778899"
     },
     {
       "id": "SH_OK188KH_2709",
@@ -2556,7 +2559,8 @@
       "user_name": "OK188KH",
       "profile_hint": "Srey Nea❤️",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "password": "778899"
     },
     {
       "id": "SH_OK188KH_0732",
@@ -2565,7 +2569,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_0732",
       "user_name": "OK188KH",
-      "profile_hint": "X",
+      "profile_hint": "srey neang",
       "remark": "USC-OK188KH-Other",
       "currency": "USC"
     },
@@ -2576,7 +2580,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_0998",
       "user_name": "OK188KH",
-      "profile_hint": "Z",
+      "profile_hint": "sreay neath",
       "remark": "USC-OK188KH-Other",
       "currency": "USC"
     },
@@ -2589,7 +2593,8 @@
       "user_name": "OK188KH",
       "profile_hint": "MEAS_OUKSA2",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "password": "778899"
     },
     {
       "id": "SH_OK188KH_4236",
@@ -2600,7 +2605,8 @@
       "user_name": "OK188KH",
       "profile_hint": "MIK_YURA",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "password": "778899"
     },
     {
       "id": "SH_OK188KH_1349",
@@ -2611,7 +2617,8 @@
       "user_name": "OK188KH",
       "profile_hint": "NyTa",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "password": "778899"
     },
     {
       "id": "SH_OK188KH_8872",
@@ -2622,7 +2629,8 @@
       "user_name": "OK188KH",
       "profile_hint": "PECH TA (ពេជ្រតា)",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "password": "778899"
     },
     {
       "id": "SH_OK188KH_5086",
@@ -2631,7 +2639,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_5086",
       "user_name": "OK188KH",
-      "profile_hint": "💙ហ្វាង ហ្វាង 🦄FANG A",
+      "profile_hint": "FANG A",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC"
@@ -2643,7 +2651,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_0331",
       "user_name": "OK188KH",
-      "profile_hint": "Nimol និមល",
+      "profile_hint": "Nimol",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC"
@@ -2655,7 +2663,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_4926",
       "user_name": "OK188KH",
-      "profile_hint": "Chhing​​​_Chhing",
+      "profile_hint": "ChingChing",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC"
@@ -2669,7 +2677,8 @@
       "user_name": "OK188KH",
       "profile_hint": "NaaNaa-1",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "password": "778899"
     },
     {
       "id": "SH_OK188KH_0314",
@@ -2690,7 +2699,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_7944",
       "user_name": "OK188KH",
-      "profile_hint": "KH778 OunYa",
+      "profile_hint": "Kh778 Ounya",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC"
@@ -2702,7 +2711,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_0034",
       "user_name": "OK188KH",
-      "profile_hint": "Kanika KH778",
+      "profile_hint": "KH778 kanika",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC"
@@ -2714,7 +2723,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_5024",
       "user_name": "OK188KH",
-      "profile_hint": "LinLin​ KH778",
+      "profile_hint": "Kh778 Linlin",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC"
@@ -2726,7 +2735,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_0354",
       "user_name": "OK188KH",
-      "profile_hint": "KH778 OunNeath",
+      "profile_hint": "Kh778 Ounneath",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC"
@@ -2750,7 +2759,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_3293",
       "user_name": "OK188KH",
-      "profile_hint": "OunHeng លីហេង",
+      "profile_hint": "Ounheng",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC"
@@ -2762,7 +2771,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_6546",
       "user_name": "OK188KH",
-      "profile_hint": "នីសា​-Nysa1",
+      "profile_hint": "Nysa",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC"
