@@ -298,6 +298,18 @@ def infer_gcs_brand(
         resolved = resolve_device_brand_code(code, currency=currency, brands_cfg=brands_cfg)
         if resolved:
             return resolved
+        code_u = code.upper()
+        cur_u = currency.upper()
+        if brands_cfg:
+            for bk, bv in brands_cfg.items():
+                if not isinstance(bv, dict):
+                    continue
+                bu = str(bk).strip().upper()
+                bcur = str(bv.get("currency") or "").strip().upper()
+                if bcur and bcur != cur_u:
+                    continue
+                if bu == code_u or bu.startswith(f"{code_u}") or code_u.startswith(bu):
+                    return bu
     return None
 
 
@@ -607,7 +619,7 @@ def queue_status(
 
         threading.Thread(
             target=_instant_push_worker,
-            args=(root, row["phone"], su, sf, account_id),
+            args=(root, row["phone"], su, sf, account_id, pool),
             daemon=True,
         ).start()
 
@@ -618,9 +630,10 @@ def _instant_push_worker(
     session_user: str,
     session_friday: str,
     account_id: str,
+    pool: str = "",
 ) -> None:
     try:
-        if push_status_instant(root, phone, session_user, session_friday):
+        if push_status_instant(root, phone, session_user, session_friday, pool=pool):
             label = account_id or phone
             friday_part = f" | Friday: {session_friday}" if session_friday else ""
             print(
@@ -636,8 +649,10 @@ def push_status_instant(
     phone: str,
     session_user: str,
     session_friday: str = "",
+    *,
+    pool: str = "",
 ) -> bool:
-    """Update one row in Telegram Acc tab (by phone number)."""
+    """Update Telegram Acc row(s) by phone. pool=gcs|shooter → Main/Other row only."""
     if not _sheet_id() or not use_telegram_acc_format():
         return False
     np = norm_phone(phone)
@@ -645,7 +660,11 @@ def push_status_instant(
         return False
     su = _sheet_status_column_value(session_user)
     sf = _map_script_status(session_friday) if session_friday else ""
-    by_phone = {np: {"session_user": su, "session_friday": sf}}
+    pl = str(pool or "").strip().lower()
+    if pl in ("gcs", "shooter"):
+        by_phone = {_status_map_key(np, pl): {"session_user": su, "session_friday": sf}}
+    else:
+        by_phone = {np: {"session_user": su, "session_friday": sf}}
     try:
         return _push_telegram_acc(root, by_phone) > 0
     except Exception:
@@ -1183,10 +1202,6 @@ def _telegram_row_to_gcs(
     phone = norm_phone(row.get("phone", ""))
     if not phone:
         return None
-    channel = str(row.get("channel") or "").lower()
-    if channel and "telegram" not in channel:
-        return None
-
     matched = _find_by_phone(existing, phone)
     if _should_skip_gcs_row(row):
         return None
@@ -1278,10 +1293,6 @@ def _telegram_row_to_shooter(row: dict[str, str], raw: dict[str, Any], existing:
     phone = norm_phone(row.get("phone", ""))
     if not phone:
         return None
-    channel = str(row.get("channel") or "").lower()
-    if channel and "telegram" not in channel:
-        return None
-
     owner = _normalize_owner_name(row.get("user") or row.get("owner") or "")
     acc_name = row.get("acc_name") or row.get("profile_hint") or ""
     account_status = effective_row_status(row)
@@ -1354,6 +1365,100 @@ def _telegram_row_to_shooter(row: dict[str, str], raw: dict[str, Any], existing:
     return out
 
 
+def _sheet_phone_pool_sets(
+    headers: list[str], lines: list[list[Any]]
+) -> tuple[set[str], set[str]]:
+    """
+    Phones in Sheet tab Telegram Acc by Group column.
+    Main → GCS (accounts.json). Other → Shooter (shooteraccounts.json).
+    Same phone in both groups is allowed (appears in /main and /other).
+    """
+    main_phones: set[str] = set()
+    other_phones: set[str] = set()
+    for line in lines:
+        if not any(str(c).strip() for c in line):
+            continue
+        row = _row_dict(headers, line)
+        phone = norm_phone(row.get("phone", ""))
+        if not phone:
+            continue
+        pool = _pool_from_group(row.get("group", ""))
+        if pool == "gcs":
+            main_phones.add(phone)
+        elif pool == "shooter":
+            other_phones.add(phone)
+    return main_phones, other_phones
+
+
+def _prune_json_pool_mismatch(
+    lst: list[dict[str, Any]],
+    *,
+    main_phones: set[str],
+    other_phones: set[str],
+    keep_pool: str,
+) -> int:
+    """
+    Remove rows whose phone is in Sheet under the opposite pool only.
+    keep_pool: 'gcs' | 'shooter'
+    Phones absent from Sheet are kept (legacy / manual JSON).
+    """
+    other_only = other_phones - main_phones
+    main_only = main_phones - other_phones
+    in_sheet = main_phones | other_phones
+    remove_if: set[str]
+    if keep_pool == "gcs":
+        remove_if = other_only
+    else:
+        remove_if = main_only
+    before = len(lst)
+    lst[:] = [
+        r
+        for r in lst
+        if isinstance(r, dict)
+        and (
+            norm_phone(str(r.get("phone") or "")) not in in_sheet
+            or norm_phone(str(r.get("phone") or "")) not in remove_if
+        )
+    ]
+    return before - len(lst)
+
+
+def _migrate_gcs_session_to_shooter(
+    root: Path,
+    shooter_acc: dict[str, Any],
+    gcs_snapshot: dict[str, dict[str, Any]],
+) -> int:
+    """
+    When Sheet Group moves phone GCS → Shooter, copy existing GCS .session to shooter path.
+    Does not delete the GCS session file (Main row may still need it).
+    """
+    import shutil
+
+    phone = norm_phone(str(shooter_acc.get("phone") or ""))
+    shooter_id = str(shooter_acc.get("id") or "").strip()
+    if not phone or not shooter_id:
+        return 0
+    dst = root / "telegram_session" / "shooter" / f"{shooter_id}.session"
+    if dst.is_file() and dst.stat().st_size >= 1024:
+        return 0
+    old = gcs_snapshot.get(phone)
+    if not old:
+        return 0
+    gid = str(old.get("id") or "").strip()
+    if not gid:
+        return 0
+    src = root / "telegram_session" / f"{gid}.session"
+    if not src.is_file() or src.stat().st_size < 1024:
+        return 0
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, dst)
+    for ext in ("-journal",):
+        sj = Path(str(src) + ext)
+        if sj.is_file():
+            shutil.copy2(sj, Path(str(dst) + ext))
+    return 1
+
+
 def _pull_telegram_acc(
     wb,
     mutate_accounts: Callable[[dict[str, Any]], bool],
@@ -1371,14 +1476,39 @@ def _pull_telegram_acc(
         "shooter_added": 0, "shooter_updated": 0, "shooter_skipped": 0,
         "shooter_renamed": 0, "shooter_session_migrated": 0, "shooter_session_cleaned": 0,
         "gcs_added": 0, "gcs_updated": 0, "gcs_skipped": 0,
+        "gcs_pruned_other_pool": 0, "shooter_pruned_main_pool": 0,
+        "gcs_session_to_shooter": 0,
     }
+    main_phones, other_phones = _sheet_phone_pool_sets(headers, lines)
+    gcs_snapshot_before_pull: dict[str, dict[str, Any]] = {}
+    shooter_phone_map: dict[str, dict[str, Any]] = {}
+    if root:
+        try:
+            import json as _json
+
+            sh_path = root / "shooteraccounts.json"
+            if sh_path.is_file():
+                sh_raw = _json.loads(sh_path.read_text(encoding="utf-8"))
+                for row in sh_raw.get("shooter_accounts") or []:
+                    if not isinstance(row, dict):
+                        continue
+                    p = norm_phone(str(row.get("phone") or ""))
+                    if p:
+                        shooter_phone_map[p] = row
+        except (OSError, ValueError):
+            pass
 
     def _apply_gcs(data: dict[str, Any]) -> None:
-        nonlocal stats
+        nonlocal stats, gcs_snapshot_before_pull
         lst = data.setdefault("otp_accounts", [])
         if not isinstance(lst, list):
             lst = []
             data["otp_accounts"] = lst
+        gcs_snapshot_before_pull = {
+            norm_phone(str(r.get("phone") or "")): dict(r)
+            for r in lst
+            if isinstance(r, dict) and str(r.get("phone") or "").strip()
+        }
         for line in lines:
             if not any(str(c).strip() for c in line):
                 continue
@@ -1386,13 +1516,14 @@ def _pull_telegram_acc(
             if pending_only:
                 if _pool_from_group(row.get("group", "")) != "gcs":
                     continue
-                if not sheet_status_is_login_trigger(effective_row_status(row)):
-                    stats["gcs_skipped"] += 1
-                    continue
                 np = norm_phone(row.get("phone", ""))
-                if not np or _find_by_phone(lst, np):
+                if not np:
                     stats["gcs_skipped"] += 1
                     continue
+                if not _find_by_phone(lst, np):
+                    if not sheet_status_is_login_trigger(effective_row_status(row)):
+                        stats["gcs_skipped"] += 1
+                        continue
             entry = _telegram_row_to_gcs(row, data, lst)
             if not entry:
                 if _pool_from_group(row.get("group", "")) == "gcs":
@@ -1418,6 +1549,25 @@ def _pull_telegram_acc(
         pruned = _prune_excluded_gcs_accounts(lst)
         if pruned:
             stats["gcs_skipped"] += pruned
+        other_only = other_phones - main_phones
+        if root and other_only:
+            for row in list(lst):
+                if not isinstance(row, dict):
+                    continue
+                phone = norm_phone(str(row.get("phone") or ""))
+                if phone not in other_only:
+                    continue
+                sh_acc = shooter_phone_map.get(phone)
+                if sh_acc:
+                    stats["gcs_session_to_shooter"] += _migrate_gcs_session_to_shooter(
+                        root, sh_acc, {phone: row}
+                    )
+        stats["gcs_pruned_other_pool"] += _prune_json_pool_mismatch(
+            lst,
+            main_phones=main_phones,
+            other_phones=other_phones,
+            keep_pool="gcs",
+        )
 
     def _apply_shooter(data: dict[str, Any]) -> None:
         nonlocal stats
@@ -1432,13 +1582,14 @@ def _pull_telegram_acc(
             if pending_only:
                 if _pool_from_group(row.get("group", "")) != "shooter":
                     continue
-                if not sheet_status_is_login_trigger(effective_row_status(row)):
-                    stats["shooter_skipped"] += 1
-                    continue
                 np = norm_phone(row.get("phone", ""))
-                if not np or _find_by_phone(lst, np):
+                if not np:
                     stats["shooter_skipped"] += 1
                     continue
+                if not _find_by_phone(lst, np):
+                    if not sheet_status_is_login_trigger(effective_row_status(row)):
+                        stats["shooter_skipped"] += 1
+                        continue
             entry = _telegram_row_to_shooter(row, data, lst)
             if not entry:
                 if _pool_from_group(row.get("group", "")) == "shooter":
@@ -1482,6 +1633,17 @@ def _pull_telegram_acc(
             stats["shooter_session_cleaned"] += _cleanup_migrated_shooter_sessions(
                 root, migrated_pairs
             )
+            for acc in lst:
+                if isinstance(acc, dict):
+                    stats["gcs_session_to_shooter"] += _migrate_gcs_session_to_shooter(
+                        root, acc, gcs_snapshot_before_pull
+                    )
+        stats["shooter_pruned_main_pool"] += _prune_json_pool_mismatch(
+            lst,
+            main_phones=main_phones,
+            other_phones=other_phones,
+            keep_pool="shooter",
+        )
 
     if not mutate_accounts(_apply_gcs):
         raise RuntimeError("Failed to write accounts.json (lock timeout?)")
@@ -1662,12 +1824,20 @@ def _skip_sheet_status_write(old: str, new: str) -> bool:
     return False
 
 
+def _sheet_status_locked(raw: str) -> bool:
+    """Staff-set terminal states — script must not overwrite with Ready/Active."""
+    return _normalize_sheet_display(raw).lower() in ("frozen", "banned", "expired")
+
+
 def _script_may_write_status(old: str, new: str) -> bool:
     """
     Protect Status dropdown: staff Pending is login trigger — script must not overwrite
     with Active/Ready until LIVE-LOGIN completes (except Banned/Frozen/Expired).
+    Frozen/Banned/Expired on Sheet are never overwritten by script.
     """
     if _skip_sheet_status_write(old, new):
+        return False
+    if _sheet_status_locked(old):
         return False
     if sheet_status_is_login_trigger(old):
         new_n = _normalize_sheet_status_value(_map_script_status(new))
@@ -1684,13 +1854,53 @@ def _script_may_write_status(old: str, new: str) -> bool:
     return True
 
 
+def _status_map_key(phone: str, pool: str) -> str:
+    p = norm_phone(phone)
+    pl = str(pool or "gcs").strip().lower()
+    if pl not in ("gcs", "shooter"):
+        pl = "gcs"
+    return f"{p}|{pl}"
+
+
+def _lookup_status_info(
+    by_phone: dict[str, dict[str, str]], phone: str, pool: str | None
+) -> dict[str, str] | None:
+    if not phone:
+        return None
+    pl = _pool_from_group(str(pool or "")) if pool else None
+    if pl:
+        hit = by_phone.get(_status_map_key(phone, pl))
+        if hit:
+            return hit
+    return by_phone.get(norm_phone(phone))
+
+
+def _derive_status_from_session(
+    session_friday: str,
+    session_user: str = "",
+) -> str:
+    """Status column: Ready when Session Friday is Active (session file exists)."""
+    su = _sheet_status_column_value(session_user)
+    if su and _sheet_status_locked(su):
+        return su
+    sf = _normalize_sheet_display(session_friday).lower()
+    if sf == "active":
+        return sheet_status_after_login_value()
+    if su:
+        return su
+    if sf in ("banned", "frozen", "expired", "disconnected"):
+        return _map_script_status(session_friday)
+    return ""
+
+
 def collect_status_by_phone(
     root: Path,
     gcs_accounts: list[dict[str, Any]],
     shooter_accounts: list[dict[str, Any]],
 ) -> dict[str, dict[str, str]]:
     """
-    phone → {session_user, session_friday, …}
+    phone|pool → {session_user, session_friday, …}
+    Main (GCS) and Other (Shooter) rows with the same phone can differ.
 
     Account Status = account state (Active / Banned / Frozen / Expired / …)
     Session Friday = FRIDAY_BO bot session only (Active / Disconnected / Pending Login)
@@ -1704,9 +1914,9 @@ def collect_status_by_phone(
             return
         # Friday = whether the bot session file exists (owner account may still be inactive).
         friday = _session_status(Path(acc["session"]))
-        # Account Status comes from real detection (event/health), not forced Active in baseline.
-        out[phone] = {
-            "session_user": "",
+        session_user = _derive_status_from_session(friday)
+        out[_status_map_key(phone, pool)] = {
+            "session_user": session_user,
             "session_friday": friday,
             "notes": "",
             "at": now,
@@ -1729,7 +1939,9 @@ def collect_status_by_phone(
                 ev = json.loads(line)
                 phone = norm_phone(str(ev.get("phone") or ""))
                 aid = str(ev.get("account_id") or "")
-                pool = str(ev.get("pool") or "")
+                pool = str(ev.get("pool") or "gcs").strip().lower()
+                if pool not in ("gcs", "shooter"):
+                    pool = "gcs"
                 su = _map_script_status(
                     str(ev.get("session_user") or ev.get("status") or "")
                 )
@@ -1738,16 +1950,21 @@ def collect_status_by_phone(
                     continue
                 key_phone = phone
                 if not key_phone and aid:
-                    for p, info in out.items():
+                    for k, info in out.items():
                         if info.get("account_id") == aid:
-                            key_phone = p
+                            key_phone = k.split("|", 1)[0]
+                            pool = k.split("|", 1)[1] if "|" in k else pool
                             break
                 if not key_phone:
                     continue
-                prev = out.get(key_phone, {})
-                out[key_phone] = {
-                    "session_user": su or prev.get("session_user", ""),
-                    "session_friday": sf or prev.get("session_friday", ""),
+                map_key = _status_map_key(key_phone, pool)
+                prev = out.get(map_key, {})
+                su = su or prev.get("session_user", "")
+                sf = sf or prev.get("session_friday", "")
+                su = _derive_status_from_session(sf, su)
+                out[map_key] = {
+                    "session_user": su,
+                    "session_friday": sf,
                     "notes": str(ev.get("note") or prev.get("notes") or ""),
                     "at": str(ev.get("at") or now),
                     "account_id": aid or prev.get("account_id", ""),
@@ -1786,7 +2003,9 @@ def collect_status_from_queue(
             ev = json.loads(line)
             phone = norm_phone(str(ev.get("phone") or ""))
             aid = str(ev.get("account_id") or "")
-            pool = str(ev.get("pool") or "")
+            pool = str(ev.get("pool") or "gcs").strip().lower()
+            if pool not in ("gcs", "shooter"):
+                pool = "gcs"
             su = _map_script_status(str(ev.get("session_user") or ev.get("status") or ""))
             sf = _map_script_status(str(ev.get("session_friday") or ""))
             if not su and not sf:
@@ -1794,10 +2013,14 @@ def collect_status_from_queue(
             key_phone = phone or aid_to_phone.get(aid, "")
             if not key_phone:
                 continue
-            prev = out.get(key_phone, {})
-            out[key_phone] = {
-                "session_user": su or prev.get("session_user", ""),
-                "session_friday": sf or prev.get("session_friday", ""),
+            map_key = _status_map_key(key_phone, pool)
+            prev = out.get(map_key, {})
+            su = su or prev.get("session_user", "")
+            sf = sf or prev.get("session_friday", "")
+            su = _derive_status_from_session(sf, su)
+            out[map_key] = {
+                "session_user": su,
+                "session_friday": sf,
                 "notes": str(ev.get("note") or prev.get("notes") or ""),
                 "at": str(ev.get("at") or now),
                 "account_id": aid or prev.get("account_id", ""),
@@ -2032,6 +2255,7 @@ def _push_telegram_acc(
         headers, lines = _read_tab_raw(wb, _tab_telegram())
 
     phone_col = _col_index(headers, "phone")
+    group_col = _col_index(headers, "group")
     st_col = _status_column_index(headers)
     sf_col = _col_index(headers, "session_friday")
     if phone_col is None:
@@ -2049,14 +2273,19 @@ def _push_telegram_acc(
         if phone_col >= len(line):
             continue
         phone = norm_phone(str(line[phone_col]))
-        if not phone or phone not in by_phone:
+        if not phone:
+            continue
+        row_group = str(line[group_col]).strip() if group_col is not None and group_col < len(line) else ""
+        info = _lookup_status_info(by_phone, phone, row_group)
+        if not info:
             continue
         sheet_phones_seen.add(phone)
-        info = by_phone[phone]
         status_new = str(info.get("session_user", "") or info.get("status", "") or "").strip()
         if status_new.lower() == "unknown":
             status_new = ""
         sf_new = str(info.get("session_friday", "") or "").strip()
+        if not status_new:
+            status_new = _derive_status_from_session(sf_new)
         old_st = str(line[st_col]).strip() if st_col < len(line) else ""
         old_sf = str(line[sf_col]).strip() if (sf_col is not None and sf_col < len(line)) else ""
 

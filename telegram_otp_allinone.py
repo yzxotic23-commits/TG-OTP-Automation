@@ -825,10 +825,13 @@ def effective_shooter_owner_filter(
     owner_filter: str,
     *,
     user: Any | None = None,
+    topic_currency: str | None = None,
 ) -> str:
-    """Staff: typo owner → use own shooter owner (not Access Denied)."""
+    """Staff: typo owner → use own shooter owner (not Access Denied). USC topic keeps brand keys."""
     key = str(owner_filter or "").strip().upper()
     if not key or staff == "__creator__":
+        return key
+    if str(topic_currency or "").strip().upper() == "USC":
         return key
     if user and user_may_access_shooter_owner(user, key):
         return key
@@ -1095,32 +1098,48 @@ def _format_shooter_owner_label(owner: str) -> str:
     o = owner.strip()
     if not o:
         return o
+    if o.upper() == o and any(c.isdigit() for c in o):
+        return o.upper()
     return o[0].upper() + o[1:].lower()
+
+
+def shooter_row_usc_brand_key(row: dict[str, Any]) -> str:
+    """USC Other: brand name from Sheet (OK188KH, KH778KH, …)."""
+    brand = str(row.get("brand") or "").strip().upper()
+    if brand:
+        return brand
+    return str(row.get("owner") or "").strip().upper()
 
 
 def build_shooter_owners_list_html(shooter_rows: list[dict[str, Any]], currency: str = "MYR") -> str:
     """Ringkasan /other tanpa argumen — format selaras dengan /main GCS."""
+    currency_u = str(currency or "MYR").strip().upper()
+    usc = currency_u == "USC"
     counts: dict[str, int] = {}
     for row in shooter_rows:
-        owner = str(row.get("owner") or "").strip().upper()
-        if owner:
-            counts[owner] = counts.get(owner, 0) + 1
+        key = shooter_row_usc_brand_key(row) if usc else str(row.get("owner") or "").strip().upper()
+        if key:
+            counts[key] = counts.get(key, 0) + 1
     total = sum(counts.values())
+    group_label = "brands" if usc else "users"
     lines: list[str] = [
-        accounts_header_html(f"💱 <b>{html.escape(currency)} Shooter Account List</b>"),
+        accounts_header_html(f"💱 <b>{html.escape(currency_u)} Shooter Account List</b>"),
         "",
-        f"📊 <b>{total}</b> accounts  ·  <b>{len(counts)}</b> users",
+        f"📊 <b>{total}</b> accounts  ·  <b>{len(counts)}</b> {group_label}",
         "",
     ]
     if not counts:
         lines.append("<i>No shooter accounts yet.</i>")
         return "\n".join(lines)
-    for owner in sorted(counts.keys(), key=lambda x: x.lower()):
-        n = counts[owner]
-        label = _format_shooter_owner_label(owner)
-        lines.append(f"◦ <b>{html.escape(label)}</b>  ·  {n}")
+    for key in sorted(counts.keys(), key=lambda x: x.lower()):
+        n = counts[key]
+        label = html.escape(key if usc else _format_shooter_owner_label(key))
+        lines.append(f"◦ <b>{label}</b>  ·  {n}")
     lines.append("")
-    lines.append("<i>/other &lt;USER&gt;</i>  ·  <code>/other KAREN</code>")
+    if usc:
+        lines.append("<i>/other &lt;BRAND&gt;</i>  ·  <code>/other OK188KH</code>")
+    else:
+        lines.append("<i>/other &lt;USER&gt;</i>  ·  <code>/other KAREN</code>")
     return "\n".join(lines)
 
 
@@ -1162,14 +1181,22 @@ def build_shooter_user_accounts_html(
     return "\n".join(lines)
 
 
-def build_shooter_user_not_found_html(owner: str, known: list[str]) -> str:
+def build_shooter_user_not_found_html(
+    owner: str,
+    known: list[str],
+    *,
+    topic_currency: str | None = None,
+) -> str:
+    usc = str(topic_currency or "").strip().upper() == "USC"
     preview = ", ".join(f"<code>{html.escape(o)}</code>" for o in known[:16])
     more = f" … +{len(known) - 16}" if len(known) > 16 else ""
+    group = "Brands" if usc else "Users"
+    example = "<code>/other OK188KH</code>" if usc else "<code>/other KAREN</code>"
     return (
         accounts_header_html("⚠️ <b>Shooter User Not Found</b>")
         + f"\n\nNo shooter accounts for <code>{html.escape(owner)}</code>.\n\n"
-        + (f"<b>Users:</b> {preview}{more}\n\n" if known else "No shooter users configured.\n\n")
-        + "<i>Example:</i> <code>/other GERI</code>"
+        + (f"<b>{group}:</b> {preview}{more}\n\n" if known else "No shooter users configured.\n\n")
+        + f"<i>Example:</i> {example}"
     )
 
 
@@ -1274,14 +1301,13 @@ def build_non_otp_forum_topic_html(accounts_doc: dict[str, Any] | None = None) -
         if allowed
         else "MYR, SGD, USC"
     )
-    shooter = html.escape(SHOOTER_DEFAULT_CURRENCY)
     return (
         accounts_header_html("⛔ <b>Wrong Topic</b>")
         + "\n\n"
         + "OTP requests are not allowed in this thread.\n"
         + f"Use an OTP topic: {topics_line}.\n\n"
-        + "<b>GCS:</b> use the topic that matches the account brand.\n"
-        + f"<b>Shooter:</b> use <code>/other</code> in the <b>{shooter}</b> topic."
+        + "<b>GCS (Main):</b> use the topic that matches the account brand.\n"
+        + "<b>Shooter (Other):</b> use <code>/other</code> in the same currency topic."
     )
 
 
@@ -2583,6 +2609,42 @@ def load_shooter_login_accounts(
 
 SHOOTER_DEFAULT_CURRENCY = "MYR"
 
+# Forum topic → shooter row currencies (Sheet Group=Other). WPLUS is separate — use /main WPLUS.
+_SHOOTER_TOPIC_CURRENCIES: dict[str, frozenset[str]] = {
+    "MYR": frozenset({"MYR"}),
+    "SGD": frozenset({"SGD"}),
+    "USC": frozenset({"USC"}),
+}
+
+WPLUS_OWNER = "WPLUS"
+WPLUS_FORUM_CURRENCY = "USC"
+
+
+def shooter_row_currency(row: dict[str, Any]) -> str:
+    return str(row.get("currency") or SHOOTER_DEFAULT_CURRENCY).strip().upper()
+
+
+def shooter_currencies_for_topic(topic_currency: str) -> frozenset[str]:
+    key = str(topic_currency or "").strip().upper()
+    if not key:
+        return frozenset()
+    return _SHOOTER_TOPIC_CURRENCIES.get(key, frozenset({key}))
+
+
+def shooter_currency_for_forum(acc: dict[str, Any]) -> str:
+    """Map shooter row → forum topic for /login (WPLUS pool uses USC topic)."""
+    if str(acc.get("owner") or "").strip().upper() == WPLUS_OWNER:
+        return WPLUS_FORUM_CURRENCY
+    return shooter_row_currency(acc)
+
+
+def _exclude_wplus_shooter_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [r for r in rows if str(r.get("owner") or "").strip().upper() != WPLUS_OWNER]
+
+
+def _is_wplus_main_request(brand_filter: str) -> bool:
+    return str(brand_filter or "").strip().upper() == WPLUS_OWNER
+
 
 def topic_currency_from_update(update: Update) -> str | None:
     """Currency for the forum topic the user is in, or None (general chat / DM)."""
@@ -2601,18 +2663,21 @@ def topic_currency_from_update(update: Update) -> str | None:
 
 
 def group_channel_topic_hint(*, topic_currency: str | None = None) -> str:
-    """Staff-facing hint: GCS uses matching topic; shooter stays on MYR topic."""
-    shooter = html.escape(SHOOTER_DEFAULT_CURRENCY)
+    """Staff-facing hint: GCS + Shooter both use the matching currency topic."""
     if topic_currency:
         cur = html.escape(str(topic_currency).strip().upper())
-        return (
-            f"You are in the <b>{cur}</b> topic — use <code>/main</code> and <code>/login</code> here "
-            f"for <b>{cur}</b> GCS accounts.\n"
-            f"Shooter accounts: use <code>/other</code> in the <b>{shooter}</b> topic."
-        )
+        lines = [
+            f"You are in the <b>{cur}</b> topic.",
+            f"· <code>/main</code> — GCS accounts (Sheet <b>Main</b>, {cur} brands)",
+            f"· <code>/other</code> — Shooter accounts (Sheet <b>Other</b>, {cur} pool)",
+        ]
+        if str(topic_currency or "").strip().upper() == WPLUS_FORUM_CURRENCY:
+            lines.append(f"· <code>/main WPLUS</code> — WPLUS pool (separate list)")
+        lines.append(f"· <code>/login</code> — request OTP here for {cur} accounts")
+        return "\n".join(lines)
     return (
-        f"<b>GCS:</b> use the topic that matches the account (SGD, MYR, …).\n"
-        f"<b>Shooter:</b> use the <b>{shooter}</b> topic only."
+        "<b>GCS (Main):</b> use the topic that matches the brand (MYR, SGD, USC).\n"
+        "<b>Shooter (Other):</b> use <code>/other</code> in the same currency topic."
     )
 
 
@@ -2622,7 +2687,7 @@ def account_pool(acc: dict[str, Any]) -> str:
 
 def account_currency_for_request(acc: dict[str, Any], brands_cfg: dict[str, dict[str, Any]]) -> str:
     if account_pool(acc) == "shooter":
-        return str(acc.get("currency") or SHOOTER_DEFAULT_CURRENCY).strip().upper()
+        return shooter_currency_for_forum(acc)
     return derive_brand_currency(derive_otp_brand(acc, brands_cfg), brands_cfg)
 
 
@@ -2998,9 +3063,33 @@ def list_shooter_owners(raw: dict[str, Any], shooter_rows: list[dict[str, Any]])
     return sorted(owners)
 
 
+def list_shooter_list_keys(
+    raw: dict[str, Any],
+    shooter_rows: list[dict[str, Any]],
+    *,
+    topic_currency: str | None = None,
+) -> list[str]:
+    if str(topic_currency or "").strip().upper() == "USC":
+        keys = {shooter_row_usc_brand_key(r) for r in shooter_rows if shooter_row_usc_brand_key(r)}
+        return sorted(keys)
+    return list_shooter_owners(raw, shooter_rows)
+
+
 def filter_shooter_by_owner(shooter_rows: list[dict[str, Any]], owner: str) -> list[dict[str, Any]]:
     key = owner.strip().upper()
     return [r for r in shooter_rows if str(r.get("owner") or "").strip().upper() == key]
+
+
+def filter_shooter_by_list_key(
+    shooter_rows: list[dict[str, Any]],
+    key: str,
+    *,
+    topic_currency: str | None = None,
+) -> list[dict[str, Any]]:
+    k = key.strip().upper()
+    if str(topic_currency or "").strip().upper() == "USC":
+        return [r for r in shooter_rows if shooter_row_usc_brand_key(r) == k]
+    return filter_shooter_by_owner(shooter_rows, k)
 
 
 def _shooter_display_row_session_ready(row: dict[str, Any]) -> bool:
@@ -3044,14 +3133,10 @@ def _filter_bot_list_accounts(
 
 
 def filter_shooter_by_currency(shooter_rows: list[dict[str, Any]], currency: str) -> list[dict[str, Any]]:
-    key = str(currency or "").strip().upper()
-    if not key:
+    allowed = shooter_currencies_for_topic(currency)
+    if not allowed:
         return shooter_rows
-    return [
-        r
-        for r in shooter_rows
-        if str(r.get("currency") or SHOOTER_DEFAULT_CURRENCY).strip().upper() == key
-    ]
+    return [r for r in shooter_rows if shooter_row_currency(r) in allowed]
 
 
 def shooter_row_has_brand(row: dict[str, Any]) -> bool:
@@ -4028,10 +4113,47 @@ async def cmd_accounts(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         if forum_denied:
             await em.reply_text(forum_denied, parse_mode="HTML")
             return
-    default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
-    root = project_root()
-    rows = load_otp_accounts(raw, root, default_peers)
+    brand_filter = " ".join(context.args).strip().upper() if context.args else ""
+    thread_id = getattr(em, "message_thread_id", None)
     brands_cfg = load_brands_config(raw)
+    root = project_root()
+
+    if _is_wplus_main_request(brand_filter):
+        topic_err = validate_forum_topic(chat.id, thread_id, WPLUS_FORUM_CURRENCY, raw)
+        if topic_err:
+            await em.reply_text(topic_err, parse_mode="HTML")
+            return
+        shooter_doc = load_shooter_doc()
+        wplus_rows = filter_shooter_by_owner(
+            _filter_bot_list_accounts(root, load_shooter_accounts(shooter_doc), pool="shooter"),
+            WPLUS_OWNER,
+        )
+        if not wplus_rows:
+            await em.reply_text(
+                accounts_header_html("⚠️ <b>WPLUS</b>") + "\n\nNo WPLUS accounts available.",
+                parse_mode="HTML",
+            )
+            return
+        full = build_shooter_user_accounts_html(WPLUS_OWNER, wplus_rows, brands_cfg)
+        if len(full) <= 4096:
+            await em.reply_text(full, parse_mode="HTML")
+        else:
+            await em.reply_text(
+                accounts_header_html(f"🎯 <b>WPLUS</b>") + f"\n\n<b>{len(wplus_rows)}</b> accounts",
+                parse_mode="HTML",
+            )
+            for chunk_start in range(0, len(wplus_rows), 40):
+                chunk = wplus_rows[chunk_start : chunk_start + 40]
+                sec_lines = []
+                for i, r in enumerate(chunk, chunk_start + 1):
+                    sec_lines.append(format_shooter_account_line(r, i))
+                await context.bot.send_message(
+                    chat_id=chat.id, text="\n".join(sec_lines), parse_mode="HTML"
+                )
+        return
+
+    default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
+    rows = load_otp_accounts(raw, root, default_peers)
     rows = [r for r in rows if derive_otp_brand(r, brands_cfg) != "UNKNOWN"]
     rows = _filter_bot_list_accounts(root, rows, pool="gcs")
     if not rows:
@@ -4041,8 +4163,6 @@ async def cmd_accounts(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         )
         return
     grouped = group_otp_rows_by_brand(rows, brands_cfg)
-    brand_filter = " ".join(context.args).strip().upper() if context.args else ""
-    thread_id = getattr(em, "message_thread_id", None)
 
     if not brand_filter and thread_id:
         topic_currency = _forum_thread_to_currency(raw, chat.id, thread_id)
@@ -4142,14 +4262,26 @@ async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             await em.reply_text(forum_denied, parse_mode="HTML")
             return
     shooter_doc = load_shooter_doc()
-    shooter_rows = _filter_bot_list_accounts(
-        project_root(), load_shooter_accounts(shooter_doc), pool="shooter"
+    shooter_rows = _exclude_wplus_shooter_rows(
+        _filter_bot_list_accounts(
+            project_root(), load_shooter_accounts(shooter_doc), pool="shooter"
+        )
     )
-    owners = list_shooter_owners(shooter_doc, shooter_rows)
     owner_filter = " ".join(context.args).strip().upper() if context.args else ""
+    if owner_filter == WPLUS_OWNER:
+        await em.reply_text(
+            accounts_header_html("ℹ️ <b>WPLUS</b>")
+            + "\n\nWPLUS uses a separate list.\n"
+            + f"Use <code>/main WPLUS</code> in the <b>{html.escape(WPLUS_FORUM_CURRENCY)}</b> topic.",
+            parse_mode="HTML",
+        )
+        return
     thread_id = getattr(em, "message_thread_id", None)
     topic_currency = (
         _forum_thread_to_currency(accounts_doc, chat.id, thread_id) if thread_id else None
+    )
+    owners = list_shooter_list_keys(
+        shooter_doc, shooter_rows, topic_currency=topic_currency
     )
     user = update.effective_user
     ensure_staff_linked(user)
@@ -4174,6 +4306,7 @@ async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             staff_shooter,
             owner_filter,
             user=user,
+            topic_currency=topic_currency,
         )
 
     if not owner_filter:
@@ -4190,10 +4323,17 @@ async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
                 list_rows = [
                     r
                     for r in shooter_rows
-                    if str(r.get("owner") or "").strip().upper() in allowed
+                    if (
+                        shooter_row_usc_brand_key(r)
+                        if str(topic_currency or "").strip().upper() == "USC"
+                        else str(r.get("owner") or "").strip().upper()
+                    )
+                    in allowed
                 ]
             elif staff_shooter:
-                list_rows = filter_shooter_by_owner(shooter_rows, staff_shooter)
+                list_rows = filter_shooter_by_list_key(
+                    shooter_rows, staff_shooter, topic_currency=topic_currency
+                )
             else:
                 await em.reply_text(
                     build_staff_not_registered_html(
@@ -4229,7 +4369,9 @@ async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         )
         return
 
-    matched = filter_shooter_by_owner(shooter_rows, owner_filter)
+    matched = filter_shooter_by_list_key(
+        shooter_rows, owner_filter, topic_currency=topic_currency
+    )
     if topic_currency:
         matched = filter_shooter_by_currency(matched, topic_currency)
     if not matched:
@@ -4241,7 +4383,9 @@ async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             )
             return
         await em.reply_text(
-            build_shooter_user_not_found_html(owner_filter, owners),
+            build_shooter_user_not_found_html(
+                owner_filter, owners, topic_currency=topic_currency
+            ),
             parse_mode="HTML",
         )
         return
@@ -4306,7 +4450,8 @@ async def cmd_login(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             "<b>GCS</b> — use the topic that matches the brand (SGD, MYR, USC, …):\n"
             "· <code>/login STMY_CS01</code>\n"
             "· <code>/login +60123456789</code>\n\n"
-            f"<b>Shooter</b> — <b>{html.escape(SHOOTER_DEFAULT_CURRENCY)}</b> topic only:\n"
+            "<b>Shooter (Other)</b> — same currency topic (MYR / SGD / USC).\n"
+            "<b>WPLUS</b> — separate: <code>/main WPLUS</code> in USC topic.\n"
             "· <code>/login SH_VENAN_01</code>\n"
             "· <code>/login +60123456789</code> <i>(registered phone number)</i>",
             parse_mode="HTML",
@@ -4327,6 +4472,7 @@ async def cmd_login(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 1
                 for r in _shooter_login_rows()
                 if str(r.get("owner") or "").strip().upper() == owner_u
+                or str(r.get("brand") or "").strip().upper() == owner_u
             )
             if n > 1:
                 owner_hint = (
@@ -6662,7 +6808,7 @@ def _after_login_sync_status(acc: dict[str, Any], pool: str) -> tuple[str, str]:
 
         if phone:
             if sheets_sync.instant_push_enabled():
-                sheets_sync.push_status_instant(root, phone, sheet_status, friday_st)
+                sheets_sync.push_status_instant(root, phone, sheet_status, friday_st, pool=pool)
             else:
                 sheets_sync.update_sheet_status_column(root, phone, sheet_status)
             sheets_sync.clear_login_code_in_sheet(root, phone)
@@ -6976,6 +7122,12 @@ def _run_sync_pull(
                 f"  GCS     +{stats['gcs_added']} new, ~{stats['gcs_updated']} updated"
                 f" (skip {stats['gcs_skipped']})"
             )
+            pr_gcs = stats.get("gcs_pruned_other_pool", 0)
+            if pr_gcs:
+                print(f"          {pr_gcs} moved off GCS (Sheet Group=Other only)")
+            mig = stats.get("gcs_session_to_shooter", 0)
+            if mig:
+                print(f"          {mig} GCS session(s) copied to shooter path")
             renamed = stats.get("shooter_renamed", 0)
             migrated = stats.get("shooter_session_migrated", 0)
             cleaned = stats.get("shooter_session_cleaned", 0)
@@ -6989,6 +7141,9 @@ def _run_sync_pull(
                 f"  Shooter +{stats['shooter_added']} new, ~{stats['shooter_updated']} updated"
                 f"{rename_note}{session_note} (skip {stats['shooter_skipped']})"
             )
+            pr_sh = stats.get("shooter_pruned_main_pool", 0)
+            if pr_sh:
+                print(f"          {pr_sh} moved off Shooter (Sheet Group=Main only)")
         elif stats.get("gcs_added") or stats.get("shooter_added"):
             print(
                 f"  ✓ registered: GCS +{stats['gcs_added']} · Shooter +{stats['shooter_added']}",
@@ -7284,6 +7439,12 @@ def run_sync_live_login() -> int:
                     f"  ⚠ Pending in Sheet but not in JSON: {sample}{extra}",
                     flush=True,
                 )
+                if cycle == 1 or cycle % 30 == 0:
+                    print(
+                        "  Hint: check Sheet Group (Main/Other), Phone, Device ID, "
+                        "api credentials — Channel is reference only.",
+                        flush=True,
+                    )
 
             if not pending:
                 time.sleep(interval_busy)
@@ -7685,7 +7846,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("login-all-shooter", help="Login shooter_accounts + sync profile_hint from Telegram.")
     sub.add_parser(
         "listen",
-        help="OTP listener for GCS + Shooter (separate logs; shooter MYR topic only).",
+        help="OTP listener for GCS + Shooter (separate logs; per currency topic).",
     )
     p_notify = sub.add_parser("notify", help="Send a manual message via bot.")
     p_notify.add_argument("message", help="Message text")

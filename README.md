@@ -111,16 +111,28 @@ Add missing rows to Sheet before expecting status sync to work.
 
 ---
 
+## Staff rules (Telegram group)
+
+| Rule | Detail |
+|------|--------|
+| **Topics** | **Main (GCS):** MYR / SGD / USC topic. **Other (Shooter):** `/other` in same topic — MYR/SGD by owner name (e.g. `KAREN`), **USC by brand** (e.g. `OK188KH`). **WPLUS:** `/main WPLUS` in USC topic only. **Not** #feedback or System Status. |
+| **OTP** | Send `/login` in the correct topic **before** OTP is forwarded. |
+| **Lists** | `/main` and `/other` hide accounts with Pending or Pending Login (no session ready). |
+| **Alerts** | Manual Login Detected tags: @geri_work @Sinyee_29 @Zaabryan (separate from bot admin role). |
+| **Owner rename** | Sheet sync renames session files; expired/missing sessions still need Pending + login. |
+
+See **WEEKLY_OPS_CHECKLIST.txt** for ops routine and **COMMANDS.txt** for full reference.
+
+---
+
 ## Bot commands
 
 | Command | Function |
 |---------|----------|
-| `/main [BRAND]` | List GCS accounts |
-| `/other [USER]` | List shooter accounts |
-| `/login ACCOUNT_ID` | Request OTP (staff must send in topic first if `TELEGRAM_REQUIRE_LOGIN_REQUEST=1`) |
+| `/main [BRAND]` | List GCS accounts (Pending / Pending Login hidden) |
+| `/other [USER\|BRAND]` | List shooter accounts — MYR/SGD: owner name; USC: brand code (Pending / Pending Login hidden) |
+| `/login ACCOUNT_ID` | Request OTP — must be in correct forum topic first |
 | `/ping` | Bot alive check |
-
-See **COMMANDS.txt** for full reference.
 
 ---
 
@@ -148,6 +160,7 @@ See **COMMANDS.txt** for full reference.
 | `TELEGRAM_NOTIFY_EXPIRED_COOLDOWN_SEC` | `86400` | Expired alert max once per day |
 | `TELEGRAM_NOTIFY_FROZEN_COOLDOWN_SEC` | `86400` | Frozen alert max once per day |
 | `TELEGRAM_PURGE_FROZEN_ACCOUNTS` | `1` | Remove frozen from bot list + JSON |
+| `TELEGRAM_MANUAL_LOGIN_CC` | `geri_work,sinyee,zaabryan` | Who gets tagged on Manual Login Detected |
 
 ---
 

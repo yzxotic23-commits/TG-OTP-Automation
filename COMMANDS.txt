@@ -81,6 +81,38 @@ Do NOT run BOT from Cursor terminal.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STAFF RULES (TELEGRAM GROUP — Phase 2)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Where to use the bot
+    · GCS (Sheet Main)     → currency topic matching Device ID (MYR / SGD / USC)
+    · Shooter (Sheet Other)→ same currency topic (/other)
+      · MYR topic → MYR shooters (SBMY, STMY, JMMY, …)
+      · SGD topic → SGD shooters (FWSG, WBSG, M24SG, …)
+      · USC topic → USC shooters by brand: <code>/other OK188KH</code>, <code>/other KH778KH</code>, …
+      · WPLUS pool  → <code>/main WPLUS</code> in USC topic only (not /other)
+    · NOT allowed          → #feedback, System Status, general chat
+
+  Before OTP is forwarded
+    · Staff must send /login <account or phone> in the correct topic first
+
+  /main and /other lists
+    · Accounts with Sheet Status = Pending or Session Friday = Pending Login
+      are HIDDEN (no active session yet — do not pick those numbers)
+
+  Manual Login Detected alert (System Status)
+    · Default tags: @geri_work @Sinyee_29 @Zaabryan
+    · Adding someone as bot admin does NOT add them to this tag list
+
+  Owner rename in Sheet (e.g. Kingsley → Nikki)
+    · Sync auto-renames saved session files on the server
+    · If session was already missing or expired → set Status = Pending and login again
+
+  After code or .env change for BOT or LISTEN
+    · Restart that service (see RESTART 1 SERVICE ONLY above)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   SINGLE COMMANDS (manual window)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

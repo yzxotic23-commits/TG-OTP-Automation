@@ -123,7 +123,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "STMY"
+      "brand": "STMY",
+      "user_name": "SNR",
+      "device_id": "MYR-ST-001"
     },
     {
       "id": "STMY_LINA",
@@ -138,7 +140,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "STMY"
+      "brand": "STMY",
+      "user_name": "SNR",
+      "device_id": "MYR-ST-001"
     },
     {
       "id": "STMY_ALICIA",
@@ -153,7 +157,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "STMY"
+      "brand": "STMY",
+      "user_name": "SNR",
+      "device_id": "MYR-ST-001"
     },
     {
       "id": "STMY_RAISA",
@@ -168,7 +174,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "STMY"
+      "brand": "STMY",
+      "user_name": "SNR",
+      "device_id": "MYR-ST-001"
     },
     {
       "id": "STMY_OFFICIAL",
@@ -183,7 +191,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "STMY"
+      "brand": "STMY",
+      "user_name": "SNR",
+      "device_id": "MYR-ST-001"
     },
     {
       "id": "STMY_RICO",
@@ -198,7 +208,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "STMY"
+      "brand": "STMY",
+      "user_name": "SNR",
+      "device_id": "MYR-ST-001"
     },
     {
       "id": "STMY_MANAGER",
@@ -213,7 +225,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "STMY"
+      "brand": "STMY",
+      "user_name": "SNR",
+      "device_id": "MYR-ST-001"
     },
     {
       "id": "JMMY_RICHARD",
@@ -516,7 +530,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "KH778KH"
+      "brand": "KH778KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "KH778KH_CS4",
@@ -531,11 +547,13 @@
         777000
       ],
       "enabled": true,
-      "brand": "KH778KH"
+      "brand": "KH778KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "KH778KH_MEYLY",
-      "profile_hint": "KH778meyly",
+      "profile_hint": "OK188KHmeyly",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855963954426",
@@ -546,7 +564,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "KH778KH"
+      "brand": "KH778KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "KH778KH_OUNLEAK",
@@ -561,22 +581,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "KH778KH"
-    },
-    {
-      "id": "KH778KH_NANA",
-      "profile_hint": "NaaNaa-1",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "phone": "+85589681882",
-      "password": "778899",
-      "session": "telegram_session/KH778KH_NANA",
-      "notify_account": "geri_work",
-      "peer_ids": [
-        777000
-      ],
-      "enabled": true,
-      "brand": "KH778KH"
+      "brand": "KH778KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "KH888KH_GCS2",
@@ -591,7 +598,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "KH888KH"
+      "brand": "KH888KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "KH888KH_GCS1",
@@ -606,7 +615,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "KH888KH"
+      "brand": "KH888KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "KH888KH_GCS3",
@@ -621,7 +632,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "KH888KH"
+      "brand": "KH888KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "CAM78KH_CS1",
@@ -849,51 +862,6 @@
       "brand": "CAM68KH"
     },
     {
-      "id": "OK188KH_DAVDAV",
-      "profile_hint": "DavDaV",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "phone": "+85568743306",
-      "password": "778899",
-      "session": "telegram_session/OK188KH_DAVDAV",
-      "notify_account": "geri_work",
-      "peer_ids": [
-        777000
-      ],
-      "enabled": true,
-      "brand": "OK188KH"
-    },
-    {
-      "id": "OK188KH_MONYNEATH",
-      "profile_hint": "Srey Nea❤️",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "phone": "+855717122709",
-      "password": "778899",
-      "session": "telegram_session/OK188KH_MONYNEATH",
-      "notify_account": "geri_work",
-      "peer_ids": [
-        777000
-      ],
-      "enabled": true,
-      "brand": "OK188KH"
-    },
-    {
-      "id": "OK188KH_MEYLANG",
-      "profile_hint": "MeyLang😻",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "phone": "+85568773080",
-      "password": "778899",
-      "session": "telegram_session/OK188KH_MEYLANG",
-      "notify_account": "geri_work",
-      "peer_ids": [
-        777000
-      ],
-      "enabled": true,
-      "brand": "OK188KH"
-    },
-    {
       "id": "OK188KH_CS1",
       "profile_hint": "OK188KH CS1",
       "api_id": 22760019,
@@ -906,7 +874,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "OK188KH"
+      "brand": "OK188KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "OK188KH_CS66",
@@ -921,7 +891,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "OK188KH"
+      "brand": "OK188KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "OK188KH_CS77",
@@ -936,7 +908,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "OK188KH"
+      "brand": "OK188KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "OK188KH_CS88",
@@ -951,22 +925,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "OK188KH"
-    },
-    {
-      "id": "OK188KH_KIMO",
-      "profile_hint": "Srey Leap Channel",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "phone": "+601160883778",
-      "password": "778899",
-      "session": "telegram_session/OK188KH_KIMO",
-      "notify_account": "geri_work",
-      "peer_ids": [
-        777000
-      ],
-      "enabled": true,
-      "brand": "OK188KH"
+      "brand": "OK188KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "OK188KH_CS2",
@@ -981,7 +942,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "OK188KH"
+      "brand": "OK188KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "OK188KH_CS3",
@@ -996,37 +959,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "OK188KH"
-    },
-    {
-      "id": "OK888KH_SEANYANG",
-      "profile_hint": "PECH TA (ពេជ្រតា)",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "phone": "+855762278872",
-      "password": "778899",
-      "session": "telegram_session/OK888KH_SEANYANG",
-      "notify_account": "geri_work",
-      "peer_ids": [
-        777000
-      ],
-      "enabled": true,
-      "brand": "OK888KH"
-    },
-    {
-      "id": "OK888KH_MIKYURA",
-      "profile_hint": "MIK_YURA",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "phone": "+60167264236",
-      "password": "778899",
-      "session": "telegram_session/OK888KH_MIKYURA",
-      "notify_account": "geri_work",
-      "peer_ids": [
-        777000
-      ],
-      "enabled": true,
-      "brand": "OK888KH"
+      "brand": "OK188KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "OK888KH_CS1",
@@ -1041,7 +976,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "OK888KH"
+      "brand": "OK888KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "OK888KH_CS2",
@@ -1056,7 +993,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "OK888KH"
+      "brand": "OK888KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "OK888KH_CS3",
@@ -1071,37 +1010,9 @@
         777000
       ],
       "enabled": true,
-      "brand": "OK888KH"
-    },
-    {
-      "id": "OK888KH_OUKSAMEAS",
-      "profile_hint": "NyTa",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "phone": "+85599271349",
-      "password": "778899",
-      "session": "telegram_session/OK888KH_OUKSAMEAS",
-      "notify_account": "geri_work",
-      "peer_ids": [
-        777000
-      ],
-      "enabled": true,
-      "brand": "OK888KH"
-    },
-    {
-      "id": "OK888KH_MEASOUKSA2",
-      "profile_hint": "MEAS_OUKSA2",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "phone": "+85577736579",
-      "password": "778899",
-      "session": "telegram_session/OK888KH_MEASOUKSA2",
-      "notify_account": "geri_work",
-      "peer_ids": [
-        777000
-      ],
-      "enabled": true,
-      "brand": "OK888KH"
+      "brand": "OK888KH",
+      "user_name": "OK188KH",
+      "device_id": "USC-OK188KH-Main"
     },
     {
       "id": "SBKH_CS2",
@@ -1903,6 +1814,85 @@
       "profile_hint": "Burry​ OK88KH",
       "device_id": "USC-OK188-001",
       "brand": "OK188KH"
+    },
+    {
+      "id": "OK188KH_OK188KH_7",
+      "phone": "+855884290998",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/OK188KH_OK188KH_7",
+      "notify_account": "geri_work",
+      "user_name": "OK188KH",
+      "profile_hint": "sreay neath",
+      "device_id": "USC-OK188-001",
+      "brand": "OK188KH"
+    },
+    {
+      "id": "OK188KH_OK188KH_8",
+      "phone": "+85567710732",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/OK188KH_OK188KH_8",
+      "notify_account": "geri_work",
+      "user_name": "OK188KH",
+      "profile_hint": "ស្រីនាង",
+      "device_id": "USC-OK188-001",
+      "brand": "OK188KH"
+    },
+    {
+      "id": "OK188KH_OK188KH_9",
+      "phone": "+85567648146",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/OK188KH_OK188KH_9",
+      "notify_account": "geri_work",
+      "user_name": "OK188KH",
+      "profile_hint": "Vichet OK188KH",
+      "device_id": "USC-OK188-001",
+      "brand": "OK188KH"
+    },
+    {
+      "id": "OK188KH_OK188KH_10",
+      "phone": "+85567636004",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/OK188KH_OK188KH_10",
+      "notify_account": "geri_work",
+      "user_name": "OK188KH",
+      "profile_hint": "អូននាទ",
+      "device_id": "USC-OK188-001",
+      "brand": "OK188KH"
+    },
+    {
+      "id": "OK188KH_OK188KH_11",
+      "phone": "+85567723835",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/OK188KH_OK188KH_11",
+      "notify_account": "geri_work",
+      "user_name": "OK188KH",
+      "profile_hint": "Diii",
+      "device_id": "USC-OK188-001",
+      "brand": "OK188KH"
+    },
+    {
+      "id": "OK188KH_OK188KH_12",
+      "phone": "+601139776569",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/OK188KH_OK188KH_12",
+      "notify_account": "geri_work",
+      "user_name": "OK188KH",
+      "profile_hint": "OK888 ADS",
+      "device_id": "USC-OK188KH-Main",
+      "brand": "OK188KH",
+      "password": "778899"
     }
   ],
   "accounts": [
