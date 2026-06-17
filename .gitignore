@@ -20,9 +20,7 @@ shooteraccounts.json.lock
 sheet_status_queue.jsonl
 .bot_polling.lock
 
-# Telethon sessions — HARUS lokal per mesin (commit = AuthKeyDuplicated)
-telegram_session/
-*.session
+# Telethon session journals (temp SQLite) — keep ignored
 *.session-journal
 
 # OS / editor
