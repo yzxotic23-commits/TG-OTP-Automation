@@ -1256,6 +1256,14 @@ def build_login_request_accepted_html(
     return "\n".join(lines)
 
 
+def build_login_request_failed_html() -> str:
+    return (
+        accounts_header_html("⚠️ <b>Login Request Failed</b>")
+        + "\n\nCould not save login request (<code>state.json</code> busy). "
+        "Retry <code>/login</code> in a few seconds."
+    )
+
+
 def build_forum_topic_error_html(topic_currency: str, account_currency: str) -> str:
     return (
         accounts_header_html("⚠️ <b>Wrong Topic</b>")
@@ -3328,6 +3336,31 @@ def get_otp_account_by_id_exact(account_id: str) -> dict[str, Any] | None:
     return None
 
 
+def get_otp_account_by_profile_hint(name_key: str) -> dict[str, Any] | None:
+    """Match GCS account by profile_hint (e.g. /login JMMY Ruby → JMMY_RICHARD)."""
+    q = str(name_key or "").strip().lower()
+    if not q or _looks_like_phone(name_key) or _looks_like_shooter_id(name_key):
+        return None
+    raw = load_json(accounts_json_path())
+    default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
+    rows = load_otp_accounts(raw, project_root(), default_peers)
+    exact: list[dict[str, Any]] = []
+    partial: list[dict[str, Any]] = []
+    for row in rows:
+        hint = str(row.get("profile_hint") or "").strip().lower()
+        if not hint:
+            continue
+        if hint == q:
+            exact.append(row)
+        elif q in hint or hint in q:
+            partial.append(row)
+    if len(exact) == 1:
+        return exact[0]
+    if len(partial) == 1:
+        return partial[0]
+    return None
+
+
 def get_otp_account_by_id(account_id: str) -> dict[str, Any] | None:
     row = get_otp_account_by_id_exact(account_id)
     if row:
@@ -3443,6 +3476,10 @@ def resolve_listen_account(account_key: str) -> dict[str, Any] | None:
         return row
 
     row = get_otp_account_by_id_exact(key)
+    if row:
+        return row
+
+    row = get_otp_account_by_profile_hint(key)
     if row:
         return row
 
@@ -3576,12 +3613,28 @@ def find_otp_account_from_template(rows: dict[str, str]) -> dict[str, Any] | Non
     return None
 
 
+def _find_login_request_entry(
+    reqs: dict[str, Any], account_id: str
+) -> tuple[str, dict[str, Any]] | None:
+    aid = str(account_id or "").strip()
+    if not aid:
+        return None
+    hit = reqs.get(aid)
+    if isinstance(hit, dict):
+        return aid, hit
+    q = aid.lower()
+    for key, val in reqs.items():
+        if str(key).strip().lower() == q and isinstance(val, dict):
+            return str(key), val
+    return None
+
+
 def set_login_request(
     account_id: str,
     requester_chat_id: str,
     target_phone: str | None,
     requester_thread_id: int | None = None,
-) -> None:
+) -> bool:
     path = state_json_path()
 
     def writer(data: dict[str, Any]) -> None:
@@ -3595,45 +3648,54 @@ def set_login_request(
         }
         if requester_thread_id:
             entry["requester_thread_id"] = requester_thread_id
-        reqs[account_id] = entry
+        reqs[str(account_id).strip()] = entry
         data["login_requests"] = reqs
         data.pop("login_request", None)
 
     if not _mutate_json_file(path, writer):
         logger.warning("set_login_request failed: %s", path)
+        return False
+    return True
 
 
 def get_active_login_request(account_id: str) -> dict[str, Any] | None:
+    req, _reason = _resolve_active_login_request(account_id)
+    return req
+
+
+def _resolve_active_login_request(account_id: str) -> tuple[dict[str, Any] | None, str | None]:
+    """Return (request, None) if active, else (None, reason_code)."""
     path = state_json_path()
     try:
         with _json_lock(path):
             data = load_json(path)
     except FileLockTimeout:
         logger.warning("Timeout lock get_active_login_request")
-        return None
+        return None, "lock_timeout"
     reqs = data.get("login_requests")
     if not isinstance(reqs, dict):
         old = data.get("login_request")
         if isinstance(old, dict) and str(old.get("account_id") or "").strip().lower() == account_id.strip().lower():
             reqs = {account_id: old}
         else:
-            return None
-    req = reqs.get(account_id)
-    if not isinstance(req, dict):
-        return None
+            return None, "missing"
+    found = _find_login_request_entry(reqs, account_id)
+    if not found:
+        return None, "missing"
+    _key, req = found
     chat = str(req.get("requester_chat_id") or "").strip()
     ts = str(req.get("requested_at") or "").strip()
     if not chat or not ts:
-        return None
+        return None, "invalid"
     ttl_sec = _env_int("TELEGRAM_LOGIN_REQUEST_TTL_SEC", 300, minimum=30)
     try:
         req_time = datetime.fromisoformat(ts.replace("Z", "+00:00"))
     except ValueError:
-        return None
+        return None, "invalid"
     age = (datetime.now(timezone.utc) - req_time).total_seconds()
     if age > ttl_sec:
-        return None
-    return req
+        return None, "expired"
+    return req, None
 
 
 def clear_login_request(account_id: str) -> None:
@@ -4508,7 +4570,9 @@ async def cmd_login(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             return
     phone = str(row.get("phone") or "").strip() or "-"
     detected = str(row.get("profile_hint") or row.get("id") or "-")
-    set_login_request(str(row["id"]), str(update.effective_chat.id), phone, thread_id)
+    if not set_login_request(str(row["id"]), str(update.effective_chat.id), phone, thread_id):
+        await em.reply_text(build_login_request_failed_html(), parse_mode="HTML")
+        return
     await em.reply_text(
         build_login_request_accepted_html(detected, phone),
         parse_mode="HTML",
@@ -4558,7 +4622,9 @@ async def on_text_template(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                 await msg.reply_text(denied_owner, parse_mode="HTML")
                 return
         phone = str(row.get("phone") or "").strip() or "-"
-        set_login_request(str(row["id"]), str(update.effective_chat.id), phone, thread_id)
+        if not set_login_request(str(row["id"]), str(update.effective_chat.id), phone, thread_id):
+            await msg.reply_text(build_login_request_failed_html(), parse_mode="HTML")
+            return
         req_user = parsed.get("user", "-")
         req_brand = parsed.get("brand", "-")
         detected = str(row.get("profile_hint") or row.get("id") or "-")
@@ -4600,7 +4666,9 @@ async def on_text_template(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             return
     phone = str(row.get("phone") or "").strip() or "-"
     detected = str(row.get("profile_hint") or row.get("id") or "-")
-    set_login_request(str(row["id"]), str(update.effective_chat.id), phone, thread_id)
+    if not set_login_request(str(row["id"]), str(update.effective_chat.id), phone, thread_id):
+        await msg.reply_text(build_login_request_failed_html(), parse_mode="HTML")
+        return
     await msg.reply_text(
         build_login_request_accepted_html(detected, phone),
         parse_mode="HTML",
@@ -5768,16 +5836,35 @@ async def _listen_start_account(
         if is_recent_otp_duplicate(str(_acc["id"]), code):
             logger.info("[%s] %s duplicate OTP, skipped.", _tag, _acc["id"])
             return
-        req = get_active_login_request(str(_acc["id"]))
+        req, req_reason = _resolve_active_login_request(str(_acc["id"]))
         if require_req and not req:
             req_cur = account_currency_for_request(_acc, brands_cfg)
-            logger.info(
-                "[%s] %s OTP received without login request — send /login %s in the %s topic first.",
-                _tag,
-                _acc["id"],
-                _acc["id"],
-                req_cur,
-            )
+            if req_reason == "expired":
+                ttl_sec = _env_int("TELEGRAM_LOGIN_REQUEST_TTL_SEC", 300, minimum=30)
+                logger.info(
+                    "[%s] %s OTP received but /login expired (%ss TTL) — send /login %s in the %s topic again.",
+                    _tag,
+                    _acc["id"],
+                    ttl_sec,
+                    _acc["id"],
+                    req_cur,
+                )
+            elif req_reason == "lock_timeout":
+                logger.warning(
+                    "[%s] %s OTP received but state.json lock timeout — retry /login %s in the %s topic.",
+                    _tag,
+                    _acc["id"],
+                    _acc["id"],
+                    req_cur,
+                )
+            else:
+                logger.info(
+                    "[%s] %s OTP received without login request — send /login %s in the %s topic first.",
+                    _tag,
+                    _acc["id"],
+                    _acc["id"],
+                    req_cur,
+                )
             if _manual_login_alert_enabled():
                 acc_id_str = str(_acc["id"])
                 baseline_hashes: set[int] = set()
@@ -7021,12 +7108,13 @@ def _last_health_check_monotonic() -> float:
 
 def _save_last_health_check_ts(ts: float | None = None) -> None:
     path = state_json_path()
-    data = load_json(path)
-    data["last_health_check_ts"] = ts if ts is not None else time.time()
-    try:
-        path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    except OSError as e:
-        logger.warning("cannot save health-check timestamp: %s", e)
+    value = ts if ts is not None else time.time()
+
+    def writer(data: dict[str, Any]) -> None:
+        data["last_health_check_ts"] = value
+
+    if not _mutate_json_file(path, writer):
+        logger.warning("cannot save health-check timestamp: %s", path)
 
 
 def _health_check_due() -> bool:

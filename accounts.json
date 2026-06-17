@@ -1802,6 +1802,34 @@
       "device_id": "USC-OK188KH-Main",
       "brand": "OK188KH",
       "password": "778899"
+    },
+    {
+      "id": "JMMY_SNR",
+      "phone": "+855978556223",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/JMMY_SNR",
+      "notify_account": "geri_work",
+      "user_name": "SNR",
+      "profile_hint": "JMMY Rico",
+      "password": "MYR889900",
+      "device_id": "MYR-JM-001",
+      "brand": "JMMY"
+    },
+    {
+      "id": "JMMY_SNR_2",
+      "phone": "+601111297542",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/JMMY_SNR_2",
+      "notify_account": "geri_work",
+      "user_name": "SNR",
+      "profile_hint": "JMMY Lula",
+      "password": "MYR889900",
+      "device_id": "MYR-JM-001",
+      "brand": "JMMY"
     }
   ],
   "accounts": [
@@ -1867,9 +1895,11 @@
     },
     {
       "id": "aldo",
-      "chat_id": "",
+      "chat_id": "1168427730",
       "label": "Aldo",
-      "shooter_owner": "ALDO"
+      "shooter_owner": "ALDO",
+      "telegram_user_id": "1168427730",
+      "telegram_username": "anobraiin"
     },
     {
       "id": "eudora",
