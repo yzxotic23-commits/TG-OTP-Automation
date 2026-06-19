@@ -14,6 +14,7 @@ import sys
 import time
 import unicodedata
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -154,6 +155,27 @@ def _env_int(name: str, default: int, *, minimum: int = 0) -> int:
         return max(minimum, v)
     except ValueError:
         return default
+
+
+def _raise_process_fd_limit(*, minimum_soft: int = 8192) -> int:
+    """
+    LISTEN opens one SQLite session + sockets per account — macOS default ~256 is too low.
+    Returns effective soft RLIMIT_NOFILE, or -1 if unavailable.
+    """
+    try:
+        import resource
+
+        soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+        want = max(minimum_soft, _env_int("TELEGRAM_LISTEN_MIN_FD", minimum_soft, minimum=256))
+        if hard != resource.RLIM_INFINITY:
+            want = min(want, hard)
+        if soft < want:
+            resource.setrlimit(resource.RLIMIT_NOFILE, (want, hard))
+            soft = want
+        return int(soft)
+    except Exception as e:
+        logger.warning("Could not raise open-files limit: %s", e)
+        return -1
 
 
 def _json_lock(path: Path) -> FileLock:
@@ -827,19 +849,16 @@ def effective_shooter_owner_filter(
     user: Any | None = None,
     topic_currency: str | None = None,
 ) -> str:
-    """Staff: typo owner → use own shooter owner (not Access Denied). USC topic keeps brand keys."""
+    """Return owner/brand key as typed. USC = brand list; MYR/SGD owner access enforced in cmd_shooter."""
     key = str(owner_filter or "").strip().upper()
     if not key or staff == "__creator__":
         return key
-    if str(topic_currency or "").strip().upper() == "USC":
-        return key
-    if user and user_may_access_shooter_owner(user, key):
-        return key
-    if not staff or not staff_shooter:
-        return key
-    if staff_matches_shooter_owner(staff, key, staff_row=staff_row):
-        return key
-    return staff_shooter.strip().upper()
+    return key
+
+
+def _shooter_owner_access_required(topic_currency: str | None) -> bool:
+    """MYR/SGD use shooter owner names — block /other for another user's list. USC uses brand keys."""
+    return str(topic_currency or "").strip().upper() in ("MYR", "SGD")
 
 
 def get_configured_shooter_owners() -> set[str]:
@@ -1261,6 +1280,24 @@ def build_login_request_failed_html() -> str:
         accounts_header_html("⚠️ <b>Login Request Failed</b>")
         + "\n\nCould not save login request (<code>state.json</code> busy). "
         "Retry <code>/login</code> in a few seconds."
+    )
+
+
+def build_login_not_found_html(raw_key: str) -> str:
+    key_esc = html.escape(raw_key.strip())
+    if _looks_like_phone(raw_key):
+        return (
+            accounts_header_html("⚠️ <b>Invalid Number</b>")
+            + f"\n\n<code>{key_esc}</code> is not registered in "
+            "<code>accounts.json</code> or <code>shooteraccounts.json</code>.\n\n"
+            "Use the exact number from the list, or login by id "
+            "(e.g. <code>/login SH_KAREN_05</code>)."
+        )
+    return (
+        accounts_header_html("⚠️ <b>Not Found</b>")
+        + f"\n\n<code>{key_esc}</code> not found in GCS or Shooter.\n\n"
+        "GCS: <code>/login STMY_CS01</code> · "
+        "Shooter: <code>/login SH_KAREN_05</code> or <code>/login +60...</code>"
     )
 
 
@@ -2482,10 +2519,20 @@ def derive_otp_brand(
     if device_id.startswith("USC-OK188KH"):
         return "OK188KH"
 
+    if sheets_sync is not None:
+        family = sheets_sync.sbkh_family_brand(
+            device_id=str(row.get("device_id") or ""),
+            account_id=str(row.get("id") or ""),
+            user_name=str(row.get("user_name") or row.get("user") or ""),
+        )
+        if family:
+            return family
+
     raw_b = row.get("brand")
     if raw_b is not None and str(raw_b).strip():
         b = str(raw_b).strip().upper()
         if sheets_sync is not None:
+            b = sheets_sync.canonical_brand(b)
             if not sheets_sync.is_currency_code(b):
                 return b
         elif b not in ("MYR", "SGD", "USD", "USC", "KHR"):
@@ -2495,7 +2542,7 @@ def derive_otp_brand(
     if sheets_sync is not None:
         resolved = sheets_sync.resolve_brand_from_id(aid, brands_cfg)
         if resolved:
-            return resolved
+            return sheets_sync.canonical_brand(resolved)
 
     device_id = str(row.get("device_id") or "").strip()
     if device_id and sheets_sync is not None:
@@ -2508,11 +2555,12 @@ def derive_otp_brand(
                 brands_cfg=brands_cfg,
             )
             if inferred:
-                return inferred
+                return sheets_sync.canonical_brand(inferred)
 
     if aid and aid.upper() not in ("GCS", "SH", "UNKNOWN"):
         bare = aid.split("_", 1)[0].upper() if "_" in aid else aid.upper()
         if sheets_sync is not None:
+            bare = sheets_sync.canonical_brand(bare)
             if not sheets_sync.is_currency_code(bare) and len(bare) >= 3:
                 return bare
         elif bare not in ("MYR", "SGD", "USD", "USC", "KHR") and len(bare) >= 3:
@@ -3123,23 +3171,28 @@ def _filter_bot_list_accounts(
     *,
     pool: str,
 ) -> list[dict[str, Any]]:
-    """Drop Pending Login / Pending (Sheet) and accounts without session from bot lists."""
+    """Drop Pending Login / Pending (Sheet) and accounts without valid session from bot lists."""
     import sheets_sync
 
-    hidden_phones = sheets_sync.fetch_phones_hidden_from_bot_list(root, pool=pool)
     use_sheet = bool(os.environ.get("GOOGLE_SHEET_ID", "").strip()) and sheets_sync.use_telegram_acc_format()
+    hidden_phones: set[str] = set()
+    if use_sheet:
+        hidden_phones = sheets_sync.fetch_phones_hidden_from_bot_list(
+            root, pool=pool, force=True
+        )
     out: list[dict[str, Any]] = []
     for row in rows:
         phone = sheets_sync.norm_phone(str(row.get("phone") or ""))
         if use_sheet and phone and phone in hidden_phones:
             continue
-        if not use_sheet:
-            if pool == "shooter":
-                if not _shooter_display_row_session_ready(row):
-                    continue
-            elif pool == "gcs" and row.get("session") is not None:
-                if not _session_file_ready(row):
-                    continue
+        if sheets_sync.json_row_hidden_from_bot_list(row):
+            continue
+        if pool == "shooter":
+            if not _shooter_display_row_session_ready(row):
+                continue
+        elif pool == "gcs" and row.get("session") is not None:
+            if not _session_file_ready(row):
+                continue
         out.append(row)
     return out
 
@@ -3390,7 +3443,7 @@ def get_otp_account_by_id(account_id: str) -> dict[str, Any] | None:
     return None
 
 
-def get_otp_account_by_phone(phone: str) -> dict[str, Any] | None:
+def get_otp_account_by_phone(phone: str, *, exact: bool = True) -> dict[str, Any] | None:
     raw = load_json(accounts_json_path())
     default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
     rows = load_otp_accounts(raw, project_root(), default_peers)
@@ -3399,9 +3452,7 @@ def get_otp_account_by_phone(phone: str) -> dict[str, Any] | None:
         return None
     for row in rows:
         p = normalize_phone_number(str(row.get("phone") or ""))
-        if not p:
-            continue
-        if p == target or p.endswith(target) or target.endswith(p):
+        if _phone_digits_match(p, target, exact=exact):
             return row
     return None
 
@@ -3420,15 +3471,13 @@ def get_shooter_listen_account_by_id(account_id: str) -> dict[str, Any] | None:
     return None
 
 
-def get_shooter_listen_account_by_phone(phone: str) -> dict[str, Any] | None:
+def get_shooter_listen_account_by_phone(phone: str, *, exact: bool = True) -> dict[str, Any] | None:
     target = normalize_phone_number(phone)
     if not target:
         return None
     for row in _shooter_login_rows():
         p = normalize_phone_number(str(row.get("phone") or ""))
-        if not p:
-            continue
-        if p == target or p.endswith(target) or target.endswith(p):
+        if _phone_digits_match(p, target, exact=exact):
             return row
     return None
 
@@ -3498,7 +3547,7 @@ def find_shooter_account_from_template(rows: dict[str, str]) -> dict[str, Any] |
     if num:
         for row in candidates:
             phone = normalize_phone_number(str(row.get("phone") or ""))
-            if phone and (phone == num or phone.endswith(num) or num.endswith(phone)):
+            if phone and _phone_digits_match(phone, num, exact=True):
                 return row
     name = str(rows.get("account_name") or "").strip().lower()
     if name:
@@ -3524,9 +3573,9 @@ def find_listen_account_from_template(rows: dict[str, str]) -> dict[str, Any] | 
     if num:
         for row in _shooter_login_rows():
             phone = normalize_phone_number(str(row.get("phone") or ""))
-            if phone and (phone == num or phone.endswith(num) or num.endswith(phone)):
+            if phone and _phone_digits_match(phone, num, exact=True):
                 return row
-        row = get_otp_account_by_phone(str(rows.get("account_number") or ""))
+        row = get_otp_account_by_phone(str(rows.get("account_number") or ""), exact=True)
         if row:
             return row
     row = find_shooter_account_from_template(rows)
@@ -3537,6 +3586,16 @@ def find_listen_account_from_template(rows: dict[str, str]) -> dict[str, Any] | 
 
 def normalize_phone_number(s: str) -> str:
     return "".join(ch for ch in (s or "") if ch.isdigit())
+
+
+def _phone_digits_match(a: str, b: str, *, exact: bool = True) -> bool:
+    pa = normalize_phone_number(a)
+    pb = normalize_phone_number(b)
+    if not pa or not pb:
+        return False
+    if exact:
+        return pa == pb
+    return pa == pb or pa.endswith(pb) or pb.endswith(pa)
 
 
 def _canonical_template_key(raw_key: str) -> str:
@@ -3587,11 +3646,11 @@ def find_otp_account_from_template(rows: dict[str, str]) -> dict[str, Any] | Non
     name = str(rows.get("account_name") or "").strip().lower()
     num = normalize_phone_number(str(rows.get("account_number") or "").strip())
 
-    # Prioritas 1: match nomor
+    # Prioritas 1: match nomor (exact — harus ada di accounts.json)
     if num:
         for row in candidates:
             phone = normalize_phone_number(str(row.get("phone") or ""))
-            if phone and (phone == num or phone.endswith(num) or num.endswith(phone)):
+            if phone and _phone_digits_match(phone, num, exact=True):
                 return row
     # Prioritas 2: brand vs profile_hint / id
     brand = str(rows.get("brand") or "").strip().lower()
@@ -3788,14 +3847,94 @@ def _staff_row_is_admin(row: dict[str, Any]) -> bool:
 
 
 def promote_staff_to_admin(hint: str) -> tuple[bool, str]:
-    """Promote staff yang sudah ada di accounts.json → role admin."""
-    row = _find_staff_row_by_admin_hint(hint)
-    if not row:
+    """Promote staff → admin. Creates allowlist row if @username / id not in JSON yet."""
+    staff_hint = str(hint or "").strip()
+    if not staff_hint:
         return False, (
-            accounts_header_html("⚠️ <b>Not Found</b>")
-            + "\n\nStaff member not found on the staff list.\n"
-            + "Add them to the staff list first, then ask them to register via <code>/start</code>."
+            accounts_header_html("⚠️ <b>Missing Staff</b>")
+            + "\n\nSpecify staff id, @username, or Telegram user ID."
         )
+
+    tg_meta = _fetch_telegram_profile_by_hint(staff_hint)
+    row = _find_staff_row_by_admin_hint(staff_hint)
+    if not row and tg_meta:
+        row = _find_staff_row_by_admin_hint(str(tg_meta.get("id") or ""))
+        if not row and tg_meta.get("telegram_username"):
+            row = _find_staff_row_by_admin_hint(str(tg_meta["telegram_username"]))
+
+    if not row:
+        new_id, new_label = _staff_id_from_hint(staff_hint, tg_meta)
+        if not new_id or new_id == creator_account_id():
+            return False, (
+                accounts_header_html("⚠️ <b>Invalid Staff</b>")
+                + "\n\nUse staff id, @username, or Telegram user ID."
+            )
+        result_username = str((tg_meta or {}).get("telegram_username") or staff_hint.lstrip("@")).strip()
+
+        def writer_new(data: dict[str, Any]) -> None:
+            nonlocal new_id, new_label, result_username
+            rows = data.get("accounts")
+            if not isinstance(rows, list):
+                rows = []
+                data["accounts"] = rows
+            for existing in rows:
+                if not isinstance(existing, dict):
+                    continue
+                if str(existing.get("id", "")).strip().lower() == new_id.lower():
+                    existing["role"] = "admin"
+                    if tg_meta:
+                        if tg_meta.get("telegram_user_id"):
+                            existing["telegram_user_id"] = tg_meta["telegram_user_id"]
+                            existing["chat_id"] = tg_meta.get("chat_id") or tg_meta["telegram_user_id"]
+                        if tg_meta.get("telegram_username"):
+                            existing["telegram_username"] = tg_meta["telegram_username"]
+                        if tg_meta.get("label"):
+                            existing["label"] = tg_meta["label"]
+                    elif result_username and not str(existing.get("telegram_username") or "").strip():
+                        existing["telegram_username"] = result_username.lstrip("@")
+                    new_id = str(existing.get("id") or new_id).strip()
+                    new_label = str(existing.get("label") or new_label).strip()
+                    result_username = str(existing.get("telegram_username") or result_username).strip()
+                    return
+            entry: dict[str, Any] = {"id": new_id, "label": new_label, "role": "admin"}
+            if tg_meta:
+                if tg_meta.get("telegram_user_id"):
+                    entry["telegram_user_id"] = tg_meta["telegram_user_id"]
+                    entry["chat_id"] = tg_meta.get("chat_id") or tg_meta["telegram_user_id"]
+                if tg_meta.get("telegram_username"):
+                    entry["telegram_username"] = tg_meta["telegram_username"]
+            elif result_username:
+                entry["telegram_username"] = result_username.lstrip("@")
+            rows.append(entry)
+            new_id = str(entry.get("id") or new_id).strip()
+            new_label = str(entry.get("label") or new_label).strip()
+            result_username = str(entry.get("telegram_username") or result_username).strip()
+
+        if not _mutate_json_file(accounts_json_path(), writer_new):
+            return False, accounts_header_html("⚠️ <b>Error</b>") + "\n\nCould not add admin."
+
+        lines = [
+            accounts_header_html("✅ <b>Admin Added</b>"),
+            "",
+            f"<b>id</b>     ·  <code>{html.escape(new_id)}</code>",
+            f"<b>label</b>  ·  <b>{html.escape(new_label)}</b>",
+            f"<b>role</b>   ·  <code>admin</code>",
+        ]
+        if result_username:
+            lines.append(f"<b>telegram</b> ·  @{html.escape(result_username.lstrip('@'))}")
+        if tg_meta and tg_meta.get("telegram_user_id"):
+            lines.append(f"<b>user_id</b> ·  <code>{html.escape(tg_meta['telegram_user_id'])}</code>")
+        lines.append("")
+        if tg_meta:
+            lines.append("<i>Telegram profile linked — staff can use admin commands after</i> <code>/start</code>.")
+        else:
+            lines.append(
+                "<i>Slot created — ask staff to DM bot</i> <code>/start</code> "
+                "<i>once so @username / user id auto-links.</i>"
+            )
+        lines.append("<i>No restart needed.</i>")
+        return True, "\n".join(lines)
+
     target_id = str(row.get("id", "")).strip().lower()
     if target_id == creator_account_id():
         return True, (
@@ -3843,6 +3982,367 @@ def promote_staff_to_admin(hint: str) -> tuple[bool, str]:
         lines.append(f"<b>shooter</b> ·  <code>{html.escape(result_owner.upper())}</code>")
     lines.append("")
     lines.append("<i>No restart needed.</i>")
+    return True, "\n".join(lines)
+
+
+def _normalize_shooter_owner_key(owner: str) -> str:
+    return str(owner or "").strip().upper()
+
+
+def _is_telegram_user_id_hint(value: str) -> bool:
+    s = str(value or "").strip()
+    return s.isdigit() and 5 <= len(s) <= 15
+
+
+def _fetch_bot_user_profile(user_id: str) -> dict[str, str] | None:
+    """Resolve display name / @username via Bot API (user must have started bot once)."""
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    uid = str(user_id or "").strip()
+    if not token or not _is_telegram_user_id_hint(uid):
+        return None
+    return _fetch_bot_chat_profile(token, uid)
+
+
+def _fetch_bot_chat_profile(token: str, chat_ref: str) -> dict[str, str] | None:
+    ref = str(chat_ref or "").strip()
+    if not token or not ref:
+        return None
+    url = f"https://api.telegram.org/bot{token}/getChat?chat_id={urllib.parse.quote(ref)}"
+    try:
+        timeout = _env_int("TELEGRAM_HTTP_TIMEOUT_SEC", 30, minimum=5)
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            parsed = json.loads(resp.read().decode("utf-8"))
+        if not parsed.get("ok"):
+            return None
+        chat = parsed.get("result") or {}
+        first = str(chat.get("first_name") or "").strip()
+        last = str(chat.get("last_name") or "").strip()
+        full = " ".join(p for p in (first, last) if p).strip()
+        uname = str(chat.get("username") or "").strip().lstrip("@")
+        tg_id = str(chat.get("id") or "").strip()
+        staff_id = uname.lower() if uname else (f"user_{tg_id}" if tg_id else "")
+        label = full or (uname and f"@{uname}") or (f"User {tg_id}" if tg_id else ref)
+        out: dict[str, str] = {"label": label}
+        if staff_id:
+            out["id"] = staff_id
+        if tg_id:
+            out["telegram_user_id"] = tg_id
+            out["chat_id"] = tg_id
+        if uname:
+            out["telegram_username"] = uname
+        return out if staff_id or tg_id else None
+    except Exception as e:
+        logger.debug("getChat(%s) failed: %s", ref, e)
+        return None
+
+
+def _fetch_telegram_profile_by_hint(hint: str) -> dict[str, str] | None:
+    """Bot API lookup by numeric user id or @username (user must have /start bot once)."""
+    raw = str(hint or "").strip()
+    if not raw:
+        return None
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    if not token:
+        return None
+    if _is_telegram_user_id_hint(raw):
+        return _fetch_bot_chat_profile(token, raw)
+    uname = raw.lstrip("@").strip()
+    if uname and " " not in uname and not uname.isdigit():
+        return _fetch_bot_chat_profile(token, f"@{uname}")
+    return None
+
+
+def _staff_id_from_hint(hint: str, tg_meta: dict[str, str] | None = None) -> tuple[str, str]:
+    """Return (staff_id, label) for a new allowlist row."""
+    if tg_meta and tg_meta.get("id"):
+        new_id = str(tg_meta["id"]).strip().lower()
+        new_label = str(tg_meta.get("label") or new_id).strip()
+        return new_id, new_label
+    raw = str(hint or "").strip()
+    if _is_telegram_user_id_hint(raw):
+        return f"user_{raw}", f"User {raw}"
+    new_id = raw.lstrip("@").lower()
+    new_label = raw.lstrip("@")
+    if new_label.islower() or new_label.isupper():
+        new_label = new_label.title()
+    return new_id, new_label
+
+
+def _apply_staff_row_from_tg_meta(
+    row: dict[str, Any],
+    user_id: str,
+    meta: dict[str, str] | None = None,
+) -> None:
+    """Pre-fill JSON from Telegram user id (+ optional Bot API profile)."""
+    uid = str(user_id or "").strip()
+    if not uid:
+        return
+    row["telegram_user_id"] = uid
+    row["chat_id"] = uid
+    if not meta:
+        meta = _fetch_bot_user_profile(uid)
+    if not meta:
+        return
+    if meta.get("telegram_username"):
+        row["telegram_username"] = meta["telegram_username"]
+    if meta.get("label") and not str(row.get("label") or "").strip():
+        row["label"] = meta["label"]
+    cur_id = str(row.get("id") or "").strip().lower()
+    if meta.get("id") and (not cur_id or cur_id.startswith("user_") or cur_id.isdigit()):
+        row["id"] = meta["id"]
+
+
+def _parse_shooter_add_args(arg1: str, arg2: str) -> tuple[str, str]:
+    """Return (owner, staff_hint). Supports owner-first or user-id-first."""
+    a1, a2 = str(arg1 or "").strip(), str(arg2 or "").strip()
+    if _is_telegram_user_id_hint(a1) and not _is_telegram_user_id_hint(a2):
+        return a2, a1
+    return a1, a2
+
+
+def _shooter_owner_is_known(owner: str) -> bool:
+    key = _normalize_shooter_owner_key(owner)
+    if not key:
+        return False
+    if key in get_configured_shooter_owners():
+        return True
+    for row in load_json(accounts_json_path()).get("accounts") or []:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("shooter_owner") or "").strip().upper() == key:
+            return True
+    return False
+
+
+def assign_staff_shooter_owner(owner: str, hint: str) -> tuple[bool, str]:
+    """Set shooter_owner on staff slot — create allowlist row if missing (unclaimed until /start)."""
+    owner_key = _normalize_shooter_owner_key(owner)
+    if not owner_key:
+        return False, (
+            accounts_header_html("⚠️ <b>Invalid Owner</b>")
+            + "\n\nShooter owner name is required (e.g. <code>VENNUS</code>, <code>KAREN</code>)."
+        )
+    staff_hint = str(hint or "").strip()
+    if not staff_hint:
+        return False, (
+            accounts_header_html("⚠️ <b>Missing Staff</b>")
+            + "\n\nSpecify staff id, @username, or Telegram user ID."
+        )
+
+    tg_meta: dict[str, str] | None = None
+    if _is_telegram_user_id_hint(staff_hint):
+        tg_meta = _fetch_bot_user_profile(staff_hint)
+
+    row = _find_staff_row_by_admin_hint(staff_hint)
+    if row:
+        target_id = str(row.get("id", "")).strip().lower()
+        if target_id == creator_account_id():
+            return False, (
+                accounts_header_html("⛔ <b>Blocked</b>")
+                + "\n\nBot owner account does not use shooter_owner."
+            )
+        result_id = target_id
+        result_label = str(row.get("label") or target_id)
+        result_username = str(row.get("telegram_username") or "")
+        old_owner = str(row.get("shooter_owner") or "").strip().upper()
+
+        def writer(data: dict[str, Any]) -> None:
+            nonlocal result_id, result_label, result_username
+            rows = data.get("accounts")
+            if not isinstance(rows, list):
+                return
+            for matched in rows:
+                if not isinstance(matched, dict):
+                    continue
+                if str(matched.get("id", "")).strip().lower() != target_id:
+                    continue
+                matched["shooter_owner"] = owner_key
+                if _is_telegram_user_id_hint(staff_hint):
+                    _apply_staff_row_from_tg_meta(matched, staff_hint, tg_meta)
+                result_id = str(matched.get("id") or result_id).strip()
+                result_label = str(matched.get("label") or result_label).strip()
+                result_username = str(matched.get("telegram_username") or result_username).strip()
+                return
+
+        if not _mutate_json_file(accounts_json_path(), writer):
+            return False, accounts_header_html("⚠️ <b>Error</b>") + "\n\nCould not update staff record."
+
+        lines = [
+            accounts_header_html("✅ <b>Shooter Owner Set</b>"),
+            "",
+            f"<b>id</b>     ·  <code>{html.escape(result_id)}</code>",
+            f"<b>label</b>  ·  <b>{html.escape(result_label)}</b>",
+            f"<b>shooter</b> ·  <code>{html.escape(owner_key)}</code>",
+        ]
+        if result_username:
+            lines.append(f"<b>telegram</b> ·  @{html.escape(result_username)}")
+        if _is_telegram_user_id_hint(staff_hint):
+            lines.append(f"<b>user_id</b> ·  <code>{html.escape(staff_hint)}</code>")
+        if old_owner and old_owner != owner_key:
+            lines.append(f"<i>was:</i> <code>{html.escape(old_owner)}</code>")
+        lines.append("")
+        if _is_telegram_user_id_hint(staff_hint):
+            lines.append("<i>Telegram user ID saved — staff can DM</i> <code>/start</code> <i>to confirm.</i>")
+        else:
+            lines.append(
+                "<i>Staff can link Telegram via</i> <code>/start</code> <i>or</i> "
+                f"<code>/start {html.escape(owner_key.title())}</code>."
+            )
+        if not tg_meta and _is_telegram_user_id_hint(staff_hint):
+            lines.append(
+                "\nℹ️ <i>Bot API could not fetch @username yet — user must /start bot first, then fields auto-fill.</i>"
+            )
+        if not _shooter_owner_is_known(owner_key):
+            lines.append(
+                "\n⚠️ <i>Owner not in shooter_users yet — add to shooteraccounts.json if needed for /other list.</i>"
+            )
+        return True, "\n".join(lines)
+
+    # New allowlist slot
+    if _is_telegram_user_id_hint(staff_hint):
+        new_id = (tg_meta or {}).get("id") or f"user_{staff_hint}"
+        new_label = (tg_meta or {}).get("label") or f"User {staff_hint}"
+    else:
+        new_id = staff_hint.lstrip("@").lower()
+        new_label = staff_hint.lstrip("@")
+        if new_label.islower() or new_label.isupper():
+            new_label = new_label.title()
+
+    if not new_id or new_id == creator_account_id():
+        return False, (
+            accounts_header_html("⚠️ <b>Invalid Staff Id</b>")
+            + "\n\nUse staff id, @username, or Telegram user ID (e.g. <code>7443459642</code>)."
+        )
+
+    result_username = str((tg_meta or {}).get("telegram_username") or "")
+
+    def writer_new(data: dict[str, Any]) -> None:
+        nonlocal new_id, new_label, result_username
+        rows = data.get("accounts")
+        if not isinstance(rows, list):
+            rows = []
+            data["accounts"] = rows
+        if _is_telegram_user_id_hint(staff_hint):
+            for existing in rows:
+                if not isinstance(existing, dict):
+                    continue
+                if str(existing.get("telegram_user_id") or "").strip() == staff_hint:
+                    existing["shooter_owner"] = owner_key
+                    _apply_staff_row_from_tg_meta(existing, staff_hint, tg_meta)
+                    new_id = str(existing.get("id") or new_id).strip()
+                    new_label = str(existing.get("label") or new_label).strip()
+                    result_username = str(existing.get("telegram_username") or result_username).strip()
+                    return
+        for existing in rows:
+            if not isinstance(existing, dict):
+                continue
+            if str(existing.get("id", "")).strip().lower() == new_id.lower():
+                existing["shooter_owner"] = owner_key
+                if _is_telegram_user_id_hint(staff_hint):
+                    _apply_staff_row_from_tg_meta(existing, staff_hint, tg_meta)
+                if not str(existing.get("label") or "").strip():
+                    existing["label"] = new_label
+                new_id = str(existing.get("id") or new_id).strip()
+                new_label = str(existing.get("label") or new_label).strip()
+                result_username = str(existing.get("telegram_username") or result_username).strip()
+                return
+        entry: dict[str, Any] = {
+            "id": new_id,
+            "label": new_label,
+            "shooter_owner": owner_key,
+        }
+        if _is_telegram_user_id_hint(staff_hint):
+            _apply_staff_row_from_tg_meta(entry, staff_hint, tg_meta)
+        rows.append(entry)
+        new_id = str(entry.get("id") or new_id).strip()
+        new_label = str(entry.get("label") or new_label).strip()
+        result_username = str(entry.get("telegram_username") or result_username).strip()
+
+    if not _mutate_json_file(accounts_json_path(), writer_new):
+        return False, accounts_header_html("⚠️ <b>Error</b>") + "\n\nCould not add staff slot."
+
+    lines = [
+        accounts_header_html("✅ <b>Staff Slot Added</b>"),
+        "",
+        f"<b>id</b>     ·  <code>{html.escape(new_id)}</code>",
+        f"<b>label</b>  ·  <b>{html.escape(new_label)}</b>",
+        f"<b>shooter</b> ·  <code>{html.escape(owner_key)}</code>",
+    ]
+    if result_username:
+        lines.append(f"<b>telegram</b> ·  @{html.escape(result_username)}")
+    if _is_telegram_user_id_hint(staff_hint):
+        lines.append(f"<b>user_id</b> ·  <code>{html.escape(staff_hint)}</code>")
+    lines.append("")
+    if _is_telegram_user_id_hint(staff_hint):
+        lines.append("<i>User ID saved in JSON — staff DM</i> <code>/start</code> <i>to link (auto-match).</i>")
+        if not tg_meta:
+            lines.append(
+                "<i>Tip: staff must open bot once first so @username can be auto-detected.</i>"
+            )
+    else:
+        lines.append(f"<i>Ask staff to DM bot:</i> <code>/start {html.escape(owner_key.title())}</code>")
+        lines.append("<i>or</i> <code>/start</code> <i>after linking username in staff list.</i>")
+    if not _shooter_owner_is_known(owner_key):
+        lines.append(
+            "\n⚠️ <i>Owner not in shooter_users yet — add to shooteraccounts.json if needed for /other list.</i>"
+        )
+    return True, "\n".join(lines)
+
+
+def remove_staff_shooter_owner(hint: str) -> tuple[bool, str]:
+    """Clear shooter_owner — staff slot + admin role tetap."""
+    row = _find_staff_row_by_admin_hint(hint)
+    if not row:
+        return False, (
+            accounts_header_html("⚠️ <b>Not Found</b>")
+            + "\n\nStaff not found. Try staff id, @username, or shooter owner name."
+        )
+    target_id = str(row.get("id", "")).strip().lower()
+    if target_id == creator_account_id():
+        return False, (
+            accounts_header_html("⛔ <b>Blocked</b>")
+            + "\n\nThe bot owner account cannot be modified."
+        )
+    old_owner = str(row.get("shooter_owner") or "").strip().upper()
+    if not old_owner:
+        label = str(row.get("label") or target_id)
+        return True, (
+            accounts_header_html("ℹ️ <b>No Shooter Owner</b>")
+            + f"\n\n<code>{html.escape(target_id)}</code> ({html.escape(label)}) has no shooter_owner."
+        )
+
+    result_id = target_id
+    result_label = str(row.get("label") or target_id)
+
+    def writer(data: dict[str, Any]) -> None:
+        nonlocal result_id, result_label
+        rows = data.get("accounts")
+        if not isinstance(rows, list):
+            return
+        for matched in rows:
+            if not isinstance(matched, dict):
+                continue
+            if str(matched.get("id", "")).strip().lower() != target_id:
+                continue
+            matched.pop("shooter_owner", None)
+            result_id = str(matched.get("id") or result_id).strip()
+            result_label = str(matched.get("label") or result_label).strip()
+            return
+
+    if not _mutate_json_file(accounts_json_path(), writer):
+        return False, accounts_header_html("⚠️ <b>Error</b>") + "\n\nCould not update staff record."
+
+    lines = [
+        accounts_header_html("✅ <b>Shooter Owner Removed</b>"),
+        "",
+        f"<b>id</b>     ·  <code>{html.escape(result_id)}</code>",
+        f"<b>label</b>  ·  <b>{html.escape(result_label)}</b>",
+        f"<i>was shooter:</i> <code>{html.escape(old_owner)}</code>",
+        "",
+        "<i>Staff slot &amp; admin role unchanged — assign again with</i> "
+        f"<code>/add shooter OWNER {html.escape(result_id)}</code>.",
+    ]
     return True, "\n".join(lines)
 
 
@@ -3905,16 +4405,26 @@ def remove_staff_admin(hint: str) -> tuple[bool, str]:
 
 
 def build_staff_admin_usage_html() -> str:
+    owners = sorted(get_configured_shooter_owners())
+    owner_sample = ", ".join(html.escape(o) for o in owners[:8])
+    if len(owners) > 8:
+        owner_sample += ", …"
     return (
-        accounts_header_html("ℹ️ <b>Staff Admin</b>")
+        accounts_header_html("ℹ️ <b>Staff Management</b>")
         + "\n\n"
-        + "<b>Usage (bot owner only):</b>\n"
+        + "<b>Admin (bot owner only):</b>\n"
         + "◦ <code>/add admin jun</code>\n"
         + "◦ <code>/add admin @JunWork16</code>\n"
         + "◦ <code>/remove jun</code>\n"
         + "◦ <code>/remove @JunWork16</code>\n\n"
-        + "<i>Staff must already be on the staff list (registered via <code>/start</code>). "
-        + "This command only grants or removes admin role.</i>"
+        + "<b>Shooter owner (bot owner only):</b>\n"
+        + "◦ <code>/add shooter VENNUS zoey</code>\n"
+        + "◦ <code>/add shooter VENNUS 7443459642</code>\n"
+        + "◦ <code>/add shooter 7443459642 VENNUS</code>\n"
+        + "◦ <code>/remove shooter zoey</code>\n\n"
+        + "<i>User ID / @username: auto-fills JSON if staff already opened bot.</i>\n"
+        + "<i>New @username: slot + admin created instantly — staff DM</i> <code>/start</code> <i>to link.</i>"
+        + (f"\n\n<i>Known owners:</i> {owner_sample}" if owner_sample else "")
     )
 
 
@@ -3939,11 +4449,16 @@ async def cmd_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await _reply_creator_only(em)
         return
     args = [str(a).strip() for a in (context.args or []) if str(a).strip()]
-    if len(args) != 2 or args[0].lower() != "admin" or not args[1]:
-        await em.reply_text(build_staff_admin_usage_html(), parse_mode="HTML")
+    if len(args) == 2 and args[0].lower() == "admin" and args[1]:
+        _, msg = promote_staff_to_admin(args[1])
+        await em.reply_text(msg, parse_mode="HTML")
         return
-    _, msg = promote_staff_to_admin(args[1])
-    await em.reply_text(msg, parse_mode="HTML")
+    if len(args) >= 3 and args[0].lower() == "shooter" and args[1] and args[2]:
+        owner, hint = _parse_shooter_add_args(args[1], args[2])
+        _, msg = assign_staff_shooter_owner(owner, hint)
+        await em.reply_text(msg, parse_mode="HTML")
+        return
+    await em.reply_text(build_staff_admin_usage_html(), parse_mode="HTML")
 
 
 async def cmd_remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -3953,11 +4468,15 @@ async def cmd_remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     if not _require_primary_creator(update):
         await _reply_creator_only(em)
         return
-    hint = " ".join(context.args or []).strip()
-    if not hint:
+    args = [str(a).strip() for a in (context.args or []) if str(a).strip()]
+    if not args:
         await em.reply_text(build_staff_admin_usage_html(), parse_mode="HTML")
         return
-    _, msg = remove_staff_admin(hint)
+    if len(args) >= 2 and args[0].lower() == "shooter":
+        _, msg = remove_staff_shooter_owner(args[1])
+    else:
+        hint = " ".join(args).strip()
+        _, msg = remove_staff_admin(hint)
     await em.reply_text(msg, parse_mode="HTML")
 
 
@@ -4105,7 +4624,8 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     thread_id = getattr(em, "message_thread_id", None)
     is_forum = getattr(update.effective_chat, "is_forum", False)
     creator = is_creator_user(update.effective_user)
-    # Grup/topic: hanya owner yang dapat balasan; staff/orang lain → diam (no reply).
+    primary_owner = is_primary_creator_user(update.effective_user)
+    # Grup/topic: hanya owner/admin yang dapat balasan; staff/orang lain → diam (no reply).
     if update.effective_chat.type != ChatType.PRIVATE and not creator:
         return
     name_hint = " ".join(context.args).strip() if context.args else ""
@@ -4123,7 +4643,10 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if creator:
         welcome = build_bot_welcome_html(cid, uid, thread_id, bool(is_forum and thread_id))
         if registered:
-            welcome += "\n\n✅ <b>Owner registered</b> for this chat."
+            if primary_owner:
+                welcome += "\n\n✅ <b>Owner registered</b> for this chat."
+            else:
+                welcome += "\n\n✅ <b>Admin registered</b> for this chat."
     elif registered and update.effective_chat.type == ChatType.PRIVATE:
         staff_row = find_staff_row_for_user(update.effective_user)
         shooter_key = resolve_shooter_owner_for_staff(
@@ -4247,7 +4770,10 @@ async def cmd_accounts(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             return
 
     if brand_filter:
-        items = [(b, rs) for b, rs in grouped.items() if b.upper() == brand_filter]
+        import sheets_sync as _ss
+
+        canon_filter = _ss.canonical_brand(brand_filter)
+        items = [(b, rs) for b, rs in grouped.items() if b.upper() == canon_filter]
         if not items:
             await em.reply_text(
                 build_accounts_brand_not_found_html(brand_filter, list(grouped.keys())),
@@ -4374,6 +4900,11 @@ async def cmd_shooter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             user=user,
             topic_currency=topic_currency,
         )
+        if _shooter_owner_access_required(topic_currency) and staff != "__creator__":
+            denied = validate_shooter_owner_access(update, owner_filter)
+            if denied:
+                await em.reply_text(denied, parse_mode="HTML")
+                return
 
     if not owner_filter:
         if staff == "__creator__":
@@ -4546,10 +5077,7 @@ async def cmd_login(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                     "use the account id (<code>SH_KAREN_05</code>) or phone number, not just the owner name."
                 )
         await em.reply_text(
-            accounts_header_html("⚠️ <b>Not Found</b>")
-            + f"\n\n<code>{html.escape(raw_key)}</code> not found in GCS or Shooter."
-            + owner_hint
-            + "\n\nGCS: <code>/login STMY_CS01</code> · Shooter: <code>/login SH_KAREN_05</code> or <code>/login +60...</code>",
+            build_login_not_found_html(raw_key) + owner_hint,
             parse_mode="HTML",
         )
         return
@@ -4646,11 +5174,7 @@ async def on_text_template(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     aid = m.group(1).strip()
     row = resolve_listen_account(aid)
     if not row:
-        await msg.reply_text(
-            accounts_header_html("⚠️ <b>Not Found</b>")
-            + f"\n\nAccount <code>{html.escape(aid)}</code> not found (GCS / Shooter).",
-            parse_mode="HTML",
-        )
+        await msg.reply_text(build_login_not_found_html(aid), parse_mode="HTML")
         return
     currency = account_currency_for_request(row, bcfg)
     topic_err = validate_forum_topic(update.effective_chat.id, thread_id, currency, raw_doc)
@@ -4864,6 +5388,42 @@ def _session_file_path(acc: dict[str, Any]) -> Path:
 def _session_file_ready(acc: dict[str, Any]) -> bool:
     sf = _session_file_path(acc)
     return sf.is_file() and sf.stat().st_size >= 1024
+
+
+def _login_use_temp_session() -> bool:
+    """Login via /tmp first — avoids SQLite disk I/O storms while LISTEN holds ~170 sessions."""
+    return os.environ.get("TELEGRAM_LOGIN_USE_TEMP_SESSION", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def _sqlite_error_retryable(exc: BaseException) -> bool:
+    msg = str(exc).lower()
+    return "locked" in msg or "disk i/o" in msg or "i/o error" in msg
+
+
+def _promote_login_session(tmp_base: Path, final_file: Path) -> bool:
+    """Move completed temp Telethon session into telegram_session/."""
+    import shutil
+
+    src = Path(str(tmp_base) + ".session")
+    if not src.is_file() or src.stat().st_size < 512:
+        return False
+    final_file.parent.mkdir(parents=True, exist_ok=True)
+    if final_file.is_file():
+        _safe_unlink_session_file(final_file)
+    shutil.move(str(src), str(final_file))
+    for suffix in ("-wal", "-shm", "-journal"):
+        side = Path(str(src) + suffix)
+        if side.is_file():
+            try:
+                shutil.move(str(side), str(final_file) + suffix)
+            except OSError:
+                pass
+    return True
 
 
 def _wait_session_file_ready(
@@ -5303,6 +5863,7 @@ def _make_login_code_callback(
                     flush=True,
                 )
             deadline = time.time() + wait_sec
+            poll_n = 0
             while time.time() < deadline:
                 codes = sheets_sync.fetch_login_codes_by_phone(root, force=True)
                 code = codes.get(np, "") if np else ""
@@ -5312,6 +5873,13 @@ def _make_login_code_callback(
                     if _sheet_clear_code_after_login() and np:
                         sheets_sync.clear_login_code_in_sheet(root, np)
                     return code
+                poll_n += 1
+                if quiet and poll_n % 15 == 0:
+                    left = max(0, int(deadline - time.time()))
+                    print(
+                        f"  · waiting OTP in Sheet for {account_id} ({left}s left) …",
+                        flush=True,
+                    )
                 time.sleep(poll_sec)
             if fallback_tty:
                 return input(f"[OTP {account_id} | {phone}] Enter code: ")
@@ -5466,6 +6034,16 @@ def _login_single_account(
     conn_retries = _env_int("TELETHON_CONNECTION_RETRIES", 5, minimum=1)
     req_retries = _env_int("TELETHON_REQUEST_RETRIES", 5, minimum=1)
     sqlite_retries = _env_int("TELEGRAM_LOGIN_SQLITE_RETRIES", 12, minimum=1)
+    _listen_mark_login_wait(acc_id)
+
+    import shutil
+    import tempfile
+
+    login_tmp_dir: Path | None = None
+    telethon_session_base = str(session_path)
+    if _login_use_temp_session():
+        login_tmp_dir = Path(tempfile.mkdtemp(prefix=f"otp_login_{acc_id}_"))
+        telethon_session_base = str(login_tmp_dir / "session")
 
     client: TelegramClient | None = None
     login_ok = False
@@ -5477,21 +6055,23 @@ def _login_single_account(
                 pass
             time.sleep(0.4 * (attempt + 1))
         if not quiet:
-            print("  Connecting to Telegram (SMS may be sent)...", flush=True)
+            hint = " (temp session)" if login_tmp_dir else ""
+            print(f"  Connecting to Telegram (SMS may be sent){hint}...", flush=True)
         client = TelegramClient(
-            str(session_path),
+            telethon_session_base,
             acc["api_id"],
             acc["api_hash"],
             device_model="FRIDAY_BO",
             connection_retries=conn_retries,
             request_retries=req_retries,
         )
+        _apply_telethon_session_tuning(client, save_entities=False)
         try:
             client.start(**kw) if kw else client.start()
             login_ok = True
             break
         except sqlite3.OperationalError as e:
-            if "locked" not in str(e).lower():
+            if not _sqlite_error_retryable(e):
                 try:
                     client.disconnect()
                 except Exception:
@@ -5503,11 +6083,14 @@ def _login_single_account(
                 pass
             client = None
             if attempt + 1 >= sqlite_retries:
+                err = "SQLite disk I/O error" if "i/o" in str(e).lower() else "SQLite session locked"
                 print(
-                    f"ERROR: SQLite session locked for {acc_id} — stop LISTEN for this account.",
+                    f"ERROR: {err} for {acc_id} — retry later or pause LISTEN briefly.",
                     file=sys.stderr,
                 )
-                return False, "SQLite session locked"
+                if login_tmp_dir is not None:
+                    shutil.rmtree(login_tmp_dir, ignore_errors=True)
+                return False, err
             time.sleep(min(3.0, 0.6 * (attempt + 1)))
         except RuntimeError as e:
             if not quiet:
@@ -5517,7 +6100,7 @@ def _login_single_account(
                     client.disconnect()
             except Exception:
                 pass
-            if session_file.is_file():
+            if login_tmp_dir is None and session_file.is_file():
                 session_file.unlink(missing_ok=True)
             break
         except Exception as e:
@@ -5528,9 +6111,12 @@ def _login_single_account(
                     client.disconnect()
             except Exception:
                 pass
-            if session_file.is_file():
+            if login_tmp_dir is None and session_file.is_file():
                 session_file.unlink(missing_ok=True)
             break
+
+    if login_tmp_dir is not None and not login_ok:
+        shutil.rmtree(login_tmp_dir, ignore_errors=True)
 
     ok = False
     fail_reason = ""
@@ -5553,6 +6139,14 @@ def _login_single_account(
         except Exception:
             pass
         time.sleep(0.4)
+        if login_tmp_dir is not None:
+            promoted = _promote_login_session(Path(telethon_session_base), session_file)
+            if promoted and not quiet:
+                print(f"  ✓ Session promoted to {session_file.name}", flush=True)
+            elif not promoted:
+                fail_reason = fail_reason or "temp session promote failed"
+            shutil.rmtree(login_tmp_dir, ignore_errors=True)
+            login_tmp_dir = None
         if me:
             profile_name = profile_name_from_me(me, acc_id)
             if not quiet:
@@ -5610,7 +6204,7 @@ def _pending_trigger_phones_from_sheet(root: Path) -> set[str]:
     """Phone numbers with column I (Status) = login trigger (default Pending)."""
     import sheets_sync
 
-    return sheets_sync.fetch_phones_by_sheet_status(root)
+    return sheets_sync.fetch_phones_by_sheet_status(root, force=True)
 
 
 def _phones_registered_in_json(root: Path, phones: set[str]) -> set[str]:
@@ -5657,7 +6251,7 @@ def _collect_accounts_pending_login(root: Path) -> list[tuple[str, dict[str, Any
     """
     import sheets_sync
 
-    trigger_phones = sheets_sync.fetch_phones_by_sheet_status(root)
+    trigger_phones = sheets_sync.fetch_phones_by_sheet_status(root, force=True)
     if not trigger_phones:
         return []
 
@@ -5825,7 +6419,9 @@ async def _listen_start_account(
         device_model="FRIDAY_BO",
         connection_retries=conn_retries,
         request_retries=req_retries,
+        entity_cache_limit=_listen_entity_cache_limit(),
     )
+    _apply_listen_session_tuning(client)
 
     @client.on(events.NewMessage(incoming=True, from_users=acc["peer_ids"]))
     async def handler(event, _acc=acc, _tag=tag) -> None:
@@ -6132,6 +6728,79 @@ def _listen_hot_reload_enabled() -> bool:
     )
 
 
+def _listen_save_entities_enabled() -> bool:
+    """Off by default — ~170 SQLite sessions + entity cache = disk I/O spikes on Mac."""
+    return os.environ.get("TELEGRAM_LISTEN_SAVE_ENTITIES", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
+def _listen_profile_sync_on_listen() -> bool:
+    return os.environ.get("TELEGRAM_SYNC_PROFILE_ON_LISTEN", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def _listen_entity_cache_limit() -> int:
+    """Profile sync ON needs a higher cap — low limit triggers SQLite flush storms."""
+    if os.environ.get("TELEGRAM_LISTEN_ENTITY_CACHE_LIMIT", "").strip():
+        return _env_int("TELEGRAM_LISTEN_ENTITY_CACHE_LIMIT", 1000, minimum=100)
+    return 1000 if _listen_profile_sync_on_listen() else 300
+
+
+def _patch_listen_sqlite_session(session: Any) -> None:
+    """WAL + busy_timeout on session DB — reduces disk I/O errors with ~170 clients."""
+    if getattr(session, "_listen_sqlite_patched", False):
+        return
+    if session.__class__.__name__ != "SQLiteSession":
+        return
+    filename = getattr(session, "filename", None)
+    if not filename or filename == ":memory:":
+        return
+    timeout = _env_int("TELEGRAM_LISTEN_SQLITE_TIMEOUT_SEC", 30, minimum=5)
+
+    def _cursor() -> Any:
+        if session._conn is None:
+            session._conn = sqlite3.connect(
+                session.filename,
+                check_same_thread=False,
+                timeout=timeout,
+            )
+            try:
+                session._conn.execute("PRAGMA journal_mode=WAL")
+                session._conn.execute("PRAGMA synchronous=NORMAL")
+                session._conn.execute("PRAGMA temp_store=MEMORY")
+                session._conn.execute(f"PRAGMA busy_timeout={int(timeout * 1000)}")
+            except sqlite3.Error:
+                pass
+        return session._conn.cursor()
+
+    session._cursor = _cursor  # type: ignore[method-assign]
+    session._listen_sqlite_patched = True
+
+
+def _apply_telethon_session_tuning(
+    client: TelegramClient,
+    *,
+    save_entities: bool | None = None,
+) -> None:
+    if save_entities is None:
+        save_entities = _listen_save_entities_enabled()
+    if not save_entities:
+        client.session.save_entities = False
+    _patch_listen_sqlite_session(client.session)
+
+
+def _apply_listen_session_tuning(client: TelegramClient) -> None:
+    _apply_telethon_session_tuning(client)
+
+
 def _listen_failed_retry_sec() -> int:
     return _env_int("TELEGRAM_LISTEN_FAILED_RETRY_SEC", 300, minimum=60)
 
@@ -6401,6 +7070,20 @@ async def run_listener_async() -> int:
     if not gcs_accounts and not shooter_accounts:
         print("No valid GCS / Shooter accounts found for listen.", file=sys.stderr)
         return 2
+
+    listen_total = len(gcs_accounts) + len(shooter_accounts)
+    fd_soft = _raise_process_fd_limit()
+    if fd_soft > 0:
+        print(f"  Open files limit (soft): {fd_soft}", flush=True)
+        fd_need = listen_total * 3 + 64
+        if fd_soft < fd_need:
+            print(
+                f"  WARNING: {listen_total} account(s) may need ~{fd_need} fds — "
+                f"run `ulimit -n 10240` before listen (Mac: start_production_mac.sh)",
+                file=sys.stderr,
+                flush=True,
+            )
+
     loose = os.environ.get("TELEGRAM_OTP_LOOSE", "0").strip().lower() in ("1", "true", "yes", "on")
     template = (os.environ.get("TELEGRAM_OTP_MESSAGE_TEMPLATE") or "").strip()
     require_req = os.environ.get("TELEGRAM_REQUIRE_LOGIN_REQUEST", "1").strip().lower() not in (
@@ -6420,6 +7103,13 @@ async def run_listener_async() -> int:
     clients: list[tuple[TelegramClient, dict[str, Any]]] = []
 
     logging.getLogger("telethon").setLevel(logging.ERROR)
+    import warnings
+
+    warnings.filterwarnings(
+        "ignore",
+        message=r"in-memory entities exceed entity_cache_limit after flushing.*",
+        category=UserWarning,
+    )
 
     conn_retries = _env_int("TELETHON_CONNECTION_RETRIES", 5, minimum=1)
     req_retries = _env_int("TELETHON_REQUEST_RETRIES", 5, minimum=1)
@@ -6541,6 +7231,18 @@ async def run_listener_async() -> int:
     print(
         f"  Disconnect policy: grace {grace}s · reconnect {reconnect_attempts}x/"
         f"{reconnect_delay}s · alert cooldown {alert_cooldown}s · batch ≥{batch_min}",
+        flush=True,
+    )
+    if _listen_save_entities_enabled():
+        print("  Session SQLite: entity cache ON (TELEGRAM_LISTEN_SAVE_ENTITIES=1)", flush=True)
+    else:
+        print(
+            "  Session SQLite: entity cache OFF (reduces disk I/O with many sessions)",
+            flush=True,
+        )
+    print(
+        f"  In-memory entity limit: {_listen_entity_cache_limit()} per account "
+        f"(TELEGRAM_LISTEN_ENTITY_CACHE_LIMIT)",
         flush=True,
     )
 
@@ -7138,9 +7840,33 @@ def _health_check_next_due_ts() -> float | None:
     return last + interval
 
 
+def _log_timezone():
+    """Timezone for terminal logs (default Asia/Jakarta / WIB)."""
+    name = os.environ.get("TELEGRAM_LOG_TIMEZONE", "Asia/Jakarta").strip()
+    if name.lower() in ("", "local", "system"):
+        return datetime.now().astimezone().tzinfo
+    try:
+        from zoneinfo import ZoneInfo
+
+        return ZoneInfo(name)
+    except Exception:
+        return datetime.now().astimezone().tzinfo
+
+
+def _log_ts_now() -> str:
+    """Current time for terminal logs (WIB by default)."""
+    tz = _log_timezone()
+    now = datetime.now(tz)
+    label = now.strftime("%Z") or "local"
+    return now.strftime(f"%Y-%m-%d %H:%M:%S {label}")
+
+
 def _format_local_ts(ts: float) -> str:
-    """Human-readable local time for ops banners (uses server timezone)."""
-    return datetime.fromtimestamp(ts, tz=timezone.utc).astimezone().strftime("%d/%m/%Y %H:%M")
+    """Human-readable local time for ops banners."""
+    tz = _log_timezone()
+    dt = datetime.fromtimestamp(ts, tz=timezone.utc).astimezone(tz)
+    label = dt.strftime("%Z") or "local"
+    return dt.strftime(f"%d/%m/%Y %H:%M {label}")
 
 
 def _health_check_schedule_banner_lines() -> list[str]:
@@ -7236,6 +7962,15 @@ def _run_sync_pull(
             pr_sh = stats.get("shooter_pruned_main_pool", 0)
             if pr_sh:
                 print(f"          {pr_sh} moved off Shooter (Sheet Group=Main only)")
+            rep = stats.get("repair_shooter_from_gcs", 0)
+            if rep:
+                print(f"          {rep} shooter session(s) copied from GCS path")
+            miss = stats.get("repair_still_missing", 0)
+            if miss:
+                print(
+                    f"          {miss} account(s) still missing session"
+                    f" — run: sync repair-sessions",
+                )
         elif stats.get("gcs_added") or stats.get("shooter_added"):
             print(
                 f"  ✓ registered: GCS +{stats['gcs_added']} · Shooter +{stats['shooter_added']}",
@@ -7323,6 +8058,9 @@ def run_sync_once(
 
     if step == "reconcile":
         return run_sync_reconcile()
+
+    if step == "repair-sessions":
+        return run_sync_repair_sessions(telethon_scan=True)
 
     if step == "sessions" or session_kill:
         if session_kill:
@@ -7441,7 +8179,7 @@ def run_sync_daemon(
     try:
         while True:
             cycle += 1
-            ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+            ts = _log_ts_now()
             print(f"\n{'#' * 50}")
             print(f"  SYNC CYCLE #{cycle}  ·  {ts}")
             print(f"{'#' * 50}")
@@ -7485,7 +8223,7 @@ def run_sync_live_login() -> int:
     print("  LIVE LOGIN — Sheet-triggered (no terminal login-all)")
     print(f"  OTP poll: {otp_poll}s (5-digit in Sheet) | idle: {interval_idle}s")
     print(f"  Trigger: Status = {trigger!r}")
-    print("  Flow: Pending -> SMS once -> fill OTP -> Ready / Active (quiet while waiting)")
+    print("  Flow: one row at a time — Pending -> SMS -> OTP -> success/fail -> next")
     print("=" * 56)
 
     cycle = 0
@@ -7499,7 +8237,7 @@ def run_sync_live_login() -> int:
             pending_phones = _pending_trigger_phones_from_sheet(root)
             if not pending_phones:
                 if now - last_idle_log >= _live_login_idle_log_interval_sec():
-                    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+                    ts = _log_ts_now()
                     print(f"\n[Live Login] {ts} — no Status={trigger!r}", flush=True)
                     last_idle_log = now
                 time.sleep(interval_idle)
@@ -7509,7 +8247,7 @@ def run_sync_live_login() -> int:
             missing_early = pending_phones - registered_early
 
             if missing_early:
-                ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+                ts = _log_ts_now()
                 print(f"\n[Live Login] {ts} — register {len(missing_early)} new Pending row(s)", flush=True)
                 if _run_sync_pull(
                     root,
@@ -7615,7 +8353,7 @@ def run_sync_live_login() -> int:
             acc_id = str(acc.get("id") or "?")
             label = "SHOOTER" if pool == "shooter" else "GCS"
             phone = str(acc.get("phone") or "")
-            ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+            ts = _log_ts_now()
 
             if action == "finalize":
                 print(f"\n[Live Login] {ts} -> finalize {acc_id} ({label})", flush=True)
@@ -7642,14 +8380,29 @@ def run_sync_live_login() -> int:
                 notify_live_login_event(acc, "sms", label=label)
 
             _apply_sheet_login_fields(acc, root)
-            ok, fail_reason = _login_single_account(
-                acc,
-                json_key,
-                label,
-                preset_code=preset,
-                quiet=(action == "sms"),
-                live_notify=True,
-            )
+            try:
+                ok, fail_reason = _login_single_account(
+                    acc,
+                    json_key,
+                    label,
+                    preset_code=preset,
+                    quiet=(action == "sms"),
+                    live_notify=True,
+                )
+            except Exception as e:
+                ok = False
+                fail_reason = f"{type(e).__name__}: {e}"
+                _login_fail_cooldown_until[acc_id] = now + fail_cooldown
+                _login_awaiting_otp.pop(acc_id, None)
+                print(f"  ✗ {acc_id} login error — {fail_reason}", file=sys.stderr, flush=True)
+                notify_live_login_event(
+                    acc,
+                    "failed",
+                    label=label,
+                    detail=f"{fail_reason} (cooldown {fail_cooldown}s)",
+                )
+                time.sleep(min(interval_busy, otp_poll))
+                continue
             if not ok and _session_working(acc):
                 ok = True
                 fail_reason = ""
@@ -7724,13 +8477,14 @@ def run_sync_live_pull() -> int:
     print(f"  Trigger: Status = {trigger!r} + phone not in JSON yet")
     print(f"  Interval: {interval}s (Ctrl+C to stop)")
     print("  Existing accounts are never modified by this service.")
+    print("  Session files are never renamed during Live Pull (LISTEN-safe).")
     print("=" * 52)
 
     cycle = 0
     try:
         while True:
             cycle += 1
-            ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+            ts = _log_ts_now()
             print(f"\n[Live Pull #{cycle}] {ts}")
             rc = _run_sync_pull(
                 root,
@@ -7781,7 +8535,7 @@ def run_sync_live_status(
             root = project_root()
 
             if hc_on and _health_check_due():
-                ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+                ts = _log_ts_now()
                 print(f"\n[Live Status] {ts} — scheduled health-check starting …", flush=True)
                 hc_rc = run_health_check(quiet=True)
                 if hc_rc == 0:
@@ -7799,7 +8553,7 @@ def run_sync_live_status(
             if rc_push != 0:
                 print(f"⚠ Push status failed (rc={rc_push}), retrying in {interval}s.", file=sys.stderr)
             elif queued > 0:
-                ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+                ts = _log_ts_now()
                 if updated_rows > 0:
                     print(f"[Live Status #{cycle}] {ts} -> {updated_rows}/{queued} row(s) updated")
                 else:
@@ -7810,6 +8564,63 @@ def run_sync_live_status(
     except KeyboardInterrupt:
         print(f"\n\n✓ Live status stopped after {cycle} cycle(s).")
         return 0
+
+
+def run_sync_repair_sessions(*, telethon_scan: bool = True) -> int:
+    """Copy orphaned GCS .session files to correct Main/Other JSON paths (by phone)."""
+    import sheets_sync
+
+    root = project_root()
+    default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
+    raw_gcs = load_json(accounts_json_path())
+    raw_sh = load_shooter_doc()
+    gcs = load_otp_accounts(raw_gcs, root, default_peers)
+    shooter = load_shooter_login_accounts(raw_sh, root, default_peers)
+
+    print("=" * 56)
+    print("  REPAIR SESSIONS — align .session with JSON paths")
+    print("  Main  → telegram_session/{id}.session")
+    print("  Other → telegram_session/shooter/{id}.session")
+    if telethon_scan:
+        print("  Mode: GCS copy + Telethon phone scan (may take 1–2 min)")
+    else:
+        print("  Mode: GCS copy only (fast)")
+    print("=" * 56)
+
+    stats = sheets_sync.repair_session_paths(
+        root,
+        gcs_accounts=gcs,
+        shooter_accounts=shooter,
+        telethon_scan=telethon_scan,
+    )
+    hr = _listen_hot_reload_interval_sec()
+    print(f"\n  Already OK       : {stats.get('already_ok', 0)}")
+    print(f"  Shooter ← GCS    : {stats.get('shooter_copied_from_gcs', 0)}")
+    print(f"  Shooter ← scan   : {stats.get('shooter_copied_from_scan', 0)}")
+    print(f"  GCS ← scan       : {stats.get('gcs_copied_from_scan', 0)}")
+    print(f"  Still missing    : {stats.get('still_missing', 0)}")
+    if telethon_scan:
+        print(f"  Files scanned    : {stats.get('scan_checked', 0)}")
+    copied = (
+        stats.get("shooter_copied_from_gcs", 0)
+        + stats.get("shooter_copied_from_scan", 0)
+        + stats.get("gcs_copied_from_scan", 0)
+    )
+    if copied:
+        print(
+            f"\n  ✓ {copied} session file(s) repaired."
+            f"\n  LISTEN hot-reload picks them up within ~{hr}s — no restart needed"
+            f" (TELEGRAM_LISTEN_HOT_RELOAD=1).",
+            flush=True,
+        )
+    elif stats.get("still_missing", 0):
+        print(
+            "\n  ⚠ Some accounts still need LIVE-LOGIN (no .session found on disk).",
+            file=sys.stderr,
+        )
+    else:
+        print("\n  ✓ All session paths already match JSON.", flush=True)
+    return 0
 
 
 def run_sync_reconcile() -> int:
@@ -7892,6 +8703,8 @@ def run_sync(
         return run_sync_live_status(pool=pool, account_id=account_id)
     if step == "reconcile":
         return run_sync_reconcile()
+    if step == "repair-sessions":
+        return run_sync_repair_sessions(telethon_scan=True)
     return run_sync_once(
         step,
         pool=pool,
@@ -7918,9 +8731,9 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         choices=[
             "once", "all", "loop", "live", "live-login", "live-status", "reconcile",
-            "pull", "login", "health", "push", "sessions", "init",
+            "repair-sessions", "pull", "login", "health", "push", "sessions", "init",
         ],
-        help="reconcile=JSON vs Sheet report. live=Sheet->JSON. live-status=delta push.",
+        help="repair-sessions=copy GCS sessions to shooter/Main paths. reconcile=JSON vs Sheet.",
     )
     p_sync.add_argument("--pool", choices=["gcs", "shooter", "all"], default="all")
     p_sync.add_argument("--id", dest="account_id", default="all", help="For sessions: id/brand partial.")

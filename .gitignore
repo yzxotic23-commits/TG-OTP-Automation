@@ -12,6 +12,9 @@ build/
 tg-otp-automation-*.json
 *credentials*.json
 
+# Telethon sessions (jangan commit)
+telegram_session/
+
 # Runtime / state (berubah saat bot jalan)
 state.json
 state.json.lock
@@ -25,6 +28,8 @@ sheet_status_queue.jsonl
 
 # OS / editor
 .DS_Store
+._*
+**/._*
 Thumbs.db
 desktop.ini
 .idea/
@@ -39,6 +44,7 @@ _scan_*.py
 _scan_*.txt
 
 # Local planning docs (not for repo)
+local/
 JIRA_TASKS_7_DAYS.txt
 WEEKLY_OPS_CHECKLIST.txt
 deliverables.txt

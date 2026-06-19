@@ -58,16 +58,6 @@
       "label": "KH888KH",
       "chat_group_id": ""
     },
-    "CAM78KH": {
-      "currency": "USC",
-      "label": "CAM78KH",
-      "chat_group_id": ""
-    },
-    "CAM68KH": {
-      "currency": "USC",
-      "label": "CAM68KH",
-      "chat_group_id": ""
-    },
     "OK188KH": {
       "currency": "USC",
       "label": "OK188KH",
@@ -83,29 +73,9 @@
       "label": "SBKH",
       "chat_group_id": ""
     },
-    "SB99KH": {
-      "currency": "USC",
-      "label": "SB99KH",
-      "chat_group_id": ""
-    },
     "17WINKH": {
       "currency": "USC",
       "label": "17WINKH",
-      "chat_group_id": ""
-    },
-    "17WIN168KH": {
-      "currency": "USC",
-      "label": "17WIN168KH",
-      "chat_group_id": ""
-    },
-    "UW29KH": {
-      "currency": "USC",
-      "label": "UW29KH",
-      "chat_group_id": ""
-    },
-    "UWON33": {
-      "currency": "USC",
-      "label": "UWON33",
       "chat_group_id": ""
     }
   },
@@ -125,7 +95,9 @@
       "enabled": true,
       "brand": "STMY",
       "user_name": "SNR",
-      "device_id": "MYR-ST-001"
+      "device_id": "MYR-ST-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "STMY_LINA",
@@ -142,7 +114,9 @@
       "enabled": true,
       "brand": "STMY",
       "user_name": "SNR",
-      "device_id": "MYR-ST-001"
+      "device_id": "MYR-ST-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "STMY_ALICIA",
@@ -159,7 +133,9 @@
       "enabled": true,
       "brand": "STMY",
       "user_name": "SNR",
-      "device_id": "MYR-ST-001"
+      "device_id": "MYR-ST-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "STMY_RAISA",
@@ -176,7 +152,9 @@
       "enabled": true,
       "brand": "STMY",
       "user_name": "SNR",
-      "device_id": "MYR-ST-001"
+      "device_id": "MYR-ST-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "STMY_OFFICIAL",
@@ -193,7 +171,9 @@
       "enabled": true,
       "brand": "STMY",
       "user_name": "SNR",
-      "device_id": "MYR-ST-001"
+      "device_id": "MYR-ST-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "STMY_RICO",
@@ -210,7 +190,9 @@
       "enabled": true,
       "brand": "STMY",
       "user_name": "SNR",
-      "device_id": "MYR-ST-001"
+      "device_id": "MYR-ST-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "STMY_MANAGER",
@@ -227,7 +209,9 @@
       "enabled": true,
       "brand": "STMY",
       "user_name": "SNR",
-      "device_id": "MYR-ST-001"
+      "device_id": "MYR-ST-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "JMMY_RICHARD",
@@ -243,7 +227,9 @@
       ],
       "enabled": true,
       "brand": "JMMY",
-      "device_id": "MYR-JM-001"
+      "device_id": "MYR-JM-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "JMMY_HARIS",
@@ -259,7 +245,9 @@
       ],
       "enabled": true,
       "brand": "JMMY",
-      "device_id": "MYR-JM-001"
+      "device_id": "MYR-JM-001",
+      "sheet_status": "Expired",
+      "session_friday": "Pending Login"
     },
     {
       "id": "JMMY_STEVEN",
@@ -275,7 +263,9 @@
       ],
       "enabled": true,
       "brand": "JMMY",
-      "device_id": "MYR-JM-001"
+      "device_id": "MYR-JM-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SBMY_JAYSON",
@@ -291,7 +281,9 @@
       ],
       "enabled": true,
       "brand": "SBMY",
-      "device_id": "MYR-SB-001"
+      "device_id": "MYR-SB-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SBMY_BEN",
@@ -307,7 +299,9 @@
       ],
       "enabled": true,
       "brand": "SBMY",
-      "device_id": "MYR-SB-001"
+      "device_id": "MYR-SB-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SBMY_6",
@@ -323,7 +317,9 @@
       ],
       "enabled": true,
       "brand": "SBMY",
-      "device_id": "MYR-SB-001"
+      "device_id": "MYR-SB-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SBMY_KENNY",
@@ -339,7 +335,9 @@
       ],
       "enabled": true,
       "brand": "SBMY",
-      "device_id": "MYR-SB-001"
+      "device_id": "MYR-SB-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SBMY_8",
@@ -355,7 +353,9 @@
       ],
       "enabled": true,
       "brand": "SBMY",
-      "device_id": "MYR-SB-001"
+      "device_id": "MYR-SB-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "M24SG_MASTER",
@@ -371,7 +371,9 @@
       ],
       "enabled": true,
       "brand": "M24SG",
-      "device_id": "SGD-M24-001"
+      "device_id": "SGD-M24-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "M24SG_MANTOU",
@@ -387,7 +389,9 @@
       ],
       "enabled": true,
       "brand": "M24SG",
-      "device_id": "SGD-M24-001"
+      "device_id": "SGD-M24-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "M24SG_JENNIFER",
@@ -403,7 +407,9 @@
       ],
       "enabled": true,
       "brand": "M24SG",
-      "device_id": "SGD-M24-001"
+      "device_id": "SGD-M24-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "WBSG_MIA",
@@ -419,7 +425,9 @@
       ],
       "enabled": true,
       "brand": "WBSG",
-      "device_id": "SGD-WB-001"
+      "device_id": "SGD-WB-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "WBSG_KELLY",
@@ -435,7 +443,9 @@
       ],
       "enabled": true,
       "brand": "WBSG",
-      "device_id": "SGD-WB-001"
+      "device_id": "SGD-WB-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "WBSG_EDDIE",
@@ -451,7 +461,9 @@
       ],
       "enabled": true,
       "brand": "WBSG",
-      "device_id": "SGD-WB-001"
+      "device_id": "SGD-WB-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "WBSG_CARINA",
@@ -467,7 +479,9 @@
       ],
       "enabled": true,
       "brand": "WBSG",
-      "device_id": "SGD-WB-001"
+      "device_id": "SGD-WB-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "FWSG_JASON",
@@ -483,7 +497,9 @@
       ],
       "enabled": true,
       "brand": "FWSG",
-      "device_id": "SGD-FW-001"
+      "device_id": "SGD-FW-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "FWSG_AVICII",
@@ -499,7 +515,9 @@
       ],
       "enabled": true,
       "brand": "FWSG",
-      "device_id": "SGD-FW-001"
+      "device_id": "SGD-FW-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "FWSG_MIKA",
@@ -515,7 +533,9 @@
       ],
       "enabled": true,
       "brand": "FWSG",
-      "device_id": "SGD-FW-001"
+      "device_id": "SGD-FW-001",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "KH778KH_CS3",
@@ -532,7 +552,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "KH778KH_CS4",
@@ -549,7 +571,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "KH778KH_MEYLY",
@@ -566,7 +590,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "KH778KH_OUNLEAK",
@@ -583,7 +609,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "KH888KH_GCS2",
@@ -600,7 +628,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "KH888KH_GCS1",
@@ -617,7 +647,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "KH888KH_GCS3",
@@ -634,7 +666,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "CAM78KH_CS1",
@@ -649,9 +683,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "CAM78KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "CAM78KH_CS3",
@@ -666,9 +702,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "CAM78KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "CAM78KH_AHJU",
@@ -683,9 +721,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "CAM78KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "CAM68KH_AHPICH",
@@ -700,9 +740,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "CAM68KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "CAM68KH_CS1",
@@ -717,9 +759,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "CAM68KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "CAM68KH_CS3",
@@ -734,9 +778,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "CAM68KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "CAM68KH_GCS2",
@@ -751,9 +797,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "CAM68KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "CAM68KH_GCS3",
@@ -768,9 +816,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "CAM68KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "OK188KH_CS1",
@@ -787,7 +837,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "OK188KH_CS66",
@@ -804,7 +856,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "OK188KH_CS77",
@@ -821,7 +875,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "OK188KH_CS88",
@@ -838,7 +894,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "OK188KH_CS2",
@@ -855,7 +913,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "OK188KH_CS3",
@@ -872,7 +932,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "OK888KH_CS1",
@@ -889,7 +951,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "OK888KH_CS2",
@@ -906,7 +970,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "OK888KH_CS3",
@@ -923,7 +989,9 @@
       "enabled": true,
       "brand": "OK188KH",
       "user_name": "OK188KH",
-      "device_id": "USC-OK188KH-Main"
+      "device_id": "USC-OK188KH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SBKH_CS2",
@@ -940,7 +1008,9 @@
       "enabled": true,
       "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SBKH_CS5",
@@ -957,7 +1027,9 @@
       "enabled": true,
       "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SBKH_CS99",
@@ -974,7 +1046,9 @@
       "enabled": true,
       "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SBKH_CS6",
@@ -991,7 +1065,9 @@
       "enabled": true,
       "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SBKH_CS03",
@@ -1008,7 +1084,9 @@
       "enabled": true,
       "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SBKH_LIIKAA",
@@ -1025,7 +1103,9 @@
       "enabled": true,
       "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SBKH_OFFICIAL",
@@ -1042,7 +1122,9 @@
       "enabled": true,
       "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SBKH_CS01",
@@ -1059,7 +1141,9 @@
       "enabled": true,
       "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SB99KH_MENGMENG",
@@ -1074,9 +1158,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "SB99KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SB99KH_YOYO",
@@ -1091,9 +1177,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "SB99KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SB99KH_CS1",
@@ -1108,9 +1196,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "SB99KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SB99KH_CS3",
@@ -1125,9 +1215,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "SB99KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SB99KH_CS2",
@@ -1142,9 +1234,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "SB99KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SB99KH_AHHNAM",
@@ -1159,9 +1253,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "SB99KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SB99KH_CS",
@@ -1176,9 +1272,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "SB99KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SB99KH_HUAT",
@@ -1193,7 +1291,7 @@
         777000
       ],
       "enabled": true,
-      "brand": "SB99KH"
+      "brand": "SBKH"
     },
     {
       "id": "SB99KH_OUNNA",
@@ -1208,7 +1306,7 @@
         777000
       ],
       "enabled": true,
-      "brand": "SB99KH"
+      "brand": "SBKH"
     },
     {
       "id": "SB99KH_OUNRY",
@@ -1223,7 +1321,7 @@
         777000
       ],
       "enabled": true,
-      "brand": "SB99KH"
+      "brand": "SBKH"
     },
     {
       "id": "SB99KH_OFFICIAL",
@@ -1238,13 +1336,15 @@
         777000
       ],
       "enabled": true,
-      "brand": "SB99KH",
+      "brand": "SBKH",
       "user_name": "SBKH",
-      "device_id": "USC-SBKH-001"
+      "device_id": "USC-SBKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "UW29KH_GROUP",
-      "profile_hint": "17WINKH Group",
+      "profile_hint": "UWKH29 Group",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+85561394492",
@@ -1255,7 +1355,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "UW29KH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "UW29KH_CS00",
@@ -1270,7 +1374,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "UW29KH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "UW29KH_FAFA",
@@ -1285,11 +1393,15 @@
         777000
       ],
       "enabled": true,
-      "brand": "UW29KH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "UW29KH_B1",
-      "profile_hint": "17WINKH B1",
+      "profile_hint": "UWKH29 B1",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855762975977",
@@ -1300,11 +1412,15 @@
         777000
       ],
       "enabled": true,
-      "brand": "UW29KH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "UW29KH_CS1",
-      "profile_hint": "17WINKH CS1",
+      "profile_hint": "UWON29 CS1",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+85561925191",
@@ -1315,11 +1431,15 @@
         777000
       ],
       "enabled": true,
-      "brand": "UW29KH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "UW29KH_CS2",
-      "profile_hint": "17WINKH CS2",
+      "profile_hint": "UWKH29 CS2",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+85592319233",
@@ -1330,11 +1450,15 @@
         777000
       ],
       "enabled": true,
-      "brand": "UW29KH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "UWON33_CS4",
-      "profile_hint": "17WINKH CS4",
+      "profile_hint": "UWON33CS4",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855883704862",
@@ -1345,7 +1469,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "UWON33"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "UWON33_CS5",
@@ -1360,7 +1488,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "UWON33"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "UWON33_CS6",
@@ -1375,11 +1507,15 @@
         777000
       ],
       "enabled": true,
-      "brand": "UWON33"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "UWON33_CS7",
-      "profile_hint": "17WINKH CS7",
+      "profile_hint": "UWON33CS7",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855883789891",
@@ -1390,11 +1526,15 @@
         777000
       ],
       "enabled": true,
-      "brand": "UWON33"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "UWON33_CS1",
-      "profile_hint": "17WINKH CS1",
+      "profile_hint": "UWON33CS1",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855962428247",
@@ -1405,11 +1545,15 @@
         777000
       ],
       "enabled": true,
-      "brand": "UWON33"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "UWON33_CS2",
-      "profile_hint": "17WINKH CS2",
+      "profile_hint": "UWON33CS2",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855962424547",
@@ -1420,11 +1564,15 @@
         777000
       ],
       "enabled": true,
-      "brand": "UWON33"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "UWON33_CS3",
-      "profile_hint": "17WINKH CS3",
+      "profile_hint": "UWON33CS3",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855962442542",
@@ -1435,7 +1583,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "UWON33"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "17WINKH_VIP1",
@@ -1450,7 +1602,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "17WINKH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "17WINKH_VIP2",
@@ -1465,7 +1621,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "17WINKH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "17WINKH_VIP3",
@@ -1480,7 +1640,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "17WINKH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "17WINKH_VIP4",
@@ -1495,7 +1659,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "17WINKH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "17WINKH_MEYMEY",
@@ -1510,7 +1678,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "17WINKH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "17WINKH_ADMIN",
@@ -1525,7 +1697,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "17WINKH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "17WIN168KH_CS1",
@@ -1540,7 +1716,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "17WIN168KH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "17WIN168KH_CS2",
@@ -1555,7 +1735,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "17WIN168KH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "17WIN168KH_CS3",
@@ -1570,7 +1754,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "17WIN168KH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "17WIN168KH_CS4",
@@ -1585,7 +1773,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "17WIN168KH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "17WIN168KH_CS",
@@ -1600,7 +1792,11 @@
         777000
       ],
       "enabled": true,
-      "brand": "17WIN168KH"
+      "brand": "17WINKH",
+      "user_name": "17WINKH",
+      "device_id": "USC-17WINKH-Main",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "STMY_4864",
@@ -1612,7 +1808,9 @@
       "notify_account": "geri_work",
       "profile_hint": "V",
       "device_id": "MYR-ST-001",
-      "brand": "STMY"
+      "brand": "STMY",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "STMY_7594",
@@ -1624,7 +1822,9 @@
       "notify_account": "geri_work",
       "profile_hint": "D",
       "device_id": "MYR-ST-001",
-      "brand": "STMY"
+      "brand": "STMY",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "STMY_8311",
@@ -1636,7 +1836,9 @@
       "notify_account": "geri_work",
       "profile_hint": "F",
       "device_id": "MYR-ST-001",
-      "brand": "STMY"
+      "brand": "STMY",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "STMY_0643",
@@ -1648,7 +1850,9 @@
       "notify_account": "geri_work",
       "profile_hint": "Boss jo",
       "device_id": "MYR-ST-001",
-      "brand": "STMY"
+      "brand": "STMY",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "OK188KH_OK188KH",
@@ -1714,7 +1918,9 @@
       "profile_hint": "OK888 ADS",
       "device_id": "USC-OK188KH-Main",
       "brand": "OK188KH",
-      "password": "778899"
+      "password": "778899",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "JMMY_SNR",
@@ -1728,7 +1934,9 @@
       "profile_hint": "JMMY Rico",
       "password": "MYR889900",
       "device_id": "MYR-JM-001",
-      "brand": "JMMY"
+      "brand": "JMMY",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "JMMY_SNR_2",
@@ -1742,7 +1950,217 @@
       "profile_hint": "JMMY Lula",
       "password": "MYR889900",
       "device_id": "MYR-JM-001",
-      "brand": "JMMY"
+      "brand": "JMMY",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SBKH_SBKH",
+      "phone": "+855763905632",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/SBKH_SBKH",
+      "notify_account": "geri_work",
+      "user_name": "SBKH",
+      "profile_hint": "SeabetCS99",
+      "password": "WFHWFH88",
+      "device_id": "USC-SBKH-Main",
+      "brand": "SBKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SBKH_SBKH_2",
+      "phone": "+85578671573",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/SBKH_SBKH_2",
+      "notify_account": "geri_work",
+      "user_name": "SBKH",
+      "profile_hint": "SEABET",
+      "password": "WFHWFH88",
+      "device_id": "USC-SBKH-Main",
+      "brand": "SBKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SBKH_SBKH_3",
+      "phone": "+85511450605",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/SBKH_SBKH_3",
+      "notify_account": "geri_work",
+      "user_name": "SBKH",
+      "profile_hint": "Maooooo_",
+      "password": "WFHWFH88",
+      "device_id": "USC-SBKH-Main",
+      "brand": "SBKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SBKH_SBKH_4",
+      "phone": "+855765628296",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/SBKH_SBKH_4",
+      "notify_account": "geri_work",
+      "user_name": "SBKH",
+      "profile_hint": "Povvvvvv_",
+      "password": "WFHWFH88",
+      "device_id": "USC-SBKH-Main",
+      "brand": "SBKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SBKH_SBKH_5",
+      "phone": "+85511366823",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/SBKH_SBKH_5",
+      "notify_account": "geri_work",
+      "user_name": "SBKH",
+      "profile_hint": "Ciciiiii_",
+      "password": "WFHWFH88",
+      "device_id": "USC-SBKH-Main",
+      "brand": "SBKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SBKH_SBKH_6",
+      "phone": "+85511279383",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/SBKH_SBKH_6",
+      "notify_account": "geri_work",
+      "user_name": "SBKH",
+      "profile_hint": "Nikaaaaa_",
+      "password": "WFHWFH88",
+      "device_id": "USC-SBKH-Main",
+      "brand": "SBKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SBKH_SBKH_7",
+      "phone": "+855719497189",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/SBKH_SBKH_7",
+      "notify_account": "geri_work",
+      "user_name": "SBKH",
+      "profile_hint": "Bellaaaa_",
+      "password": "WFHWFH88",
+      "device_id": "USC-SBKH-Main",
+      "brand": "SBKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SBKH_SBKH_8",
+      "phone": "+85567874704",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/SBKH_SBKH_8",
+      "notify_account": "geri_work",
+      "user_name": "SBKH",
+      "profile_hint": "Jen",
+      "password": "WFHWFH88",
+      "device_id": "USC-SBKH-Main",
+      "brand": "SBKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SBKH_SBKH_9",
+      "phone": "+85567667895",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/SBKH_SBKH_9",
+      "notify_account": "geri_work",
+      "user_name": "SBKH",
+      "profile_hint": "Liz",
+      "password": "WFHWFH88",
+      "device_id": "USC-SBKH-Main",
+      "brand": "SBKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SBKH_SBKH_10",
+      "phone": "+855965953485",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/SBKH_SBKH_10",
+      "notify_account": "geri_work",
+      "user_name": "SBKH",
+      "profile_hint": "Ah Ying",
+      "password": "778899",
+      "device_id": "USC-SBKH-Main",
+      "brand": "SBKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SBKH_SBKH_11",
+      "phone": "+85595960558",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/SBKH_SBKH_11",
+      "notify_account": "geri_work",
+      "user_name": "SBKH",
+      "profile_hint": "mei ii​ ( CAM68 CS )",
+      "password": "CAMTEAM",
+      "device_id": "USC-SBKH-Main",
+      "brand": "SBKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SBKH_SBKH_12",
+      "phone": "+85514909689",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/SBKH_SBKH_12",
+      "notify_account": "geri_work",
+      "user_name": "SBKH",
+      "profile_hint": "Mai nia",
+      "password": "WFHCAM",
+      "device_id": "USC-SBKH-Main",
+      "brand": "SBKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SBKH_SBKH_13",
+      "phone": "+85592635848",
+      "api_id": 22760019,
+      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "enabled": true,
+      "session": "telegram_session/SBKH_SBKH_13",
+      "notify_account": "geri_work",
+      "user_name": "SBKH",
+      "profile_hint": "Soriya ( CAM68 CS )",
+      "password": "WFHCAM",
+      "device_id": "USC-SBKH-Main",
+      "brand": "SBKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     }
   ],
   "accounts": [
@@ -1894,6 +2312,34 @@
       "telegram_user_id": "874015719",
       "telegram_username": "Zaabryan",
       "role": "admin"
+    },
+    {
+      "id": "ctinework",
+      "label": "Ctine.C (Work)",
+      "shooter_owner": "CHRISTINE",
+      "telegram_user_id": "7074817963",
+      "chat_id": "7074817963",
+      "telegram_username": "Ctinework"
+    },
+    {
+      "id": "kdmvnisss",
+      "label": "Mey ~",
+      "role": "admin",
+      "telegram_username": "kdmvnisss",
+      "chat_id": "1433387057",
+      "telegram_user_id": "1433387057"
+    },
+    {
+      "id": "wenjie5425",
+      "label": "Wenjie5425",
+      "role": "admin",
+      "telegram_username": "wenjie5425"
+    },
+    {
+      "id": "annaworkkk",
+      "label": "Annaworkkk",
+      "role": "admin",
+      "telegram_username": "Annaworkkk"
     }
   ]
 }

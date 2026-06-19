@@ -12,6 +12,8 @@
     "RINTO",
     "RIZKYR",
     "SHEVA",
+    "SBKH",
+    "17WINKH",
     "VENAN",
     "VENNUS",
     "WAI",
@@ -26,10 +28,12 @@
       "profile_hint": "Y",
       "session": "telegram_session/shooter/SH_VENNUS_01",
       "enabled": true,
-      "user_name": "Venus",
+      "user_name": "Vennus",
       "remark": "MYR-SB-003",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VENNUS_02",
@@ -38,10 +42,12 @@
       "profile_hint": "F",
       "session": "telegram_session/shooter/SH_VENNUS_02",
       "enabled": true,
-      "user_name": "Venus",
+      "user_name": "Vennus",
       "remark": "MYR-SB-003",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VENNUS_03",
@@ -50,10 +56,12 @@
       "profile_hint": "V",
       "session": "telegram_session/shooter/SH_VENNUS_03",
       "enabled": true,
-      "user_name": "Venus",
+      "user_name": "Vennus",
       "remark": "MYR-SB-003",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VENNUS_04",
@@ -62,10 +70,12 @@
       "profile_hint": "G",
       "session": "telegram_session/shooter/SH_VENNUS_04",
       "enabled": true,
-      "user_name": "Venus",
+      "user_name": "Vennus",
       "remark": "MYR-SB-003",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VENNUS_05",
@@ -74,10 +84,12 @@
       "profile_hint": "G",
       "session": "telegram_session/shooter/SH_VENNUS_05",
       "enabled": true,
-      "user_name": "Venus",
+      "user_name": "Vennus",
       "remark": "MYR-SB-003",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_EUDORA_01",
@@ -89,7 +101,9 @@
       "user_name": "Eudora",
       "remark": "MYR-SB-005",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_EUDORA_02",
@@ -101,7 +115,9 @@
       "user_name": "Eudora",
       "remark": "MYR-SB-005",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_EUDORA_03",
@@ -113,7 +129,9 @@
       "user_name": "Eudora",
       "remark": "MYR-SB-005",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_EUDORA_04",
@@ -125,7 +143,9 @@
       "user_name": "Eudora",
       "remark": "MYR-SB-005",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_EUDORA_05",
@@ -137,7 +157,9 @@
       "user_name": "Eudora",
       "remark": "MYR-SB-005",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_FANIE_01",
@@ -149,7 +171,9 @@
       "user_name": "Fanie",
       "remark": "MYR-SB-007",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_FANIE_02",
@@ -161,7 +185,9 @@
       "user_name": "Fanie",
       "remark": "MYR-SB-007",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_FANIE_03",
@@ -185,7 +211,9 @@
       "user_name": "Fanie",
       "remark": "MYR-SB-007",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_FANIE_05",
@@ -197,7 +225,9 @@
       "user_name": "Fanie",
       "remark": "MYR-SB-007",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WAI_01",
@@ -209,7 +239,9 @@
       "user_name": "Wai",
       "remark": "MYR-SB-008",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WAI_02",
@@ -221,7 +253,9 @@
       "user_name": "Wai",
       "remark": "MYR-SB-008",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WAI_03",
@@ -233,7 +267,9 @@
       "user_name": "Wai",
       "remark": "MYR-SB-008",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WAI_04",
@@ -245,7 +281,9 @@
       "user_name": "Wai",
       "remark": "MYR-SB-008",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WAI_05",
@@ -257,7 +295,9 @@
       "user_name": "Wai",
       "remark": "MYR-SB-008",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_LIHYUN_01",
@@ -269,7 +309,9 @@
       "user_name": "liyun",
       "remark": "MYR-SB-009",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_LIHYUN_02",
@@ -281,7 +323,9 @@
       "user_name": "liyun",
       "remark": "MYR-SB-009",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_LIHYUN_03",
@@ -293,7 +337,9 @@
       "user_name": "liyun",
       "remark": "MYR-SB-009",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_LIHYUN_04",
@@ -305,7 +351,9 @@
       "user_name": "liyun",
       "remark": "MYR-SB-009",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_LIHYUN_05",
@@ -317,43 +365,51 @@
       "user_name": "liyun",
       "remark": "MYR-SB-009",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_SHEVA_01",
       "owner": "SHEVA",
       "phone": "+601137311457",
-      "profile_hint": "g",
+      "profile_hint": "Celline",
       "session": "telegram_session/shooter/SH_SHEVA_01",
       "enabled": true,
       "user_name": "Sheva",
       "remark": "MYR-SB-011",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_SHEVA_02",
       "owner": "SHEVA",
       "phone": "+601161758292",
-      "profile_hint": "H",
+      "profile_hint": "sellina",
       "session": "telegram_session/shooter/SH_SHEVA_02",
       "enabled": true,
       "user_name": "Sheva",
       "remark": "MYR-SB-011",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_SHEVA_03",
       "owner": "SHEVA",
       "phone": "+601161758583",
-      "profile_hint": "H",
+      "profile_hint": "Harlisa",
       "session": "telegram_session/shooter/SH_SHEVA_03",
       "enabled": true,
       "user_name": "Sheva",
       "remark": "MYR-SB-011",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_SHEVA_04",
@@ -371,13 +427,15 @@
       "id": "SH_SHEVA_05",
       "owner": "SHEVA",
       "phone": "+601161760178",
-      "profile_hint": "H",
+      "profile_hint": "Jesica",
       "session": "telegram_session/shooter/SH_SHEVA_05",
       "enabled": true,
       "user_name": "Sheva",
       "remark": "MYR-SB-011",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KELLY_01",
@@ -389,7 +447,10 @@
       "user_name": "Kelly",
       "remark": "MYR-SB-012",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KELLY_02",
@@ -401,7 +462,10 @@
       "user_name": "Kelly",
       "remark": "MYR-SB-012",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KELLY_03",
@@ -413,7 +477,10 @@
       "user_name": "Kelly",
       "remark": "MYR-SB-012",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KELLY_04",
@@ -425,7 +492,10 @@
       "user_name": "Kelly",
       "remark": "MYR-SB-012",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KELLY_05",
@@ -437,7 +507,10 @@
       "user_name": "Kelly",
       "remark": "MYR-SB-012",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_INDRI_02",
@@ -449,7 +522,9 @@
       "user_name": "Indri",
       "remark": "MYR-ST-002",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Using",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_INDRI_04",
@@ -461,7 +536,9 @@
       "user_name": "Indri",
       "remark": "MYR-ST-002",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Using",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_INDRI_05",
@@ -473,7 +550,9 @@
       "user_name": "Indri",
       "remark": "MYR-ST-002",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Using",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WIDYA_01",
@@ -486,7 +565,9 @@
       "remark": "MYR-ST-003",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WIDYA_02",
@@ -498,7 +579,10 @@
       "user_name": "Widya",
       "remark": "MYR-ST-003",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WIDYA_03",
@@ -510,7 +594,10 @@
       "user_name": "Widya",
       "remark": "MYR-ST-003",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WIDYA_04",
@@ -522,7 +609,10 @@
       "user_name": "Widya",
       "remark": "MYR-ST-003",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WIDYA_05",
@@ -534,7 +624,10 @@
       "user_name": "Widya",
       "remark": "MYR-ST-003",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_RINTO_01",
@@ -546,7 +639,9 @@
       "user_name": "Rinto",
       "remark": "MYR-ST-004",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_RINTO_02",
@@ -558,7 +653,9 @@
       "user_name": "Rinto",
       "remark": "MYR-ST-004",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_RINTO_03",
@@ -570,7 +667,9 @@
       "user_name": "Rinto",
       "remark": "MYR-ST-004",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_RINTO_04",
@@ -582,7 +681,9 @@
       "user_name": "Rinto",
       "remark": "MYR-ST-004",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_RINTO_05",
@@ -594,7 +695,9 @@
       "user_name": "Rinto",
       "remark": "MYR-ST-004",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDO_01",
@@ -606,7 +709,9 @@
       "user_name": "Aldo",
       "remark": "MYR-ST-005",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDO_02",
@@ -618,7 +723,9 @@
       "user_name": "Aldo",
       "remark": "MYR-ST-005",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDO_03",
@@ -630,7 +737,9 @@
       "user_name": "Aldo",
       "remark": "MYR-ST-005",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDO_04",
@@ -642,7 +751,9 @@
       "user_name": "Aldo",
       "remark": "MYR-ST-005",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDO_05",
@@ -662,7 +773,9 @@
       "user_name": "Karen",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Using",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KAREN_02",
@@ -675,7 +788,9 @@
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KAREN_03",
@@ -687,7 +802,9 @@
       "user_name": "Karen",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Using",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KAREN_04",
@@ -699,7 +816,9 @@
       "user_name": "Karen",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Frozen",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KAREN_05",
@@ -711,7 +830,9 @@
       "user_name": "Karen",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Frozen",
+      "session_friday": "Active"
     },
     {
       "id": "SH_RIZKYR_01",
@@ -723,7 +844,9 @@
       "user_name": "Rizky-R",
       "remark": "MYR-JM-003",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_RIZKYR_02",
@@ -735,7 +858,9 @@
       "user_name": "Rizky-R",
       "remark": "MYR-JM-003",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_RIZKYR_03",
@@ -747,7 +872,9 @@
       "user_name": "Rizky-R",
       "remark": "MYR-JM-003",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_RIZKYR_04",
@@ -759,7 +886,9 @@
       "user_name": "Rizky-R",
       "remark": "MYR-JM-003",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_RIZKYR_05",
@@ -771,7 +900,9 @@
       "user_name": "Rizky-R",
       "remark": "MYR-JM-003",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_VENAN_01",
@@ -783,7 +914,9 @@
       "user_name": "Venan",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VENAN_02",
@@ -795,7 +928,9 @@
       "user_name": "Venan",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Expired",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_VENAN_03",
@@ -807,7 +942,9 @@
       "user_name": "Venan",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Expired",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_VENAN_04",
@@ -819,7 +956,9 @@
       "user_name": "Venan",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Expired",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_VENAN_05",
@@ -831,7 +970,9 @@
       "user_name": "Venan",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Expired",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_INDRI_9268",
@@ -844,7 +985,9 @@
       "remark": "MYR-ST-002",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_INDRI_2584",
@@ -857,7 +1000,9 @@
       "remark": "MYR-ST-002",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_INDRI_6647",
@@ -869,7 +1014,9 @@
       "profile_hint": "d",
       "remark": "MYR-ST-002",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_INDRI_8737",
@@ -882,7 +1029,9 @@
       "remark": "MYR-ST-002",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_INDRI_0117",
@@ -895,7 +1044,9 @@
       "remark": "MYR-ST-002",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WIDYA_2711",
@@ -908,7 +1059,9 @@
       "remark": "MYR-ST-003",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WIDYA_8303",
@@ -921,7 +1074,9 @@
       "remark": "MYR-ST-003",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WIDYA_5762",
@@ -934,7 +1089,9 @@
       "remark": "MYR-ST-003",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WIDYA_5354",
@@ -947,7 +1104,9 @@
       "remark": "MYR-ST-003",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WIDYA_0127",
@@ -960,7 +1119,9 @@
       "remark": "MYR-ST-003",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_RINTO_8901",
@@ -973,7 +1134,9 @@
       "remark": "MYR-ST-004",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_RINTO_1955",
@@ -986,7 +1149,9 @@
       "remark": "MYR-ST-004",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_RINTO_6958",
@@ -999,7 +1164,9 @@
       "remark": "MYR-ST-004",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_RINTO_0827",
@@ -1012,7 +1179,9 @@
       "remark": "MYR-ST-004",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_RINTO_8724",
@@ -1025,7 +1194,9 @@
       "remark": "MYR-ST-004",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDO_7452",
@@ -1038,7 +1209,9 @@
       "remark": "MYR-ST-005",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDO_2539",
@@ -1051,7 +1224,9 @@
       "remark": "MYR-ST-005",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDO_7632",
@@ -1064,7 +1239,9 @@
       "remark": "MYR-ST-005",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDO_3127",
@@ -1077,7 +1254,9 @@
       "remark": "MYR-ST-005",
       "brand": "STMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KAREN_4862",
@@ -1090,7 +1269,9 @@
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KAREN_5684",
@@ -1103,7 +1284,9 @@
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Expired",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KAREN_8521",
@@ -1116,7 +1299,9 @@
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KAREN_2275",
@@ -1128,7 +1313,9 @@
       "profile_hint": "L",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KAREN_8761",
@@ -1141,7 +1328,9 @@
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_RIZKYR_5491",
@@ -1154,7 +1343,9 @@
       "remark": "MYR-JM-003",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_RIZKYR_3160",
@@ -1167,7 +1358,9 @@
       "remark": "MYR-JM-003",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_RIZKYR_5400",
@@ -1180,7 +1373,9 @@
       "remark": "MYR-JM-003",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_RIZKYR_2549",
@@ -1193,7 +1388,9 @@
       "remark": "MYR-JM-003",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_RIZKYR_3984",
@@ -1206,7 +1403,9 @@
       "remark": "MYR-JM-003",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VENAN_6501",
@@ -1219,7 +1418,9 @@
       "remark": "MYR-JM-004",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VENAN_8058",
@@ -1232,7 +1433,9 @@
       "remark": "MYR-JM-004",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VENAN_9435",
@@ -1245,7 +1448,9 @@
       "remark": "MYR-JM-004",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VENAN_3989",
@@ -1258,7 +1463,9 @@
       "remark": "MYR-JM-004",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VENAN_6843",
@@ -1271,7 +1478,9 @@
       "remark": "MYR-JM-004",
       "brand": "JMMY",
       "currency": "MYR",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WINNIE_6637",
@@ -1283,7 +1492,10 @@
       "profile_hint": "G",
       "remark": "SGD-WB-003",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WINNIE_4832",
@@ -1295,7 +1507,10 @@
       "profile_hint": "H",
       "remark": "SGD-WB-003",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WINNIE_5102",
@@ -1307,7 +1522,10 @@
       "profile_hint": "D",
       "remark": "SGD-WB-003",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WINNIE_4947",
@@ -1319,7 +1537,10 @@
       "profile_hint": "D",
       "remark": "SGD-WB-003",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WINNIE_6822",
@@ -1331,7 +1552,10 @@
       "profile_hint": "G",
       "remark": "SGD-WB-003",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_CHRISTINE_4398",
@@ -1343,7 +1567,9 @@
       "profile_hint": "F",
       "remark": "SGD-WB-005",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_CHRISTINE_4369",
@@ -1355,7 +1581,9 @@
       "profile_hint": "F",
       "remark": "SGD-WB-005",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_CHRISTINE_4625",
@@ -1367,7 +1595,9 @@
       "profile_hint": "V",
       "remark": "SGD-WB-005",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_CHRISTINE_4261",
@@ -1379,7 +1609,9 @@
       "profile_hint": "G",
       "remark": "SGD-WB-005",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_CHRISTINE_3498",
@@ -1391,7 +1623,9 @@
       "profile_hint": "F",
       "remark": "SGD-WB-005",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_CARINA_7781",
@@ -1403,7 +1637,9 @@
       "profile_hint": "H",
       "remark": "SGD-WB-007",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_CARINA_5394",
@@ -1415,7 +1651,9 @@
       "profile_hint": "N",
       "remark": "SGD-WB-007",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_CARINA_7161",
@@ -1427,7 +1665,9 @@
       "profile_hint": "G",
       "remark": "SGD-WB-007",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_CARINA_6549",
@@ -1439,7 +1679,9 @@
       "profile_hint": "P",
       "remark": "SGD-WB-007",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_CARINA_5572",
@@ -1451,7 +1693,9 @@
       "profile_hint": "F",
       "remark": "SGD-WB-007",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_DIAN_1552",
@@ -1463,7 +1707,9 @@
       "profile_hint": "g",
       "remark": "SGD-WB-009",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_DIAN_1539",
@@ -1475,7 +1721,9 @@
       "profile_hint": "g",
       "remark": "SGD-WB-009",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_DIAN_1485",
@@ -1487,7 +1735,9 @@
       "profile_hint": "g",
       "remark": "SGD-WB-009",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_DIAN_1449",
@@ -1499,7 +1749,9 @@
       "profile_hint": "H",
       "remark": "SGD-WB-009",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_DIAN_1447",
@@ -1511,7 +1763,9 @@
       "profile_hint": "G",
       "remark": "SGD-WB-009",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_DIAN_1213",
@@ -1523,7 +1777,9 @@
       "profile_hint": "G",
       "remark": "SGD-WB-009",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_DIAN_1247",
@@ -1535,7 +1791,9 @@
       "profile_hint": "C",
       "remark": "SGD-WB-009",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_DIAN_1276",
@@ -1547,7 +1805,9 @@
       "profile_hint": "D",
       "remark": "SGD-WB-009",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_DIAN_2199",
@@ -1559,7 +1819,9 @@
       "profile_hint": "J",
       "remark": "SGD-WB-009",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WALLACE_2192",
@@ -1571,7 +1833,9 @@
       "profile_hint": "H",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_EDMUND_4543",
@@ -1584,7 +1848,9 @@
       "remark": "SGD-FW-003",
       "brand": "FWSG",
       "currency": "SGD",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_EDMUND_6874",
@@ -1597,7 +1863,9 @@
       "remark": "SGD-FW-003",
       "brand": "FWSG",
       "currency": "SGD",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_EDMUND_7466",
@@ -1610,7 +1878,9 @@
       "remark": "SGD-FW-003",
       "brand": "FWSG",
       "currency": "SGD",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_EDMUND_7146",
@@ -1623,7 +1893,9 @@
       "remark": "SGD-FW-003",
       "brand": "FWSG",
       "currency": "SGD",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_EDMUND_5318",
@@ -1636,7 +1908,9 @@
       "remark": "SGD-FW-003",
       "brand": "FWSG",
       "currency": "SGD",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KAIXIAN_2766",
@@ -1648,7 +1922,9 @@
       "profile_hint": "D",
       "remark": "SGD-FW-005",
       "brand": "FWSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KAIXIAN_3022",
@@ -1660,7 +1936,9 @@
       "profile_hint": "G",
       "remark": "SGD-FW-005",
       "brand": "FWSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KAIXIAN_3349",
@@ -1672,7 +1950,9 @@
       "profile_hint": "G",
       "remark": "SGD-FW-005",
       "brand": "FWSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KAIXIAN_3352",
@@ -1684,7 +1964,9 @@
       "profile_hint": "J",
       "remark": "SGD-FW-005",
       "brand": "FWSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KAIXIAN_3714",
@@ -1696,7 +1978,9 @@
       "profile_hint": "H",
       "remark": "SGD-FW-005",
       "brand": "FWSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_NIKKI_7054",
@@ -1709,7 +1993,9 @@
       "remark": "SGD-FW-006",
       "brand": "FWSG",
       "currency": "SGD",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_NIKKI_7375",
@@ -1722,7 +2008,9 @@
       "remark": "SGD-FW-006",
       "brand": "FWSG",
       "currency": "SGD",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_NIKKI_6335",
@@ -1735,7 +2023,9 @@
       "remark": "SGD-FW-006",
       "brand": "FWSG",
       "currency": "SGD",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_NIKKI_7948",
@@ -1748,7 +2038,9 @@
       "remark": "SGD-FW-006",
       "brand": "FWSG",
       "currency": "SGD",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_NIKKI_7383",
@@ -1761,7 +2053,9 @@
       "remark": "SGD-FW-006",
       "brand": "FWSG",
       "currency": "SGD",
-      "password": "0000"
+      "password": "0000",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VINZ_5238",
@@ -1773,7 +2067,9 @@
       "profile_hint": "D",
       "remark": "SGD-M24-003",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_VINZ_4536",
@@ -1785,7 +2081,9 @@
       "profile_hint": "H",
       "remark": "SGD-M24-003",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_VINZ_3995",
@@ -1797,7 +2095,9 @@
       "profile_hint": "H",
       "remark": "SGD-M24-003",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_VINZ_7335",
@@ -1809,7 +2109,9 @@
       "profile_hint": "H",
       "remark": "SGD-M24-003",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_VINZ_8034",
@@ -1821,7 +2123,9 @@
       "profile_hint": "Z",
       "remark": "SGD-M24-003",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_EDWARD_4173",
@@ -1833,7 +2137,9 @@
       "profile_hint": "G",
       "remark": "SGD-M24-005",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_EDWARD_9230",
@@ -1845,7 +2151,9 @@
       "profile_hint": "G",
       "remark": "SGD-M24-005",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_EDWARD_7235",
@@ -1857,7 +2165,9 @@
       "profile_hint": "A",
       "remark": "SGD-M24-005",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_EDWARD_6854",
@@ -1869,7 +2179,9 @@
       "profile_hint": "S",
       "remark": "SGD-M24-005",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_EDWARD_6813",
@@ -1881,7 +2193,9 @@
       "profile_hint": "G",
       "remark": "SGD-M24-005",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KIM_6817",
@@ -1893,7 +2207,9 @@
       "profile_hint": "G",
       "remark": "SGD-M24-007",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KIM_5963",
@@ -1905,7 +2221,9 @@
       "profile_hint": "F",
       "remark": "SGD-M24-007",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KIM_6438",
@@ -1917,7 +2235,9 @@
       "profile_hint": "H",
       "remark": "SGD-M24-007",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KIM_6331",
@@ -1929,7 +2249,9 @@
       "profile_hint": "G",
       "remark": "SGD-M24-007",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_KIM_2682",
@@ -1941,7 +2263,9 @@
       "profile_hint": "C",
       "remark": "SGD-M24-007",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDA_9960",
@@ -1953,7 +2277,9 @@
       "profile_hint": "h",
       "remark": "SGD-M24-008",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDA_9367",
@@ -1965,7 +2291,9 @@
       "profile_hint": "h",
       "remark": "SGD-M24-008",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDA_9241",
@@ -1977,7 +2305,9 @@
       "profile_hint": "b",
       "remark": "SGD-M24-008",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDA_8246",
@@ -1989,7 +2319,9 @@
       "profile_hint": "f",
       "remark": "SGD-M24-008",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDA_8232",
@@ -2001,7 +2333,9 @@
       "profile_hint": "g",
       "remark": "SGD-M24-008",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDA_1052",
@@ -2013,7 +2347,9 @@
       "profile_hint": "H",
       "remark": "SGD-M24-008",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDA_0965",
@@ -2025,7 +2361,9 @@
       "profile_hint": "H",
       "remark": "SGD-M24-008",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDA_0943",
@@ -2037,7 +2375,9 @@
       "profile_hint": "H",
       "remark": "SGD-M24-008",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDA_0641",
@@ -2049,7 +2389,9 @@
       "profile_hint": "Z",
       "remark": "SGD-M24-008",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_ALDA_0621",
@@ -2061,7 +2403,9 @@
       "profile_hint": "R",
       "remark": "SGD-M24-008",
       "brand": "M24SG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_2481",
@@ -2072,7 +2416,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Liwenn",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_9626",
@@ -2083,7 +2429,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Asley",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_9340",
@@ -2094,7 +2442,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Anna",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_5688",
@@ -2105,7 +2455,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Diana",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_3598",
@@ -2116,7 +2468,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Hannah",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_5341",
@@ -2127,7 +2481,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Angela",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_9338",
@@ -2138,7 +2494,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Christine",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_7081",
@@ -2149,7 +2507,9 @@
       "user_name": "W+ plus",
       "profile_hint": "B",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_8521",
@@ -2160,7 +2520,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Elsa",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WPLUS_2688",
@@ -2171,7 +2533,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Cayla",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_8665",
@@ -2182,7 +2546,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Darron +",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_6439",
@@ -2193,7 +2559,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Athirah",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_2048",
@@ -2204,7 +2572,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Celine",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_3515",
@@ -2215,7 +2585,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Hannah",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_7832",
@@ -2226,7 +2598,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Angeline",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_7502",
@@ -2237,7 +2611,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Michael.J_Banking",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_6637",
@@ -2248,7 +2624,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Epstein_FinanceSolution",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_3649",
@@ -2259,7 +2637,9 @@
       "user_name": "W+ plus",
       "profile_hint": "wealth",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_3569",
@@ -2270,7 +2650,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Darron",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_7419",
@@ -2281,7 +2663,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Gyan",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_7048",
@@ -2292,7 +2676,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Nisya",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_7249",
@@ -2303,7 +2689,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Jack",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_4589",
@@ -2314,7 +2702,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Brian",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WPLUS_5843",
@@ -2325,7 +2715,9 @@
       "user_name": "W+ plus",
       "profile_hint": "Aaron",
       "remark": "wealth",
-      "currency": "WPLUS"
+      "currency": "WPLUS",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_WALLACE_8621",
@@ -2334,10 +2726,12 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WALLACE_8621",
       "user_name": "Wallace",
-      "profile_hint": "Cj XI",
+      "profile_hint": "Jason",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WALLACE_3987",
@@ -2346,10 +2740,12 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WALLACE_3987",
       "user_name": "Wallace",
-      "profile_hint": "T",
+      "profile_hint": "Mandy",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WALLACE_5214",
@@ -2358,10 +2754,12 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WALLACE_5214",
       "user_name": "Wallace",
-      "profile_hint": "F",
+      "profile_hint": "Charles",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WALLACE_3688",
@@ -2370,10 +2768,12 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WALLACE_3688",
       "user_name": "Wallace",
-      "profile_hint": "Hamir othman",
+      "profile_hint": "Leo",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WALLACE_5364",
@@ -2382,10 +2782,12 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WALLACE_5364",
       "user_name": "Wallace",
-      "profile_hint": "F",
+      "profile_hint": "Dylan",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WALLACE_2358",
@@ -2394,22 +2796,26 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WALLACE_2358",
       "user_name": "Wallace",
-      "profile_hint": "U",
+      "profile_hint": "stella",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WALLACE_6551",
       "phone": "+60138826551",
       "owner": "WALLACE",
-      "enabled": true,
+      "enabled": false,
       "session": "telegram_session/shooter/SH_WALLACE_6551",
       "user_name": "Wallace",
       "profile_hint": "Ikha Qayyum",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Banned",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_DIAN_3155",
@@ -2421,7 +2827,9 @@
       "profile_hint": "Jeline",
       "remark": "SGD-WB-009",
       "brand": "WBSG",
-      "currency": "SGD"
+      "currency": "SGD",
+      "sheet_status": "Pending Login",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_INDRI_9910",
@@ -2433,7 +2841,9 @@
       "profile_hint": "f",
       "remark": "MYR-ST-002",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Frozen",
+      "session_friday": "Frozen"
     },
     {
       "id": "SH_INDRI_7949",
@@ -2445,7 +2855,9 @@
       "profile_hint": "d",
       "remark": "MYR-ST-002",
       "brand": "STMY",
-      "currency": "MYR"
+      "currency": "MYR",
+      "sheet_status": "Frozen",
+      "session_friday": "Frozen"
     },
     {
       "id": "SH_OK188KH_6487",
@@ -2457,7 +2869,9 @@
       "profile_hint": "Nina",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_9056",
@@ -2468,7 +2882,9 @@
       "user_name": "OK188KH",
       "profile_hint": "Auri",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_0156",
@@ -2479,7 +2895,9 @@
       "user_name": "OK188KH",
       "profile_hint": "Burry​ OK88KH",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_3306",
@@ -2491,7 +2909,9 @@
       "profile_hint": "DavDaV",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
-      "password": "778899"
+      "password": "778899",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_3835",
@@ -2502,7 +2922,9 @@
       "user_name": "OK188KH",
       "profile_hint": "Dii",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_8146",
@@ -2513,7 +2935,9 @@
       "user_name": "OK188KH",
       "profile_hint": "Vichet OK188KH",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_3080",
@@ -2525,7 +2949,9 @@
       "profile_hint": "MeyLang😻",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
-      "password": "778899"
+      "password": "778899",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_6004",
@@ -2536,7 +2962,9 @@
       "user_name": "OK188KH",
       "profile_hint": "អូននាទ",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_3778",
@@ -2548,7 +2976,9 @@
       "profile_hint": "Srey Leap Channel",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
-      "password": "778899"
+      "password": "778899",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_2709",
@@ -2560,7 +2990,9 @@
       "profile_hint": "Srey Nea❤️",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
-      "password": "778899"
+      "password": "778899",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_0732",
@@ -2571,7 +3003,9 @@
       "user_name": "OK188KH",
       "profile_hint": "ស្រីនាង",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_0998",
@@ -2582,7 +3016,9 @@
       "user_name": "OK188KH",
       "profile_hint": "sreay neath",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_6579",
@@ -2594,7 +3030,9 @@
       "profile_hint": "MEAS_OUKSA2",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
-      "password": "778899"
+      "password": "778899",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_4236",
@@ -2606,7 +3044,9 @@
       "profile_hint": "MIK_YURA",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
-      "password": "778899"
+      "password": "778899",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_1349",
@@ -2618,7 +3058,9 @@
       "profile_hint": "NyTa",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
-      "password": "778899"
+      "password": "778899",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_8872",
@@ -2630,7 +3072,9 @@
       "profile_hint": "PECH TA (ពេជ្រតា)",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
-      "password": "778899"
+      "password": "778899",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_5086",
@@ -2642,7 +3086,9 @@
       "profile_hint": "FANG A",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_0331",
@@ -2654,7 +3100,9 @@
       "profile_hint": "Nimol",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_4926",
@@ -2666,7 +3114,9 @@
       "profile_hint": "ChingChing",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_1882",
@@ -2678,7 +3128,9 @@
       "profile_hint": "NaaNaa-1",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
-      "password": "778899"
+      "password": "778899",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_0314",
@@ -2690,7 +3142,9 @@
       "profile_hint": "KH778 Dalin",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_7944",
@@ -2702,7 +3156,9 @@
       "profile_hint": "Kh778 Ounya",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_0034",
@@ -2714,7 +3170,9 @@
       "profile_hint": "KH778 kanika",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_5024",
@@ -2726,7 +3184,9 @@
       "profile_hint": "Kh778 Linlin",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_0354",
@@ -2738,7 +3198,9 @@
       "profile_hint": "Kh778 Ounneath",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_4088",
@@ -2750,7 +3212,9 @@
       "profile_hint": "Mey",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_3293",
@@ -2762,7 +3226,9 @@
       "profile_hint": "Ounheng",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_OK188KH_6546",
@@ -2774,7 +3240,894 @@
       "profile_hint": "Nysa",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
-      "currency": "USC"
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_SBKH_3789",
+      "phone": "+85514703789",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_3789",
+      "user_name": "SBKH",
+      "profile_hint": "Mie Mie",
+      "password": "SBKHTEAM",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "session_friday": "Active",
+      "brand": "SBKH",
+      "sheet_status": "Ready"
+    },
+    {
+      "id": "SH_SBKH_8464",
+      "phone": "+85511358464",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_8464",
+      "user_name": "SBKH",
+      "profile_hint": "Tiy Nitt",
+      "password": "SBKHTEAM",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "session_friday": "Active",
+      "brand": "SBKH",
+      "sheet_status": "Ready"
+    },
+    {
+      "id": "SH_SBKH_2988",
+      "phone": "+85511412988",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_2988",
+      "user_name": "SBKH",
+      "profile_hint": "SBKH Cashier",
+      "password": "SBKHTEAM",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active",
+      "brand": "SBKH"
+    },
+    {
+      "id": "SH_SBKH_5288",
+      "phone": "+855764265288",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_5288",
+      "user_name": "SBKH",
+      "profile_hint": "Juu Naa",
+      "password": "SBKHTEAM",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active",
+      "brand": "SBKH"
+    },
+    {
+      "id": "SH_SBKH_8436",
+      "phone": "+85567618436",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_8436",
+      "user_name": "SBKH",
+      "profile_hint": "SBKH ADS 1",
+      "password": "SBKHTEAM",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active",
+      "brand": "SBKH"
+    },
+    {
+      "id": "SH_SBKH_8862",
+      "phone": "+85567868862",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_8862",
+      "user_name": "SBKH",
+      "profile_hint": "SBKH ADS 2",
+      "password": "SBKHTEAM",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active",
+      "brand": "SBKH"
+    },
+    {
+      "id": "SH_SBKH_4265",
+      "phone": "+85567634265",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_4265",
+      "user_name": "SBKH",
+      "profile_hint": "SBKh ADS 3",
+      "password": "SBKHTEAM",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active",
+      "brand": "SBKH"
+    },
+    {
+      "id": "SH_SBKH_2071",
+      "phone": "+85517202071",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_2071",
+      "user_name": "SBKH",
+      "profile_hint": "Smey",
+      "password": "WFHWFH88",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active",
+      "brand": "SBKH"
+    },
+    {
+      "id": "SH_SBKH_0827",
+      "phone": "+85577290827",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_0827",
+      "user_name": "SBKH",
+      "profile_hint": "Handsome boy",
+      "password": "WFHWFH88",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active",
+      "brand": "SBKH"
+    },
+    {
+      "id": "SH_SBKH_9617",
+      "phone": "+85514759617",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_9617",
+      "user_name": "SBKH",
+      "profile_hint": "love8",
+      "password": "WFHWFH88",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active",
+      "brand": "SBKH"
+    },
+    {
+      "id": "SH_SBKH_0842",
+      "phone": "+85589250842",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_0842",
+      "user_name": "SBKH",
+      "profile_hint": "Vid_Real",
+      "password": "WFHWFH88",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active",
+      "brand": "SBKH"
+    },
+    {
+      "id": "SH_SBKH_9683",
+      "phone": "+855978429683",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_9683",
+      "user_name": "SBKH",
+      "profile_hint": "Lii Kaa",
+      "password": "778899",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "session_friday": "Active",
+      "brand": "SBKH",
+      "sheet_status": "Ready"
+    },
+    {
+      "id": "SH_SBKH_3085",
+      "phone": "+85568773085",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_3085",
+      "user_name": "SBKH",
+      "profile_hint": "Lii Kaa",
+      "password": "778899",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "session_friday": "Active",
+      "brand": "SBKH",
+      "sheet_status": "Ready"
+    },
+    {
+      "id": "SH_SBKH_9340",
+      "phone": "+855313309340",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_9340",
+      "user_name": "SBKH",
+      "profile_hint": "Lita 🌸🍁",
+      "password": "778899",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "session_friday": "Active",
+      "brand": "SBKH",
+      "sheet_status": "Ready"
+    },
+    {
+      "id": "SH_SBKH_9699",
+      "phone": "+855968779699",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_9699",
+      "user_name": "SBKH",
+      "profile_hint": "Meychu",
+      "password": "778899",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "session_friday": "Active",
+      "brand": "SBKH",
+      "sheet_status": "Ready"
+    },
+    {
+      "id": "SH_SBKH_2101",
+      "phone": "+855966202101",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_2101",
+      "user_name": "SBKH",
+      "profile_hint": "Sok Nanin",
+      "password": "778899",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "session_friday": "Active",
+      "brand": "SBKH",
+      "sheet_status": "Ready"
+    },
+    {
+      "id": "SH_SBKH_2972",
+      "phone": "+855966202972",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_2972",
+      "user_name": "SBKH",
+      "profile_hint": "Sol Kolab",
+      "password": "778899",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "session_friday": "Active",
+      "brand": "SBKH",
+      "sheet_status": "Ready"
+    },
+    {
+      "id": "SH_SBKH_8798",
+      "phone": "+85568738798",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_8798",
+      "user_name": "SBKH",
+      "profile_hint": "អានីតា💖💖",
+      "password": "778899",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "session_friday": "Active",
+      "brand": "SBKH",
+      "sheet_status": "Ready"
+    },
+    {
+      "id": "SH_SBKH_5466",
+      "phone": "+85567605466",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_5466",
+      "user_name": "SBKH",
+      "profile_hint": "A",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active",
+      "brand": "SBKH"
+    },
+    {
+      "id": "SH_SBKH_0515",
+      "phone": "+85567820515",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_0515",
+      "user_name": "SBKH",
+      "profile_hint": "K",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active",
+      "brand": "SBKH"
+    },
+    {
+      "id": "SH_SBKH_1624",
+      "phone": "+85567651624",
+      "owner": "SBKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_SBKH_1624",
+      "user_name": "SBKH",
+      "profile_hint": "Z",
+      "remark": "USC-SBKH-Other",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active",
+      "brand": "SBKH"
+    },
+    {
+      "id": "SH_17WINKH_4380",
+      "phone": "+855964604380",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_4380",
+      "user_name": "17WINKH",
+      "profile_hint": "LiiNyy​ លីនី",
+      "remark": "USC-17WINKH-002",
+      "currency": "USC",
+      "session_friday": "Pending Login",
+      "brand": "17WINKH"
+    },
+    {
+      "id": "SH_17WINKH_5694",
+      "phone": "+855967645694",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_5694",
+      "user_name": "17WINKH",
+      "profile_hint": "អូននីន នីន",
+      "remark": "USC-17WINKH-002",
+      "currency": "USC",
+      "session_friday": "Pending Login",
+      "brand": "17WINKH"
+    },
+    {
+      "id": "SH_17WINKH_9226",
+      "phone": "+855884099226",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_9226",
+      "user_name": "17WINKH",
+      "profile_hint": "អូន សី",
+      "remark": "USC-17WINKH-002",
+      "currency": "USC",
+      "session_friday": "Pending Login",
+      "brand": "17WINKH"
+    },
+    {
+      "id": "SH_17WINKH_9991",
+      "phone": "+855967959991",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_9991",
+      "user_name": "17WINKH",
+      "profile_hint": "Juu Ying",
+      "remark": "USC-17WINKH-002",
+      "currency": "USC",
+      "session_friday": "Pending Login",
+      "brand": "17WINKH"
+    },
+    {
+      "id": "SH_17WINKH_5279",
+      "phone": "+85599215279",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_5279",
+      "user_name": "17WINKH",
+      "profile_hint": "Rathana",
+      "password": "565565",
+      "remark": "USC-17WINKH-Other",
+      "currency": "USC",
+      "brand": "17WINKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_7983",
+      "phone": "+85577807983",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_7983",
+      "user_name": "17WINKH",
+      "profile_hint": "SreyBalla",
+      "password": "565565",
+      "remark": "USC-17WINKH-Other",
+      "currency": "USC",
+      "brand": "17WINKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_3891",
+      "phone": "+601160683891",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_3891",
+      "user_name": "17WINKH",
+      "profile_hint": "Vann Sreyneath",
+      "password": "1234",
+      "remark": "USC-17WINKH-Other",
+      "currency": "USC",
+      "brand": "17WINKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_4091",
+      "phone": "+601161864091",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_4091",
+      "user_name": "17WINKH",
+      "profile_hint": "Ahneath",
+      "password": "1234",
+      "remark": "USC-17WINKH-Other",
+      "currency": "USC",
+      "brand": "17WINKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_2660",
+      "phone": "+601160682660",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_2660",
+      "user_name": "17WINKH",
+      "profile_hint": "Neathneath",
+      "password": "1234",
+      "remark": "USC-17WINKH-Other",
+      "currency": "USC",
+      "brand": "17WINKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_6116",
+      "phone": "+855978646116",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_6116",
+      "user_name": "17WINKH",
+      "profile_hint": "SIVE ENG",
+      "password": "1234",
+      "remark": "USC-17WINKH-Other",
+      "currency": "USC",
+      "brand": "17WINKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_1958",
+      "phone": "+855882411958",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_1958",
+      "user_name": "17WINKH",
+      "profile_hint": "Nii Taa",
+      "password": "1234",
+      "remark": "USC-17WINKH-Other",
+      "currency": "USC",
+      "brand": "17WINKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_2392",
+      "phone": "+855969382392",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_2392",
+      "user_name": "17WINKH",
+      "profile_hint": "លី ហ្សា❤️ (mira)",
+      "password": "1234",
+      "remark": "USC-17WINKH-Other",
+      "currency": "USC",
+      "brand": "17WINKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_2711",
+      "phone": "+855969392711",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_2711",
+      "user_name": "17WINKH",
+      "profile_hint": "Theann",
+      "password": "1234",
+      "remark": "USC-17WINKH-Other",
+      "currency": "USC",
+      "brand": "17WINKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_2661",
+      "phone": "+601160682661",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_2661",
+      "user_name": "17WINKH",
+      "profile_hint": "អូន ធាន",
+      "password": "1234",
+      "remark": "USC-17WINKH-Other",
+      "currency": "USC",
+      "brand": "17WINKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_6630",
+      "phone": "+855713406630",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_6630",
+      "user_name": "17WINKH",
+      "profile_hint": "Ahh Meyy",
+      "password": "1234",
+      "remark": "USC-17WINKH-Other",
+      "currency": "USC",
+      "brand": "17WINKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_5841",
+      "phone": "+855969385841",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_5841",
+      "user_name": "17WINKH",
+      "profile_hint": "Boo Meyy",
+      "password": "1234",
+      "remark": "USC-17WINKH-Other",
+      "currency": "USC",
+      "brand": "17WINKH",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_2119",
+      "phone": "+855718412119",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_2119",
+      "user_name": "17WINKH",
+      "profile_hint": "Dara",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_9649",
+      "phone": "+855717579649",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_9649",
+      "user_name": "17WINKH",
+      "profile_hint": "Vith",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_2659",
+      "phone": "+855719052659",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_2659",
+      "user_name": "17WINKH",
+      "profile_hint": "Ben Ben",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_0619",
+      "phone": "+855719500619",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_0619",
+      "user_name": "17WINKH",
+      "profile_hint": "Panharith",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_5439",
+      "phone": "+855717595439",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_5439",
+      "user_name": "17WINKH",
+      "profile_hint": "David Yin",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_6929",
+      "phone": "+855718706929",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_6929",
+      "user_name": "17WINKH",
+      "profile_hint": "Oun Ny",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_6809",
+      "phone": "+855717596809",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_6809",
+      "user_name": "17WINKH",
+      "profile_hint": "Chou Chou",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_1094",
+      "phone": "+855962721094",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_1094",
+      "user_name": "17WINKH",
+      "profile_hint": "ម៉ូលី ម៉ូលី",
+      "password": "17WINTEAM",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_5602",
+      "phone": "+855713935602",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_5602",
+      "user_name": "17WINKH",
+      "profile_hint": "Oun Moly",
+      "password": "17WINTEAM",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_4901",
+      "phone": "+601160884901",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_4901",
+      "user_name": "17WINKH",
+      "profile_hint": "Moly Moly",
+      "password": "17WINTEAM",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_3288",
+      "phone": "+601161863288",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_3288",
+      "user_name": "17WINKH",
+      "profile_hint": "ម៉ូលី",
+      "password": "17WINTEAM",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_1869",
+      "phone": "+601171321869",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_1869",
+      "user_name": "17WINKH",
+      "profile_hint": "Ah Molee",
+      "password": "17WINTEAM",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_5684",
+      "phone": "+85561745684",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_5684",
+      "user_name": "17WINKH",
+      "profile_hint": "រ៉ាត់ រីណា",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_7529",
+      "phone": "+855719597529",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_7529",
+      "user_name": "17WINKH",
+      "profile_hint": "Mouyyy",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_7859",
+      "phone": "+855718847859",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_7859",
+      "user_name": "17WINKH",
+      "profile_hint": "HanaHana_02",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_2603",
+      "phone": "+855764582603",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_2603",
+      "user_name": "17WINKH",
+      "profile_hint": "Ciciii_022",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_6298",
+      "phone": "+85592316298",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_6298",
+      "user_name": "17WINKH",
+      "profile_hint": "Kiki",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_8394",
+      "phone": "+85567648394",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_8394",
+      "user_name": "17WINKH",
+      "profile_hint": "Reak Smey",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_3124",
+      "phone": "+85567673124",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_3124",
+      "user_name": "17WINKH",
+      "profile_hint": "Phearun",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_2015",
+      "phone": "+85567652015",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_2015",
+      "user_name": "17WINKH",
+      "profile_hint": "Dara",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_0914",
+      "phone": "+85567660914",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_0914",
+      "user_name": "17WINKH",
+      "profile_hint": "Theara",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_7506",
+      "phone": "+85567717506",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_7506",
+      "user_name": "17WINKH",
+      "profile_hint": "Ra Vin",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_3474",
+      "phone": "+85567643474",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_3474",
+      "user_name": "17WINKH",
+      "profile_hint": "Da Vin",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
+    },
+    {
+      "id": "SH_17WINKH_8614",
+      "phone": "+85567758614",
+      "owner": "17WINKH",
+      "enabled": true,
+      "session": "telegram_session/shooter/SH_17WINKH_8614",
+      "user_name": "17WINKH",
+      "profile_hint": "Lim Horng",
+      "remark": "USC-17WINKH-Other",
+      "brand": "17WINKH",
+      "currency": "USC",
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     }
   ]
 }

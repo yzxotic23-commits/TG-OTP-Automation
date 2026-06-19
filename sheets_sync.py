@@ -228,17 +228,98 @@ def resolve_device_brand_code(
 
 
 _ID_PREFIX_BRAND_ALIASES: dict[str, str] = {
-    "SEABET99KH": "SB99KH",
-    "SEABET99": "SB99KH",
+    "SEABET99KH": "SBKH",
+    "SEABET99": "SBKH",
+    "SB99KH": "SBKH",
+    "CAM68KH": "SBKH",
+    "CAM78KH": "SBKH",
     "SEABETKH": "SBKH",
     "SEABETCS99": "SBKH",
     "SEABETKHCS01": "SBKH",
     "SEABETKHCS2": "SBKH",
     "SEABETKHCS5": "SBKH",
-    "17WIN168": "17WIN168KH",
-    "UWON29": "UW29KH",
-    "UWKH29": "UW29KH",
+    "17WIN168": "17WINKH",
+    "17WIN168KH": "17WINKH",
+    "UWON29": "17WINKH",
+    "UWKH29": "17WINKH",
+    "UW29KH": "17WINKH",
+    "UWON33": "17WINKH",
 }
+
+# Retired sub-brands → single umbrella brand in /main, /other, Sheet sync.
+_CANONICAL_BRAND_ALIASES: dict[str, str] = {
+    "SB99KH": "SBKH",
+    "CAM68KH": "SBKH",
+    "CAM78KH": "SBKH",
+    "SEABET99KH": "SBKH",
+    "SEABET99": "SBKH",
+    "17WIN168KH": "17WINKH",
+    "17WIN168": "17WINKH",
+    "UW29KH": "17WINKH",
+    "UWON33": "17WINKH",
+    "UWON29": "17WINKH",
+    "UWKH29": "17WINKH",
+}
+
+_SBKH_FAMILY_ID_PREFIXES = ("SBKH_", "SB99KH_", "CAM68KH_", "CAM78KH_")
+_WINKH_FAMILY_ID_PREFIXES = ("17WINKH_", "17WIN168KH_", "UW29KH_", "UWON33_", "UWKH_")
+
+
+def canonical_brand(name: str) -> str:
+    """Map retired sub-brands to umbrella brand (SBKH or 17WINKH)."""
+    n = str(name or "").strip().upper()
+    if not n:
+        return n
+    return _CANONICAL_BRAND_ALIASES.get(n, n)
+
+
+def sbkh_family_brand(
+    *,
+    device_id: str = "",
+    account_id: str = "",
+    user_name: str = "",
+) -> str | None:
+    """True when row belongs to USC SBKH pool (Main + Other sub-lines)."""
+    dev = str(device_id or "").strip().upper()
+    if dev.startswith("USC-SBKH") or "-SBKH" in dev:
+        return "SBKH"
+    if str(user_name or "").strip().upper() == "SBKH":
+        return "SBKH"
+    aid = str(account_id or "").strip().upper()
+    if any(aid.startswith(p) for p in _SBKH_FAMILY_ID_PREFIXES):
+        return "SBKH"
+    return None
+
+
+def winkh_family_brand(
+    *,
+    device_id: str = "",
+    account_id: str = "",
+    user_name: str = "",
+) -> str | None:
+    """True when row belongs to USC 17WINKH pool (17WIN168 + UW29 + UWON33 merged)."""
+    dev = str(device_id or "").strip().upper()
+    if dev.startswith("USC-17WINKH") or "-17WINKH" in dev:
+        return "17WINKH"
+    if str(user_name or "").strip().upper() == "17WINKH":
+        return "17WINKH"
+    aid = str(account_id or "").strip().upper()
+    if any(aid.startswith(p) for p in _WINKH_FAMILY_ID_PREFIXES):
+        return "17WINKH"
+    return None
+
+
+def umbrella_family_brand(
+    *,
+    device_id: str = "",
+    account_id: str = "",
+    user_name: str = "",
+) -> str | None:
+    return sbkh_family_brand(
+        device_id=device_id, account_id=account_id, user_name=user_name
+    ) or winkh_family_brand(
+        device_id=device_id, account_id=account_id, user_name=user_name
+    )
 
 
 def resolve_brand_from_id(
@@ -251,6 +332,7 @@ def resolve_brand_from_id(
         return None
     pref = aid.split("_", 1)[0] if "_" in aid else aid
     pref = _ID_PREFIX_BRAND_ALIASES.get(pref, pref)
+    pref = canonical_brand(pref)
     if is_currency_code(pref):
         return None
     if brands_cfg:
@@ -286,18 +368,27 @@ def infer_gcs_brand(
     """
     b = str(brand or "").strip().upper()
     if b and not is_currency_code(b):
+        b = canonical_brand(b)
         if not brands_cfg or b in brands_cfg:
             return b
 
+    family = umbrella_family_brand(
+        device_id=device_id,
+        account_id=account_id,
+        user_name=str(brand or ""),
+    )
+    if family:
+        return family
+
     resolved = resolve_brand_from_id(account_id, brands_cfg)
     if resolved:
-        return resolved
+        return canonical_brand(resolved)
 
     currency, code = parse_device_id(device_id)
     if code and currency:
         resolved = resolve_device_brand_code(code, currency=currency, brands_cfg=brands_cfg)
         if resolved:
-            return resolved
+            return canonical_brand(resolved)
         code_u = code.upper()
         cur_u = currency.upper()
         if brands_cfg:
@@ -309,7 +400,7 @@ def infer_gcs_brand(
                 if bcur and bcur != cur_u:
                     continue
                 if bu == code_u or bu.startswith(f"{code_u}") or code_u.startswith(bu):
-                    return bu
+                    return canonical_brand(bu)
     return None
 
 
@@ -721,10 +812,11 @@ def _extract_login_code(raw: str) -> str:
     return ""
 
 
-def fetch_phones_by_sheet_status(root: Path, *status_values: str) -> set[str]:
+def fetch_phones_by_sheet_status(root: Path, *status_values: str, force: bool = False) -> set[str]:
     """
     Phone numbers where column I (Status) matches (default: Pending).
     Empty status_values → use Pending from env / default.
+    force=True bypasses sheet read cache (use in LIVE-LOGIN poll).
     """
     if not _sheet_id() or not use_telegram_acc_format():
         return set()
@@ -733,7 +825,7 @@ def fetch_phones_by_sheet_status(root: Path, *status_values: str) -> set[str]:
         raw_trigger = os.environ.get("TELEGRAM_SHEET_LOGIN_TRIGGER_STATUS", "Pending").strip()
         targets = {_normalize_sheet_status_value(raw_trigger)}
     try:
-        headers, lines = read_telegram_acc_tab(root)
+        headers, lines = read_telegram_acc_tab(root, force=force)
         if not headers:
             return set()
         out: set[str] = set()
@@ -752,10 +844,10 @@ def fetch_phones_by_sheet_status(root: Path, *status_values: str) -> set[str]:
         return set()
 
 
-def _sheet_row_hidden_from_bot_list(row: dict[str, str]) -> bool:
-    """True when account must not appear in Telegram /main or /other lists."""
-    st = _normalize_sheet_status_value(row.get("status", ""))
-    sf = _normalize_sheet_status_value(row.get("session_friday", ""))
+def _status_values_hidden_from_bot_list(status: str, session_friday: str = "") -> bool:
+    """Pending / Pending Login → hide from Telegram /main and /other lists."""
+    st = _normalize_sheet_status_value(status)
+    sf = _normalize_sheet_status_value(session_friday)
     pending_login = _normalize_sheet_status_value("Pending Login")
     login_trigger = _normalize_sheet_status_value(
         os.environ.get("TELEGRAM_SHEET_LOGIN_TRIGGER_STATUS", "Pending")
@@ -767,7 +859,41 @@ def _sheet_row_hidden_from_bot_list(row: dict[str, str]) -> bool:
     return False
 
 
-def fetch_phones_hidden_from_bot_list(root: Path, *, pool: str | None = None) -> set[str]:
+def _sheet_row_hidden_from_bot_list(row: dict[str, str]) -> bool:
+    """True when account must not appear in Telegram /main or /other lists."""
+    return _status_values_hidden_from_bot_list(
+        str(row.get("status") or row.get("session_user") or ""),
+        str(row.get("session_friday") or ""),
+    )
+
+
+def json_row_hidden_from_bot_list(row: dict[str, Any]) -> bool:
+    """JSON fallback — uses sheet_status / session_friday saved during sync pull."""
+    if not isinstance(row, dict):
+        return False
+    st = str(
+        row.get("sheet_status")
+        or row.get("status")
+        or row.get("session_user")
+        or ""
+    )
+    sf = str(row.get("session_friday") or "")
+    return _status_values_hidden_from_bot_list(st, sf)
+
+
+def _apply_sheet_list_fields(out: dict[str, Any], row: dict[str, str]) -> None:
+    """Persist Sheet Status + Session Friday on JSON rows for offline bot-list filtering."""
+    st = effective_row_status(row)
+    sf = str(row.get("session_friday") or "").strip()
+    if st:
+        out["sheet_status"] = st
+    if sf:
+        out["session_friday"] = sf
+
+
+def fetch_phones_hidden_from_bot_list(
+    root: Path, *, pool: str | None = None, force: bool = False
+) -> set[str]:
     """
     Phones excluded from bot account lists (/main, /other).
     Pending / Pending Login (Status or Session Friday) — no session ready for staff OTP yet.
@@ -779,7 +905,7 @@ def fetch_phones_hidden_from_bot_list(root: Path, *, pool: str | None = None) ->
     if pl not in ("gcs", "shooter"):
         pl = ""
     try:
-        headers, lines = read_telegram_acc_tab(root)
+        headers, lines = read_telegram_acc_tab(root, force=force)
         if not headers:
             return set()
         out: set[str] = set()
@@ -1015,7 +1141,7 @@ def _new_gcs_id(
 
 def shooter_rename_on_owner_change() -> bool:
     """Full pull: rename SH_OLD_* → SH_NEW_* when Sheet User/owner changes."""
-    v = os.environ.get("TELEGRAM_SYNC_SHOOTER_RENAME_ON_OWNER", "1").strip().lower()
+    v = os.environ.get("TELEGRAM_SYNC_SHOOTER_RENAME_ON_OWNER", "0").strip().lower()
     return v not in ("0", "false", "no", "off")
 
 
@@ -1206,12 +1332,20 @@ def _gcs_brand_from_sheet_row(
     account_id: str = "",
     brands_cfg: dict[str, dict[str, Any]] | None = None,
 ) -> str:
-    """Sheet brand / USC-OK188KH pool override (legacy brands merged under OK188KH)."""
+    """Sheet brand / pool overrides (OK188KH, SBKH family, …)."""
     device_id_raw = str(row.get("device_id") or "").strip().upper()
     if device_id_raw.startswith("USC-OK188KH"):
         return "OK188KH"
+    family = umbrella_family_brand(
+        device_id=str(row.get("device_id") or ""),
+        account_id=account_id,
+        user_name=str(row.get("user") or row.get("user_name") or ""),
+    )
+    if family:
+        return family
     sheet_brand = str(row.get("brand") or "").strip().upper()
     if sheet_brand and not is_currency_code(sheet_brand):
+        sheet_brand = canonical_brand(sheet_brand)
         if not brands_cfg or sheet_brand in brands_cfg:
             return sheet_brand
     inferred = infer_gcs_brand(
@@ -1221,7 +1355,7 @@ def _gcs_brand_from_sheet_row(
         brand=str(row.get("brand") or ""),
         brands_cfg=brands_cfg,
     )
-    return inferred or ""
+    return canonical_brand(inferred) if inferred else ""
 
 
 def _telegram_row_to_gcs(
@@ -1303,7 +1437,7 @@ def _telegram_row_to_gcs(
         if merged_brand:
             out["brand"] = merged_brand
         else:
-            prev_b = str(matched.get("brand") or "").strip().upper()
+            prev_b = canonical_brand(str(matched.get("brand") or "").strip())
             if prev_b and not is_currency_code(prev_b):
                 out["brand"] = prev_b
             else:
@@ -1324,6 +1458,7 @@ def _telegram_row_to_gcs(
             )
         if inferred:
             out["brand"] = inferred
+    _apply_sheet_list_fields(out, row)
     return out
 
 
@@ -1403,6 +1538,7 @@ def _telegram_row_to_shooter(row: dict[str, str], raw: dict[str, Any], existing:
             out["brand"] = brand_from_dev
         if currency:
             out["currency"] = currency
+    _apply_sheet_list_fields(out, row)
     return out
 
 
@@ -1464,40 +1600,247 @@ def _prune_json_pool_mismatch(
     return before - len(lst)
 
 
+def _session_path_ready(path: Path, *, min_bytes: int = 1024) -> bool:
+    try:
+        return path.is_file() and path.stat().st_size >= min_bytes
+    except OSError:
+        return False
+
+
+def _acc_session_file(root: Path, acc: dict[str, Any]) -> Path:
+    session = str(acc.get("session") or "").strip()
+    if not session:
+        return root / "telegram_session" / "missing.session"
+    p = Path(session)
+    if not p.is_absolute() and p.parent == Path("."):
+        p = root / "telegram_session" / p
+    elif not p.is_absolute():
+        p = root / p
+    return Path(str(p) + ".session") if not str(p).endswith(".session") else p
+
+
+def _copy_session_file(src: Path, dst: Path) -> bool:
+    """Copy Telethon SQLite session (+ sidecar files if present)."""
+    import shutil
+
+    if not _session_path_ready(src, min_bytes=512):
+        return False
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if _session_path_ready(dst, min_bytes=512):
+        return False
+    shutil.copy2(src, dst)
+    for ext in ("-wal", "-shm", "-journal"):
+        side = Path(str(src) + ext)
+        if side.is_file():
+            try:
+                shutil.copy2(side, Path(str(dst) + ext))
+            except OSError:
+                pass
+    return _session_path_ready(dst, min_bytes=512)
+
+
+def _gcs_session_src_for_phone(
+    root: Path,
+    phone: str,
+    gcs_accounts: list[dict[str, Any]],
+    gcs_snapshot: dict[str, dict[str, Any]] | None = None,
+) -> Path | None:
+    """Find GCS .session file for a phone (current JSON or pre-pull snapshot)."""
+    np = norm_phone(phone)
+    if not np:
+        return None
+    candidates: list[str] = []
+    for acc in gcs_accounts:
+        if not isinstance(acc, dict):
+            continue
+        if norm_phone(str(acc.get("phone") or "")) != np:
+            continue
+        aid = str(acc.get("id") or "").strip()
+        if aid:
+            candidates.append(aid)
+    if gcs_snapshot and np in gcs_snapshot:
+        aid = str(gcs_snapshot[np].get("id") or "").strip()
+        if aid and aid not in candidates:
+            candidates.append(aid)
+    for aid in candidates:
+        src = root / "telegram_session" / f"{aid}.session"
+        if _session_path_ready(src):
+            return src
+    return None
+
+
 def _migrate_gcs_session_to_shooter(
     root: Path,
     shooter_acc: dict[str, Any],
     gcs_snapshot: dict[str, dict[str, Any]],
+    *,
+    gcs_accounts: list[dict[str, Any]] | None = None,
 ) -> int:
     """
     When Sheet Group moves phone GCS → Shooter, copy existing GCS .session to shooter path.
     Does not delete the GCS session file (Main row may still need it).
     """
-    import shutil
-
     phone = norm_phone(str(shooter_acc.get("phone") or ""))
     shooter_id = str(shooter_acc.get("id") or "").strip()
     if not phone or not shooter_id:
         return 0
-    dst = root / "telegram_session" / "shooter" / f"{shooter_id}.session"
-    if dst.is_file() and dst.stat().st_size >= 1024:
+    dst = _acc_session_file(root, {"session": f"telegram_session/shooter/{shooter_id}"})
+    if _session_path_ready(dst):
         return 0
-    old = gcs_snapshot.get(phone)
-    if not old:
+    src = _gcs_session_src_for_phone(root, phone, gcs_accounts or [], gcs_snapshot)
+    if not src:
         return 0
-    gid = str(old.get("id") or "").strip()
-    if not gid:
-        return 0
-    src = root / "telegram_session" / f"{gid}.session"
-    if not src.is_file() or src.stat().st_size < 1024:
-        return 0
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src, dst)
-    for ext in ("-journal",):
-        sj = Path(str(src) + ext)
-        if sj.is_file():
-            shutil.copy2(sj, Path(str(dst) + ext))
-    return 1
+    return 1 if _copy_session_file(src, dst) else 0
+
+
+def _telethon_phone_for_session(session_file: Path, api_id: int, api_hash: str) -> str:
+    from telethon.sync import TelegramClient
+
+    base = str(session_file.with_suffix(""))
+    client = TelegramClient(base, api_id, api_hash, device_model="FRIDAY_BO")
+    try:
+        client.connect()
+        if not client.is_user_authorized():
+            return ""
+        me = client.get_me()
+        if not me or not me.phone:
+            return ""
+        return norm_phone("+" + str(me.phone))
+    finally:
+        try:
+            client.disconnect()
+        except Exception:
+            pass
+
+
+def repair_session_paths(
+    root: Path,
+    *,
+    gcs_accounts: list[dict[str, Any]] | None = None,
+    shooter_accounts: list[dict[str, Any]] | None = None,
+    telethon_scan: bool = True,
+) -> dict[str, int]:
+    """
+    Align .session files with JSON paths (Main→telegram_session/, Other→telegram_session/shooter/).
+    Pass 1: copy GCS session → shooter when same phone. Pass 2: Telethon scan for orphans.
+    """
+    import json as _json
+
+    stats = {
+        "shooter_copied_from_gcs": 0,
+        "shooter_copied_from_scan": 0,
+        "gcs_copied_from_scan": 0,
+        "already_ok": 0,
+        "still_missing": 0,
+        "scan_checked": 0,
+    }
+    if gcs_accounts is None or shooter_accounts is None:
+        try:
+            gcs_raw = _json.loads((root / "accounts.json").read_text(encoding="utf-8"))
+            sh_raw = _json.loads((root / "shooteraccounts.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return stats
+        # Minimal load — caller should pass full accounts when available.
+        gcs_accounts = gcs_raw.get("otp_accounts") or []
+        shooter_accounts = sh_raw.get("shooter_accounts") or []
+
+    gcs_snapshot = {
+        norm_phone(str(r.get("phone") or "")): dict(r)
+        for r in gcs_accounts
+        if isinstance(r, dict) and norm_phone(str(r.get("phone") or ""))
+    }
+
+    missing: list[tuple[str, dict[str, Any], Path]] = []
+    ready_dst: set[str] = set()
+
+    for acc in gcs_accounts:
+        if not isinstance(acc, dict):
+            continue
+        phone = norm_phone(str(acc.get("phone") or ""))
+        if not phone:
+            continue
+        dst = _acc_session_file(root, acc)
+        if _session_path_ready(dst):
+            stats["already_ok"] += 1
+            ready_dst.add(str(dst.resolve()))
+            continue
+        missing.append(("gcs", acc, dst))
+
+    for acc in shooter_accounts:
+        if not isinstance(acc, dict):
+            continue
+        phone = norm_phone(str(acc.get("phone") or ""))
+        if not phone:
+            continue
+        dst = _acc_session_file(root, acc)
+        if _session_path_ready(dst):
+            stats["already_ok"] += 1
+            ready_dst.add(str(dst.resolve()))
+            continue
+        src = _gcs_session_src_for_phone(root, phone, gcs_accounts, gcs_snapshot)
+        if src and _copy_session_file(src, dst):
+            stats["shooter_copied_from_gcs"] += 1
+            ready_dst.add(str(dst.resolve()))
+            continue
+        missing.append(("shooter", acc, dst))
+
+    if not telethon_scan or not missing:
+        stats["still_missing"] = len(missing)
+        return stats
+
+    api_id: int | None = None
+    api_hash = ""
+    for src in (gcs_accounts, shooter_accounts):
+        for row in src:
+            if not isinstance(row, dict):
+                continue
+            try:
+                api_id = int(str(row.get("api_id") or "").strip())
+            except (TypeError, ValueError):
+                api_id = None
+            api_hash = str(row.get("api_hash") or api_hash or "").strip()
+            if api_id and api_hash:
+                break
+        if api_id and api_hash:
+            break
+    if not api_id or not api_hash:
+        stats["still_missing"] = len(missing)
+        return stats
+
+    sess_root = root / "telegram_session"
+    if not sess_root.is_dir():
+        stats["still_missing"] = len(missing)
+        return stats
+
+    phone_to_src: dict[str, Path] = {}
+    for sf in sorted(sess_root.rglob("*.session")):
+        if not _session_path_ready(sf, min_bytes=512):
+            continue
+        resolved = str(sf.resolve())
+        if resolved in ready_dst:
+            continue
+        stats["scan_checked"] += 1
+        try:
+            phone = _telethon_phone_for_session(sf, api_id, api_hash)
+        except Exception:
+            continue
+        if phone and phone not in phone_to_src:
+            phone_to_src[phone] = sf
+
+    still: list[tuple[str, dict[str, Any], Path]] = []
+    for pool, acc, dst in missing:
+        phone = norm_phone(str(acc.get("phone") or ""))
+        src = phone_to_src.get(phone)
+        if src and _copy_session_file(src, dst):
+            if pool == "shooter":
+                stats["shooter_copied_from_scan"] += 1
+            else:
+                stats["gcs_copied_from_scan"] += 1
+            ready_dst.add(str(dst.resolve()))
+        else:
+            still.append((pool, acc, dst))
+    stats["still_missing"] = len(still)
+    return stats
 
 
 def _pull_telegram_acc(
@@ -1519,6 +1862,7 @@ def _pull_telegram_acc(
         "gcs_added": 0, "gcs_updated": 0, "gcs_skipped": 0,
         "gcs_pruned_other_pool": 0, "shooter_pruned_main_pool": 0,
         "gcs_session_to_shooter": 0,
+        "repair_shooter_from_gcs": 0, "repair_still_missing": 0,
     }
     main_phones, other_phones = _sheet_phone_pool_sets(headers, lines)
     gcs_snapshot_before_pull: dict[str, dict[str, Any]] = {}
@@ -1561,10 +1905,12 @@ def _pull_telegram_acc(
                 if not np:
                     stats["gcs_skipped"] += 1
                     continue
-                if not _find_by_phone(lst, np):
-                    if not sheet_status_is_login_trigger(effective_row_status(row)):
-                        stats["gcs_skipped"] += 1
-                        continue
+                if _find_by_phone(lst, np):
+                    stats["gcs_skipped"] += 1
+                    continue
+                if not sheet_status_is_login_trigger(effective_row_status(row)):
+                    stats["gcs_skipped"] += 1
+                    continue
             entry = _telegram_row_to_gcs(row, data, lst)
             if not entry:
                 if _pool_from_group(row.get("group", "")) == "gcs":
@@ -1591,7 +1937,7 @@ def _pull_telegram_acc(
         if pruned:
             stats["gcs_skipped"] += pruned
         other_only = other_phones - main_phones
-        if root and other_only:
+        if root and other_only and not pending_only:
             for row in list(lst):
                 if not isinstance(row, dict):
                     continue
@@ -1601,7 +1947,10 @@ def _pull_telegram_acc(
                 sh_acc = shooter_phone_map.get(phone)
                 if sh_acc:
                     stats["gcs_session_to_shooter"] += _migrate_gcs_session_to_shooter(
-                        root, sh_acc, {phone: row}
+                        root,
+                        sh_acc,
+                        {phone: row},
+                        gcs_accounts=list(gcs_snapshot_before_pull.values()),
                     )
         stats["gcs_pruned_other_pool"] += _prune_json_pool_mismatch(
             lst,
@@ -1627,10 +1976,12 @@ def _pull_telegram_acc(
                 if not np:
                     stats["shooter_skipped"] += 1
                     continue
-                if not _find_by_phone(lst, np):
-                    if not sheet_status_is_login_trigger(effective_row_status(row)):
-                        stats["shooter_skipped"] += 1
-                        continue
+                if _find_by_phone(lst, np):
+                    stats["shooter_skipped"] += 1
+                    continue
+                if not sheet_status_is_login_trigger(effective_row_status(row)):
+                    stats["shooter_skipped"] += 1
+                    continue
             entry = _telegram_row_to_shooter(row, data, lst)
             if not entry:
                 if _pool_from_group(row.get("group", "")) == "shooter":
@@ -1641,7 +1992,13 @@ def _pull_telegram_acc(
             before = matched is not None
             old_id = str(matched.get("id") or "").strip() if matched else ""
             new_id = str(entry.get("id") or "").strip()
-            if root and old_id and new_id and old_id != new_id:
+            if (
+                root
+                and not pending_only
+                and old_id
+                and new_id
+                and old_id != new_id
+            ):
                 _migrate_shooter_session_files(root, old_id, new_id)
                 stats["shooter_renamed"] += 1
             if matched:
@@ -1668,7 +2025,7 @@ def _pull_telegram_acc(
             else:
                 _upsert_list(lst, entry, key="id")
                 stats["shooter_added"] += 1
-        if root:
+        if root and not pending_only:
             migrated_n, migrated_pairs = _reconcile_shooter_session_files(root, lst)
             stats["shooter_session_migrated"] += migrated_n
             stats["shooter_session_cleaned"] += _cleanup_migrated_shooter_sessions(
@@ -1677,8 +2034,20 @@ def _pull_telegram_acc(
             for acc in lst:
                 if isinstance(acc, dict):
                     stats["gcs_session_to_shooter"] += _migrate_gcs_session_to_shooter(
-                        root, acc, gcs_snapshot_before_pull
+                        root,
+                        acc,
+                        gcs_snapshot_before_pull,
+                        gcs_accounts=list(gcs_snapshot_before_pull.values()),
                     )
+        if root and not pending_only:
+            repair = repair_session_paths(
+                root,
+                gcs_accounts=list(gcs_snapshot_before_pull.values()),
+                shooter_accounts=lst,
+                telethon_scan=False,
+            )
+            stats["repair_shooter_from_gcs"] = repair.get("shooter_copied_from_gcs", 0)
+            stats["repair_still_missing"] = repair.get("still_missing", 0)
         stats["shooter_pruned_main_pool"] += _prune_json_pool_mismatch(
             lst,
             main_phones=main_phones,
