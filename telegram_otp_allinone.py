@@ -1337,16 +1337,49 @@ def build_login_qr_denied_html() -> str:
 
 
 def build_login_qr_started_html(acc_id: str, phone: str, profile: str) -> str:
-    return (
-        accounts_header_html("📷 <b>QR Login Started</b>")
-        + "\n\n"
-        + f"<b>Account</b>  ·  <code>{html.escape(acc_id)}</code>\n"
-        + f"<b>Profile</b>  ·  {html.escape(profile)}\n"
-        + f"<b>Phone</b>    ·  <code>{html.escape(phone)}</code>\n\n"
-        + "QR akan dikirim ke chat ini.\n"
-        + "HP: <b>Settings → Devices → Link Desktop Device</b> → scan.\n"
-        + "Nomor HP harus sama dengan akun di atas."
+    lines: list[str] = [
+        accounts_header_html("📷 <b>QR Login Started</b>"),
+        "",
+        f"<b>Account</b>  ·  <code>{html.escape(acc_id)}</code>",
+        f"<b>Profile</b>  ·  {html.escape(profile)}",
+        f"<b>Phone</b>    ·  <code>{html.escape(phone)}</code>",
+        "",
+        "QR akan dikirim ke chat ini dalam beberapa detik.",
+        "",
+        "<i>Nomor HP harus sama dengan akun di atas.</i>",
+    ]
+    return "\n".join(lines)
+
+
+def build_login_qr_photo_caption_html(
+    acc_id: str,
+    phone: str,
+    profile: str = "",
+    *,
+    renewed: bool = False,
+) -> str:
+    title = (
+        "↻ <b>New QR</b> — scan before it expires"
+        if renewed
+        else "📷 <b>Scan QR</b> — Link Desktop Device"
     )
+    prof = str(profile or "").strip()
+    lines: list[str] = [
+        accounts_header_html(title),
+        "",
+    ]
+    if prof:
+        lines.append(f"<b>Profile</b>  :  {html.escape(prof)}")
+    lines.append(f"<b>Phone</b>    :  <code>{html.escape(phone)}</code>")
+    lines.extend(
+        [
+            "",
+            "<b>How to scan</b>",
+            "1) Telegram → <b>Settings</b> → <b>Devices</b>",
+            "2) <b>Link Desktop Device</b> → scan the QR above",
+        ]
+    )
+    return "\n".join(lines)
 
 
 def build_login_qr_success_html(acc_id: str, profile: str) -> str:
@@ -1378,13 +1411,11 @@ async def _bot_send_qr_photo(
     phone: str,
     png_path: Path,
     *,
+    profile: str = "",
     renewed: bool = False,
 ) -> None:
-    title = "↻ QR baru (scan sebelum expired)" if renewed else "Scan QR — Link Desktop Device"
-    caption = (
-        f"<b>{html.escape(title)}</b>\n"
-        f"<code>{html.escape(acc_id)}</code> · <code>{html.escape(phone)}</code>\n"
-        "Telegram → Settings → Devices → Link Desktop Device"
+    caption = build_login_qr_photo_caption_html(
+        acc_id, phone, profile, renewed=renewed
     )
     with open(png_path, "rb") as f:
         await bot.send_photo(
@@ -1420,6 +1451,7 @@ async def _bot_qr_login_task(
                 acc_id,
                 phone,
                 path,
+                profile=profile,
                 renewed=(qr_count[0] > 1),
             ),
             loop,
@@ -1678,6 +1710,42 @@ def _manual_login_scan_delay_sec() -> int:
 
 def _listen_keep_device_label() -> str:
     return (os.environ.get("TELEGRAM_LISTEN_DEVICE_MODEL") or "FRIDAY_BO").strip() or "FRIDAY_BO"
+
+
+def _login_device_profile() -> dict[str, str]:
+    """Mobile-like params for LIVE-LOGIN send_code — improves OTP push (Telethon #4730)."""
+    return {
+        "device_model": (
+            os.environ.get("TELEGRAM_LOGIN_DEVICE_MODEL") or "FRIDAY_BO"
+        ).strip()
+        or "FRIDAY_BO",
+        "system_version": (
+            os.environ.get("TELEGRAM_LOGIN_SYSTEM_VERSION") or "Android 13"
+        ).strip()
+        or "Android 13",
+        "app_version": (
+            os.environ.get("TELEGRAM_LOGIN_APP_VERSION") or "10.14.5 (48959)"
+        ).strip()
+        or "10.14.5 (48959)",
+        "lang_code": (
+            os.environ.get("TELEGRAM_LOGIN_LANG_CODE") or "en"
+        ).strip()
+        or "en",
+        "system_lang_code": (
+            os.environ.get("TELEGRAM_LOGIN_SYSTEM_LANG_CODE") or "en-US"
+        ).strip()
+        or "en-US",
+    }
+
+
+def _login_resend_after_app_enabled() -> bool:
+    """After SentCodeTypeApp, try ResendCodeRequest for alternate delivery."""
+    return os.environ.get("TELEGRAM_LOGIN_RESEND_AFTER_APP", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
 
 
 async def _collect_non_friday_authorizations(
@@ -5755,7 +5823,9 @@ def _make_telethon_client_temp(acc: dict[str, Any]) -> tuple[Any, Path]:
 
 
 def _session_file_path(acc: dict[str, Any]) -> Path:
-    session_path: Path = acc["session"]
+    session_path = acc["session"]
+    if not isinstance(session_path, Path):
+        session_path = Path(str(session_path))
     return (
         Path(str(session_path) + ".session")
         if not str(session_path).endswith(".session")
@@ -6414,9 +6484,13 @@ def _send_code_min_interval_sec() -> int:
 
 
 async def _telethon_send_login_code(
-    client: TelegramClient, phone: str, *, acc_id: str = ""
+    client: TelegramClient,
+    phone: str,
+    *,
+    acc_id: str = "",
+    enforce_cooldown: bool = True,
 ) -> Any:
-    """Single SendCode — Telegram may return OK without a new push if requested too often."""
+    """SendCode (+ optional ResendCode) — Telegram may return OK without a new push if spammed."""
     from telethon import errors
 
     tag = f"{acc_id} — " if acc_id else ""
@@ -6428,23 +6502,33 @@ async def _telethon_send_login_code(
     except Exception:
         pass
 
-    min_iv = _send_code_min_interval_sec()
-    last = _last_send_code_at.get(np, 0.0)
-    since = time.time() - last
-    if min_iv > 0 and last > 0 and since < min_iv:
-        wait_left = int(min_iv - since)
-        print(
-            f"  ⚠ {tag}SendCode ditunda — request terlalu cepat ({wait_left}s lagi). "
-            "Telegram sering tidak push pesan baru kalau spam request.",
-            file=sys.stderr,
-            flush=True,
-        )
-        raise RuntimeError(
-            f"SendCode cooldown ({wait_left}s) — tunggu sebelum request OTP baru"
-        )
+    if enforce_cooldown:
+        min_iv = _send_code_min_interval_sec()
+        last = _last_send_code_at.get(np, 0.0)
+        since = time.time() - last
+        if min_iv > 0 and last > 0 and since < min_iv:
+            wait_left = int(min_iv - since)
+            print(
+                f"  ⚠ {tag}SendCode ditunda — request terlalu cepat ({wait_left}s lagi). "
+                "Telegram sering tidak push pesan baru kalau spam request.",
+                file=sys.stderr,
+                flush=True,
+            )
+            raise RuntimeError(
+                f"SendCode cooldown ({wait_left}s) — tunggu sebelum request OTP baru"
+            )
 
     sent = await client.send_code_request(phone)
-    _last_send_code_at[np] = time.time()
+    if enforce_cooldown:
+        _last_send_code_at[np] = time.time()
+
+    prof = _login_device_profile()
+    print(
+        f"  · {tag}Login device: {prof['device_model']} / {prof['system_version']} "
+        f"/ lang={prof['system_lang_code']}",
+        flush=True,
+    )
+
     nt = getattr(sent, "next_type", None)
     next_hint = f" | next={type(nt).__name__}" if nt else ""
     timeout = getattr(sent, "timeout", None)
@@ -6453,6 +6537,32 @@ async def _telethon_send_login_code(
         f"  ✓ {tag}Code request OK — {_otp_delivery_hint(sent.type)}{next_hint}{timeout_hint}",
         flush=True,
     )
+
+    if (
+        _login_resend_after_app_enabled()
+        and type(sent.type).__name__ == "SentCodeTypeApp"
+    ):
+        try:
+            resent = await client.send_code_request(phone)
+            rt = type(resent.type).__name__
+            print(
+                f"  ↻ {tag}ResendCode → {_otp_delivery_hint(resent.type)} ({rt})",
+                flush=True,
+            )
+            sent = resent
+            nt = getattr(sent, "next_type", None)
+            timeout = getattr(sent, "timeout", None)
+        except errors.SendCodeUnavailableError:
+            print(
+                f"  · {tag}ResendCode tidak tersedia — Telegram belum izinkan fallback",
+                flush=True,
+            )
+        except Exception as e:
+            print(
+                f"  · {tag}ResendCode gagal: {type(e).__name__}: {e}",
+                flush=True,
+            )
+
     if type(sent.type).__name__ == "SentCodeTypeApp":
         print(
             f"  · {tag}Cek chat Telegram (777000) di SEMUA device yang login nomor ini "
@@ -6510,6 +6620,20 @@ def _print_qr_for_login(
     return None
 
 
+async def _resolve_password_value(password: Any) -> str:
+    """Password from plain string or callback (Sheet / getpass)."""
+    import inspect
+
+    if password is None:
+        return ""
+    if callable(password):
+        value = password()
+        if inspect.isawaitable(value):
+            value = await value
+        return str(value or "").strip()
+    return str(password).strip()
+
+
 async def _telethon_qr_login(
     client: TelegramClient,
     *,
@@ -6559,9 +6683,7 @@ async def _telethon_qr_login(
         raise ValueError("2FA enabled — isi kolom 2FA di Sheet atau password di accounts.json")
     for _ in range(max_attempts):
         try:
-            value = password()
-            if inspect.isawaitable(value):
-                value = await value
+            value = await _resolve_password_value(password)
             await client.sign_in(password=value)
             print(f"  ✓ {tag}2FA OK", flush=True)
             return
@@ -6582,7 +6704,9 @@ async def _telethon_resend_login_code(client: TelegramClient, phone: str, *, acc
     except Exception:
         pass
     try:
-        await _telethon_send_login_code(client, phone, acc_id=acc_id)
+        await _telethon_send_login_code(
+            client, phone, acc_id=acc_id, enforce_cooldown=False
+        )
     except Exception as e:
         print(f"  ⚠ {tag}Resend code gagal: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
 
@@ -6666,9 +6790,7 @@ async def _telethon_start_with_delivery_log(
             )
         for _ in range(max_attempts):
             try:
-                value = password()
-                if inspect.isawaitable(value):
-                    value = await value
+                value = await _resolve_password_value(password)
                 await client.sign_in(password=value)
                 break
             except errors.PasswordHashInvalidError:
@@ -6698,6 +6820,11 @@ def _login_single_account(
     acc_id = str(acc.get("id") or "?")
     acc_phone = str(acc.get("phone") or "-")
 
+    if not isinstance(acc.get("session"), Path):
+        acc["session"] = normalize_session(
+            root, acc.get("session"), f"{acc_id}.session"
+        )
+
     def _clear_login_pin() -> None:
         try:
             import sheets_sync
@@ -6726,15 +6853,24 @@ def _login_single_account(
         kw["phone"] = acc["phone"]
 
     sheet_pw = _apply_sheet_login_fields(acc, root)
+    json_pw = str(acc.get("password") or "").strip()
+    preset_pw = sheet_pw or json_pw
     if _login_sheet_code_enabled():
         kw["password"] = _make_login_password_callback(
             root,
             acc_id,
             acc_phone,
-            preset_password=sheet_pw,
+            preset_password=preset_pw,
         )
-    elif sheet_pw:
-        kw["password"] = sheet_pw
+    elif preset_pw:
+        kw["password"] = preset_pw
+    else:
+        kw["password"] = _make_login_password_callback(
+            root,
+            acc_id,
+            acc_phone,
+            preset_password="",
+        )
 
     max_otp_retries = _env_int("TELEGRAM_LOGIN_OTP_RETRIES", 3, minimum=1)
     telethon_client_holder: list[Any] = [None]
@@ -6790,9 +6926,9 @@ def _login_single_account(
             telethon_session_base,
             acc["api_id"],
             acc["api_hash"],
-            device_model="FRIDAY_BO",
             connection_retries=conn_retries,
             request_retries=req_retries,
+            **_login_device_profile(),
         )
         _apply_telethon_session_tuning(client, save_entities=False)
         telethon_client_holder[0] = client
@@ -7141,6 +7277,92 @@ def _resolve_login_account(ref: str) -> tuple[dict[str, Any], str, str] | None:
     return None
 
 
+def _resolve_login_account_any(ref: str) -> tuple[dict[str, Any], str, str] | None:
+    """Like _resolve_login_account but includes enabled:false rows (test accounts)."""
+    resolved = _resolve_login_account(ref)
+    if resolved:
+        return resolved
+    key = (ref or "").strip()
+    if not key:
+        return None
+    root = project_root()
+    default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
+    raw = load_json(accounts_json_path())
+    rows = raw.get("otp_accounts")
+    if not isinstance(rows, list):
+        return None
+
+    def _row_to_acc(row: dict[str, Any]) -> dict[str, Any] | None:
+        aid = str(row.get("id") or "").strip()
+        api_id = to_int(row.get("api_id"))
+        api_hash = str(row.get("api_hash") or "").strip()
+        if not aid or api_id is None or not api_hash:
+            return None
+        return {
+            "id": aid,
+            "api_id": api_id,
+            "api_hash": api_hash,
+            "phone": str(row.get("phone") or "").strip() or None,
+            "password": str(row.get("password") or "").strip() or None,
+            "session": normalize_session(root, row.get("session"), f"{aid}.session"),
+            "notify_account": str(row.get("notify_account") or aid).strip(),
+            "profile_hint": str(row.get("profile_hint") or "").strip() or None,
+            "peer_ids": parse_peer_ids(row.get("peer_ids"), default_peers),
+            "brand": str(row.get("brand") or "").strip() or None,
+            "pool": "gcs",
+        }
+
+    if _looks_like_phone(key):
+        np = key.replace(" ", "").replace("-", "")
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            rp = str(row.get("phone") or "").replace(" ", "").replace("-", "")
+            if rp and (rp == np or rp.endswith(np) or np.endswith(rp.lstrip("+"))):
+                acc = _row_to_acc(row)
+                if acc:
+                    return acc, "otp_accounts", "GCS"
+        return None
+
+    q = key.lower()
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("id") or "").strip().lower() == q:
+            acc = _row_to_acc(row)
+            if acc:
+                return acc, "otp_accounts", "GCS"
+    return None
+
+
+def run_login_one(account_ref: str) -> int:
+    """Login satu akun via OTP — terminal input jika TELEGRAM_LOGIN_SHEET_CODE=0."""
+    ref = (account_ref or "").strip()
+    if not ref:
+        print(
+            "Usage: login PHONE_OR_ID\n"
+            "  e.g. login KH778KH_CS3\n"
+            "  e.g. login +855713398102\n"
+            "  e.g. login KH778KH_CS3\n\n"
+            "Tip: TELEGRAM_LOGIN_SHEET_CODE=0 → ketik OTP + 2FA di terminal.",
+            file=sys.stderr,
+        )
+        return 2
+    resolved = _resolve_login_account_any(ref)
+    if not resolved:
+        print(f"Account not found: {ref}", file=sys.stderr)
+        return 2
+    acc, json_key, label = resolved
+    acc_id = str(acc.get("id") or "?")
+    print(f"\n[Login] {acc_id} ({acc.get('phone')}) [{label}]")
+    ok, err = _login_single_account(acc, json_key, label)
+    if ok:
+        print(f"\n✓ {acc_id} session ready — LISTEN hot-reload will pick it up.")
+        return 0
+    print(f"\n✗ {acc_id} failed — {err or 'unknown'}", file=sys.stderr)
+    return 1
+
+
 def run_login_qr(account_ref: str) -> int:
     """Login satu akun via QR scan (HP) — by account id atau nomor HP."""
     ref = (account_ref or "").strip()
@@ -7153,7 +7375,7 @@ def run_login_qr(account_ref: str) -> int:
             file=sys.stderr,
         )
         return 2
-    resolved = _resolve_login_account(ref)
+    resolved = _resolve_login_account_any(ref)
     if not resolved:
         print(f"Account not found: {ref}", file=sys.stderr)
         print("Hint: pakai nomor HP (+855…) atau id persis dari JSON.", file=sys.stderr)
@@ -9728,6 +9950,14 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("bot", help="Run bot polling (/start, /ping).")
     sub.add_parser("login-all", help="Bootstrap login for all otp_accounts (GCS).")
     sub.add_parser("login-all-shooter", help="Login shooter_accounts + sync profile_hint from Telegram.")
+    p_login = sub.add_parser(
+        "login",
+        help="Login satu akun via OTP (terminal atau Sheet).",
+    )
+    p_login.add_argument(
+        "account_id",
+        help="Nomor HP atau account id (KH778KH_CS3, SH_OK188KH_3306, …)",
+    )
     p_qr = sub.add_parser(
         "login-qr",
         help="Login satu akun via QR scan di HP (tanpa OTP chat 777000).",
@@ -9829,6 +10059,8 @@ def main() -> int:
         return run_login_all()
     if args.command == "login-all-shooter":
         return run_login_all_shooter()
+    if args.command == "login":
+        return run_login_one(args.account_id)
     if args.command == "login-qr":
         return run_login_qr(args.account_id)
     if args.command == "listen":
