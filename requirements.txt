@@ -1,6 +1,7 @@
 python-telegram-bot>=21.6,<22
 python-dotenv>=1.0,<2
 telethon>=1.36.0,<2
+qrcode>=7.4,<9
 filelock>=3.13,<4
 gspread>=6.0,<7
 google-auth>=2.0,<3

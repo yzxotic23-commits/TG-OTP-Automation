@@ -423,6 +423,8 @@ def norm_phone(raw: str) -> str:
 
 # --- In-memory cache: avoid Google Sheets 429 (read quota per minute) ---
 _SHEET_TAB_CACHE: dict[str, tuple[float, list[str], list[list[str]]]] = {}
+# LIVE-LOGIN: pin phone → OTP cell (A1) so poll reads 1 cell, not full sheet
+_LOGIN_OTP_CELL_PIN: dict[str, tuple[float, str]] = {}
 
 
 def invalidate_sheet_cache() -> None:
@@ -606,8 +608,98 @@ def _should_instant_push(session_user: str) -> bool:
     )
 
 
+def is_transient_network_error(
+    exc: BaseException | None = None, *, message: str = ""
+) -> bool:
+    """WiFi drop / DNS blip / errno 49 — retry, jangan tandai Expired."""
+    if exc is not None:
+        if isinstance(
+            exc,
+            (
+                TimeoutError,
+                ConnectionResetError,
+                ConnectionAbortedError,
+                BrokenPipeError,
+            ),
+        ):
+            return True
+        if isinstance(exc, OSError):
+            if getattr(exc, "errno", None) in (
+                8,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                60,
+                61,
+                64,
+                65,
+                101,
+                110,
+                111,
+            ):
+                return True
+        name = type(exc).__name__.lower()
+        msg = str(exc).lower()
+    else:
+        name = ""
+        msg = str(message or "").lower()
+    combined = f"{name} {msg}"
+    needles = (
+        "timeout",
+        "timed out",
+        "connection reset",
+        "connection refused",
+        "connection aborted",
+        "server closed the connection",
+        "can't assign requested address",
+        "cannot assign requested address",
+        "nodename nor servname",
+        "name or service not known",
+        "network is unreachable",
+        "no route to host",
+        "econnreset",
+        "etimedout",
+        "connection broken",
+        "failed to establish a new connection",
+        "temporary failure",
+        "ssl: unexpected_eof",
+        "broken pipe",
+    )
+    return any(n in combined for n in needles)
+
+
+def is_auth_terminal_error(
+    exc: BaseException | None = None, *, message: str = ""
+) -> bool:
+    """Dead session / banned — jangan retry reconnect tanpa login ulang."""
+    if exc is not None:
+        name = type(exc).__name__.lower()
+        msg = str(exc).lower()
+    else:
+        name = ""
+        msg = str(message or "").lower()
+    combined = f"{name} {msg}"
+    if is_transient_network_error(exc=exc, message=message):
+        return False
+    needles = (
+        "authkeyunregistered",
+        "sessionrevoked",
+        "auth key",
+        "userdeactivatedban",
+        "phonenumberbanned",
+        "not authorized",
+        "userdeactivated",
+    )
+    return any(n in combined for n in needles)
+
+
 def classify_account_status(exc: BaseException | None = None, *, message: str = "") -> str:
     """Telegram account status for Sheet Status dropdown (Banned/Frozen/Expired/…)."""
+    if is_transient_network_error(exc=exc, message=message):
+        return "Disconnected"
     if exc is not None:
         name = type(exc).__name__.lower()
         msg = str(exc).lower()
@@ -642,9 +734,8 @@ def classify_account_status(exc: BaseException | None = None, *, message: str = 
     if "database is locked" in combined or "sqlite" in combined:
         return "Disconnected"
     if message:
-        # Avoid "Unknown" in Account Status column.
         return _map_script_status(message) or "Disconnected"
-    return "Expired"
+    return "Disconnected"
 
 
 def _sheet_status_column_value(raw: str) -> str:
@@ -794,8 +885,24 @@ def open_workbook(root: Path):
         raise ValueError("Set GOOGLE_SHEET_ID in .env (ID from the Google Sheet URL).")
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
     creds = Credentials.from_service_account_file(str(cred_path), scopes=scopes)
-    gc = gspread.authorize(creds)
-    return gc.open_by_key(sid)
+    retries = int(os.environ.get("GOOGLE_SHEET_OPEN_RETRIES", "4"))
+    base_sleep = float(os.environ.get("GOOGLE_SHEET_BATCH_BASE_SLEEP_SEC", "1.0"))
+    last_err: Exception | None = None
+    for attempt in range(max(1, retries)):
+        try:
+            gc = gspread.authorize(creds)
+            return gc.open_by_key(sid)
+        except Exception as e:
+            last_err = e
+            msg = str(e).lower()
+            if "429" in msg or "quota" in msg or is_transient_network_error(e):
+                sleep_s = min(base_sleep * (2**attempt), 30.0)
+                time.sleep(sleep_s)
+                continue
+            raise
+    if last_err:
+        raise last_err
+    raise RuntimeError("open_workbook failed")
 
 
 def _extract_login_code(raw: str) -> str:
@@ -845,16 +952,25 @@ def fetch_phones_by_sheet_status(root: Path, *status_values: str, force: bool = 
 
 
 def _status_values_hidden_from_bot_list(status: str, session_friday: str = "") -> bool:
-    """Pending / Pending Login → hide from Telegram /main and /other lists."""
+    """Pending / terminal states → hide from Telegram /main and /other lists."""
     st = _normalize_sheet_status_value(status)
     sf = _normalize_sheet_status_value(session_friday)
     pending_login = _normalize_sheet_status_value("Pending Login")
     login_trigger = _normalize_sheet_status_value(
         os.environ.get("TELEGRAM_SHEET_LOGIN_TRIGGER_STATUS", "Pending")
     )
-    if st in (pending_login, login_trigger):
+    hidden = frozenset(
+        {
+            pending_login,
+            login_trigger,
+            "expired",
+            "banned",
+            "disconnected",
+        }
+    )
+    if st in hidden:
         return True
-    if sf == pending_login:
+    if sf in hidden:
         return True
     return False
 
@@ -891,12 +1007,40 @@ def _apply_sheet_list_fields(out: dict[str, Any], row: dict[str, str]) -> None:
         out["session_friday"] = sf
 
 
+def fetch_status_by_phone_pool(
+    root: Path, *, pool: str, force: bool = False
+) -> dict[str, str]:
+    """phone → Status column (cached Sheet read) for one pool (gcs|shooter)."""
+    if not _sheet_id() or not use_telegram_acc_format():
+        return {}
+    pl = str(pool or "").strip().lower()
+    if pl not in ("gcs", "shooter"):
+        return {}
+    try:
+        headers, lines = read_telegram_acc_tab(root, force=force)
+        if not headers:
+            return {}
+        out: dict[str, str] = {}
+        for line in lines:
+            if not any(str(c).strip() for c in line):
+                continue
+            row = _row_dict(headers, line)
+            if _pool_from_group(row.get("group", "")) != pl:
+                continue
+            phone = norm_phone(row.get("phone", ""))
+            if phone:
+                out[phone] = effective_row_status(row)
+        return out
+    except Exception:
+        return {}
+
+
 def fetch_phones_hidden_from_bot_list(
     root: Path, *, pool: str | None = None, force: bool = False
 ) -> set[str]:
     """
     Phones excluded from bot account lists (/main, /other).
-    Pending / Pending Login (Status or Session Friday) — no session ready for staff OTP yet.
+    Pending / Pending Login / Expired / Banned / Disconnected (Status or Session Friday).
     pool=gcs|shooter: only rows matching that Sheet Group (Main vs Other).
     """
     if not _sheet_id() or not use_telegram_acc_format():
@@ -954,7 +1098,8 @@ def fetch_passwords_by_phone(root: Path, *, force: bool = False) -> dict[str, st
 def fetch_login_codes_by_phone(root: Path, *, force: bool = False) -> dict[str, str]:
     """
     Read tab Telegram Acc: phone -> OTP (header: OTP / Login Code).
-    Accepts cell with exactly 5 digits. force=True bypasses read cache (login poll).
+    Accepts cell with exactly 5 digits. force=True bypasses read cache.
+    Prefer fetch_login_code_for_phone() during LIVE-LOGIN — 1 cell read vs full sheet.
     """
     if not _sheet_id() or not use_telegram_acc_format():
         return {}
@@ -974,6 +1119,113 @@ def fetch_login_codes_by_phone(root: Path, *, force: bool = False) -> dict[str, 
         return out
     except Exception:
         return {}
+
+
+def _login_otp_pin_key(phone: str) -> str:
+    return f"{_sheet_id()}:{norm_phone(phone)}"
+
+
+def pin_login_otp_cell(root: Path, phone: str) -> bool:
+    """One full read to locate OTP cell — then poll that cell only (saves 429 quota)."""
+    np = norm_phone(phone)
+    if not np or not _sheet_id() or not use_telegram_acc_format():
+        return False
+    key = _login_otp_pin_key(phone)
+    try:
+        headers, lines = read_telegram_acc_tab(root, force=True)
+        phone_col = _col_index(headers, "phone")
+        otp_col = _col_index(headers, "login_code")
+        if phone_col is None or otp_col is None:
+            return False
+        for r_idx, line in enumerate(lines, start=2):
+            if phone_col >= len(line):
+                continue
+            if norm_phone(str(line[phone_col])) != np:
+                continue
+            cell = f"{_col_to_a1(otp_col + 1)}{r_idx}"
+            _LOGIN_OTP_CELL_PIN[key] = (time.time(), cell)
+            return True
+    except Exception:
+        return False
+    return False
+
+
+def clear_login_otp_cell_pin(phone: str) -> None:
+    key = _login_otp_pin_key(phone)
+    if key:
+        _LOGIN_OTP_CELL_PIN.pop(key, None)
+
+
+def _read_worksheet_cell(ws, cell: str, *, login_mode: bool = False) -> str:
+    retries = int(
+        os.environ.get(
+            "GOOGLE_SHEET_LOGIN_READ_RETRIES" if login_mode else "GOOGLE_SHEET_READ_RETRIES",
+            "8" if login_mode else "4",
+        )
+    )
+    base_sleep = float(os.environ.get("GOOGLE_SHEET_BATCH_BASE_SLEEP_SEC", "1.0"))
+    max_sleep = float(
+        os.environ.get(
+            "GOOGLE_SHEET_LOGIN_READ_MAX_SLEEP_SEC" if login_mode else "GOOGLE_SHEET_READ_MAX_SLEEP_SEC",
+            "4" if login_mode else "30",
+        )
+    )
+    last_err: Exception | None = None
+    for attempt in range(max(1, retries)):
+        try:
+            return str(ws.acell(cell).value or "").strip()
+        except Exception as e:
+            last_err = e
+            if not (_is_quota_error(e) or is_transient_network_error(e)):
+                raise
+            sleep_s = min(base_sleep * (2**attempt), max_sleep)
+            if login_mode:
+                print(
+                    f"  ⚠ OTP read quota, retry in {sleep_s:.0f}s...",
+                    flush=True,
+                )
+            elif "429" in str(e).lower() or "quota" in str(e).lower():
+                print(
+                    f"  ⚠ Sheet read quota (429), retry in {sleep_s:.0f}s...",
+                    flush=True,
+                )
+            time.sleep(sleep_s)
+    if last_err:
+        raise last_err
+    return ""
+
+
+def fetch_login_code_for_phone(root: Path, phone: str, *, force: bool = False) -> str:
+    """Read OTP for one phone — pinned cell when LIVE-LOGIN active (low quota)."""
+    np = norm_phone(phone)
+    if not np:
+        return ""
+    key = _login_otp_pin_key(phone)
+    pin = _LOGIN_OTP_CELL_PIN.get(key) if key else None
+    if pin and force:
+        try:
+            wb = open_workbook(root)
+            ws = wb.worksheet(_tab_telegram())
+            raw = _read_worksheet_cell(ws, pin[1], login_mode=True)
+            return _extract_login_code(raw)
+        except Exception:
+            pass
+    return fetch_login_codes_by_phone(root, force=force).get(np, "")
+
+
+def _clear_login_code_via_pin(root: Path, phone: str) -> bool:
+    key = _login_otp_pin_key(phone)
+    pin = _LOGIN_OTP_CELL_PIN.get(key) if key else None
+    if not pin:
+        return False
+    try:
+        wb = open_workbook(root)
+        ws = wb.worksheet(_tab_telegram())
+        _batch_update_with_retry(ws, [{"range": pin[1], "values": [[""]]}])
+        invalidate_sheet_cache()
+        return True
+    except Exception:
+        return False
 
 
 def _update_sheet_cell_by_phone(
@@ -1015,7 +1267,18 @@ def update_sheet_status_column(root: Path, phone: str, status_value: str) -> boo
 
 def clear_login_code_in_sheet(root: Path, phone: str) -> bool:
     """Clear OTP column after successful login."""
+    if _clear_login_code_via_pin(root, phone):
+        return True
     return _update_sheet_cell_by_phone(root, phone, "login_code", "")
+
+
+def prepare_login_otp_cell(root: Path, phone: str) -> bool:
+    """
+    Before send_code_request: pin OTP cell and clear stale value.
+    Prevents LIVE-LOGIN from reading an old Sheet OTP from a prior manual login.
+    """
+    pin_login_otp_cell(root, phone)
+    return clear_login_code_in_sheet(root, phone)
 
 
 def _read_tab_raw(wb, tab_name: str) -> tuple[list[str], list[list[str]]]:
@@ -1041,6 +1304,10 @@ def _read_tab_raw(wb, tab_name: str) -> tuple[list[str], list[list[str]]]:
                     f"  ⚠ Sheet read quota (429), retry in {sleep_s:.0f}s...",
                     flush=True,
                 )
+                time.sleep(sleep_s)
+                continue
+            if is_transient_network_error(e):
+                sleep_s = min(base_sleep * (2**attempt), 20.0)
                 time.sleep(sleep_s)
                 continue
             raise
@@ -1843,6 +2110,44 @@ def repair_session_paths(
     return stats
 
 
+def _refresh_json_sheet_list_fields(
+    accounts: list[dict[str, Any]],
+    *,
+    headers: list[str],
+    lines: list[list[str]],
+    pool: str,
+) -> int:
+    """Sync sheet_status + session_friday from Sheet → JSON (even on pending-only pull)."""
+    phone_to_row: dict[str, dict[str, str]] = {}
+    for line in lines:
+        if not any(str(c).strip() for c in line):
+            continue
+        row = _row_dict(headers, line)
+        if _pool_from_group(row.get("group", "")) != pool:
+            continue
+        p = norm_phone(row.get("phone", ""))
+        if p:
+            phone_to_row[p] = row
+    updated = 0
+    for i, r in enumerate(accounts):
+        if not isinstance(r, dict):
+            continue
+        p = norm_phone(str(r.get("phone") or ""))
+        if not p or p not in phone_to_row:
+            continue
+        merged = dict(r)
+        old_st = str(merged.get("sheet_status") or "")
+        old_sf = str(merged.get("session_friday") or "")
+        _apply_sheet_list_fields(merged, phone_to_row[p])
+        if (
+            str(merged.get("sheet_status") or "") != old_st
+            or str(merged.get("session_friday") or "") != old_sf
+        ):
+            accounts[i] = merged
+            updated += 1
+    return updated
+
+
 def _pull_telegram_acc(
     wb,
     mutate_accounts: Callable[[dict[str, Any]], bool],
@@ -1863,6 +2168,7 @@ def _pull_telegram_acc(
         "gcs_pruned_other_pool": 0, "shooter_pruned_main_pool": 0,
         "gcs_session_to_shooter": 0,
         "repair_shooter_from_gcs": 0, "repair_still_missing": 0,
+        "gcs_sheet_fields_refreshed": 0, "shooter_sheet_fields_refreshed": 0,
     }
     main_phones, other_phones = _sheet_phone_pool_sets(headers, lines)
     gcs_snapshot_before_pull: dict[str, dict[str, Any]] = {}
@@ -1957,6 +2263,9 @@ def _pull_telegram_acc(
             main_phones=main_phones,
             other_phones=other_phones,
             keep_pool="gcs",
+        )
+        stats["gcs_sheet_fields_refreshed"] = _refresh_json_sheet_list_fields(
+            lst, headers=headers, lines=lines, pool="gcs"
         )
 
     def _apply_shooter(data: dict[str, Any]) -> None:
@@ -2053,6 +2362,9 @@ def _pull_telegram_acc(
             main_phones=main_phones,
             other_phones=other_phones,
             keep_pool="shooter",
+        )
+        stats["shooter_sheet_fields_refreshed"] = _refresh_json_sheet_list_fields(
+            lst, headers=headers, lines=lines, pool="shooter"
         )
 
     if not mutate_accounts(_apply_gcs):
@@ -2235,18 +2547,28 @@ def _skip_sheet_status_write(old: str, new: str) -> bool:
 
 
 def _sheet_status_locked(raw: str) -> bool:
-    """Staff-set terminal states — script must not overwrite with Ready/Active."""
-    return _normalize_sheet_display(raw).lower() in ("frozen", "banned", "expired")
+    """Banned/Frozen — jangan auto-clear. Expired/Disconnected boleh di-recover health-check."""
+    return _normalize_sheet_display(raw).lower() in ("frozen", "banned")
 
 
 def _script_may_write_status(old: str, new: str) -> bool:
     """
     Protect Status dropdown: staff Pending is login trigger — script must not overwrite
-    with Active/Ready until LIVE-LOGIN completes (except Banned/Frozen/Expired).
-    Frozen/Banned/Expired on Sheet are never overwritten by script.
+    with Active/Ready until LIVE-LOGIN completes.
+    Banned/Frozen on Sheet are never overwritten. Expired/Disconnected may recover → Ready.
     """
     if _skip_sheet_status_write(old, new):
         return False
+    old_l = _normalize_sheet_display(old).lower()
+    new_l = _normalize_sheet_display(new).lower()
+    after = _normalize_sheet_status_value(sheet_status_after_login_value())
+    if old_l in ("expired", "disconnected") and new_l in (
+        after,
+        "ready",
+        "active",
+        "feeding",
+    ):
+        return True
     if _sheet_status_locked(old):
         return False
     if sheet_status_is_login_trigger(old):
@@ -2272,6 +2594,11 @@ def _status_map_key(phone: str, pool: str) -> str:
     return f"{p}|{pl}"
 
 
+def _plain_phone_from_status_key(key: str) -> str:
+    raw = str(key or "").split("|", 1)[0]
+    return norm_phone(raw)
+
+
 def _lookup_status_info(
     by_phone: dict[str, dict[str, str]], phone: str, pool: str | None
 ) -> dict[str, str] | None:
@@ -2283,6 +2610,17 @@ def _lookup_status_info(
         if hit:
             return hit
     return by_phone.get(norm_phone(phone))
+
+
+def queue_status_fields_for_account(
+    root: Path, phone: str, *, pool: str
+) -> tuple[str, str]:
+    """Latest queued Status + Session Friday for bot-list filtering."""
+    row = _lookup_status_info(collect_status_from_queue(root), phone, pool) or {}
+    return (
+        str(row.get("session_user") or "").strip(),
+        str(row.get("session_friday") or "").strip(),
+    )
 
 
 def _derive_status_from_session(
@@ -2775,13 +3113,18 @@ def _push_telegram_acc(
     updated = len(updated_phones)
     trim_phones = set(updated_phones)
     if delta_only:
-        orphan = {p for p in by_phone if p not in sheet_phones_seen}
-        if orphan:
-            trim_phones |= orphan
-            sample = ", ".join(sorted(orphan)[:5])
-            extra = f" (+{len(orphan) - 5})" if len(orphan) > 5 else ""
+        orphan_keys = {
+            k
+            for k in by_phone
+            if _plain_phone_from_status_key(k) not in sheet_phones_seen
+        }
+        if orphan_keys:
+            orphan_phones = {_plain_phone_from_status_key(k) for k in orphan_keys}
+            trim_phones |= orphan_phones
+            sample = ", ".join(sorted(orphan_phones)[:5])
+            extra = f" (+{len(orphan_phones) - 5})" if len(orphan_phones) > 5 else ""
             print(
-                f"  ⚠ Queue dropped {len(orphan)} phone(s) not in Sheet: {sample}{extra}",
+                f"  ⚠ Queue dropped {len(orphan_phones)} phone(s) not in Sheet: {sample}{extra}",
                 file=sys.stderr,
                 flush=True,
             )

@@ -190,18 +190,6 @@
       "session_friday": "Active"
     },
     {
-      "id": "SH_FANIE_03",
-      "owner": "FANIE",
-      "phone": "+601137306104",
-      "profile_hint": "h",
-      "session": "telegram_session/shooter/SH_FANIE_03",
-      "enabled": true,
-      "user_name": "Fanie",
-      "remark": "MYR-SB-007",
-      "brand": "SBMY",
-      "currency": "MYR"
-    },
-    {
       "id": "SH_FANIE_04",
       "owner": "FANIE",
       "phone": "+601137305786",
@@ -387,7 +375,7 @@
       "id": "SH_SHEVA_02",
       "owner": "SHEVA",
       "phone": "+601161758292",
-      "profile_hint": "sellina",
+      "profile_hint": "Sellina",
       "session": "telegram_session/shooter/SH_SHEVA_02",
       "enabled": true,
       "user_name": "Sheva",
@@ -410,18 +398,6 @@
       "currency": "MYR",
       "sheet_status": "Ready",
       "session_friday": "Active"
-    },
-    {
-      "id": "SH_SHEVA_04",
-      "owner": "SHEVA",
-      "phone": "+601161759790",
-      "profile_hint": "G",
-      "session": "telegram_session/shooter/SH_SHEVA_04",
-      "enabled": false,
-      "user_name": "Sheva",
-      "remark": "MYR-SB-011",
-      "brand": "SBMY",
-      "currency": "MYR"
     },
     {
       "id": "SH_SHEVA_05",
@@ -573,7 +549,7 @@
       "id": "SH_WIDYA_02",
       "owner": "WIDYA",
       "phone": "+601162276962",
-      "profile_hint": "STMY  ALI",
+      "profile_hint": "😎 STMY ALI",
       "session": "telegram_session/shooter/SH_WIDYA_02",
       "enabled": true,
       "user_name": "Widya",
@@ -603,7 +579,7 @@
       "id": "SH_WIDYA_04",
       "owner": "WIDYA",
       "phone": "+601162276322",
-      "profile_hint": "Queenza",
+      "profile_hint": "Dara",
       "session": "telegram_session/shooter/SH_WIDYA_04",
       "enabled": true,
       "user_name": "Widya",
@@ -618,7 +594,7 @@
       "id": "SH_WIDYA_05",
       "owner": "WIDYA",
       "phone": "+601162276248",
-      "profile_hint": "Aletya",
+      "profile_hint": "aletya",
       "session": "telegram_session/shooter/SH_WIDYA_05",
       "enabled": true,
       "user_name": "Widya",
@@ -754,14 +730,6 @@
       "currency": "MYR",
       "sheet_status": "Ready",
       "session_friday": "Pending Login"
-    },
-    {
-      "id": "SH_ALDO_05",
-      "owner": "ALDO",
-      "phone": "+601162277148",
-      "profile_hint": "lintun",
-      "session": "telegram_session/shooter/SH_ALDO_05",
-      "enabled": true
     },
     {
       "id": "SH_KAREN_01",
@@ -908,7 +876,7 @@
       "id": "SH_VENAN_01",
       "owner": "VENAN",
       "phone": "+601162275984",
-      "profile_hint": "bb",
+      "profile_hint": "Y",
       "session": "telegram_session/shooter/SH_VENAN_01",
       "enabled": true,
       "user_name": "Venan",
@@ -996,7 +964,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_INDRI_2584",
       "user_name": "Indri",
-      "profile_hint": "Agnes",
+      "profile_hint": "agnes",
       "remark": "MYR-ST-002",
       "brand": "STMY",
       "currency": "MYR",
@@ -1115,7 +1083,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WIDYA_0127",
       "user_name": "Widya",
-      "profile_hint": "Dennis",
+      "profile_hint": "Denis",
       "remark": "MYR-ST-003",
       "brand": "STMY",
       "currency": "MYR",
@@ -1205,7 +1173,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_ALDO_7452",
       "user_name": "Aldo",
-      "profile_hint": "fahmi",
+      "profile_hint": "Fahmi",
       "remark": "MYR-ST-005",
       "brand": "STMY",
       "currency": "MYR",
@@ -1220,7 +1188,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_ALDO_2539",
       "user_name": "Aldo",
-      "profile_hint": "chieka",
+      "profile_hint": "Chieka",
       "remark": "MYR-ST-005",
       "brand": "STMY",
       "currency": "MYR",
@@ -1265,7 +1233,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_KAREN_4862",
       "user_name": "Karen",
-      "profile_hint": "d",
+      "profile_hint": "D",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR",
@@ -1344,7 +1312,7 @@
       "brand": "JMMY",
       "currency": "MYR",
       "password": "0000",
-      "sheet_status": "Ready",
+      "sheet_status": "Expired",
       "session_friday": "Active"
     },
     {
@@ -1359,7 +1327,7 @@
       "brand": "JMMY",
       "currency": "MYR",
       "password": "0000",
-      "sheet_status": "Ready",
+      "sheet_status": "Expired",
       "session_friday": "Active"
     },
     {
@@ -1374,7 +1342,7 @@
       "brand": "JMMY",
       "currency": "MYR",
       "password": "0000",
-      "sheet_status": "Ready",
+      "sheet_status": "Expired",
       "session_friday": "Active"
     },
     {
@@ -1389,7 +1357,7 @@
       "brand": "JMMY",
       "currency": "MYR",
       "password": "0000",
-      "sheet_status": "Ready",
+      "sheet_status": "Expired",
       "session_friday": "Active"
     },
     {
@@ -1404,7 +1372,7 @@
       "brand": "JMMY",
       "currency": "MYR",
       "password": "0000",
-      "sheet_status": "Ready",
+      "sheet_status": "Expired",
       "session_friday": "Active"
     },
     {
@@ -1578,7 +1546,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_CHRISTINE_4369",
       "user_name": "Christine",
-      "profile_hint": "F",
+      "profile_hint": "Joshua",
       "remark": "SGD-WB-005",
       "brand": "WBSG",
       "currency": "SGD",
@@ -1708,8 +1676,8 @@
       "remark": "SGD-WB-009",
       "brand": "WBSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_DIAN_1539",
@@ -1722,8 +1690,8 @@
       "remark": "SGD-WB-009",
       "brand": "WBSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_DIAN_1485",
@@ -1736,8 +1704,8 @@
       "remark": "SGD-WB-009",
       "brand": "WBSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_DIAN_1449",
@@ -1750,8 +1718,8 @@
       "remark": "SGD-WB-009",
       "brand": "WBSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_DIAN_1447",
@@ -1764,8 +1732,8 @@
       "remark": "SGD-WB-009",
       "brand": "WBSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_DIAN_1213",
@@ -1778,8 +1746,8 @@
       "remark": "SGD-WB-009",
       "brand": "WBSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_DIAN_1247",
@@ -1792,8 +1760,8 @@
       "remark": "SGD-WB-009",
       "brand": "WBSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_DIAN_1276",
@@ -1806,8 +1774,8 @@
       "remark": "SGD-WB-009",
       "brand": "WBSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_DIAN_2199",
@@ -1820,8 +1788,8 @@
       "remark": "SGD-WB-009",
       "brand": "WBSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WALLACE_2192",
@@ -1923,8 +1891,8 @@
       "remark": "SGD-FW-005",
       "brand": "FWSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KAIXIAN_3022",
@@ -1937,8 +1905,8 @@
       "remark": "SGD-FW-005",
       "brand": "FWSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KAIXIAN_3349",
@@ -1951,8 +1919,8 @@
       "remark": "SGD-FW-005",
       "brand": "FWSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KAIXIAN_3352",
@@ -1965,7 +1933,7 @@
       "remark": "SGD-FW-005",
       "brand": "FWSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
+      "sheet_status": "Expired",
       "session_friday": "Pending Login"
     },
     {
@@ -1979,8 +1947,8 @@
       "remark": "SGD-FW-005",
       "brand": "FWSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_NIKKI_7054",
@@ -2004,7 +1972,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_NIKKI_7375",
       "user_name": "Nikki",
-      "profile_hint": "F",
+      "profile_hint": "Stephy",
       "remark": "SGD-FW-006",
       "brand": "FWSG",
       "currency": "SGD",
@@ -2068,8 +2036,8 @@
       "remark": "SGD-M24-003",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VINZ_4536",
@@ -2082,8 +2050,8 @@
       "remark": "SGD-M24-003",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VINZ_3995",
@@ -2096,8 +2064,8 @@
       "remark": "SGD-M24-003",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VINZ_7335",
@@ -2110,8 +2078,8 @@
       "remark": "SGD-M24-003",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VINZ_8034",
@@ -2124,8 +2092,8 @@
       "remark": "SGD-M24-003",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_EDWARD_4173",
@@ -2138,8 +2106,8 @@
       "remark": "SGD-M24-005",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_EDWARD_9230",
@@ -2152,8 +2120,8 @@
       "remark": "SGD-M24-005",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_EDWARD_7235",
@@ -2166,8 +2134,8 @@
       "remark": "SGD-M24-005",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_EDWARD_6854",
@@ -2180,8 +2148,8 @@
       "remark": "SGD-M24-005",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_EDWARD_6813",
@@ -2194,8 +2162,8 @@
       "remark": "SGD-M24-005",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KIM_6817",
@@ -2208,8 +2176,8 @@
       "remark": "SGD-M24-007",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KIM_5963",
@@ -2222,8 +2190,8 @@
       "remark": "SGD-M24-007",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KIM_6438",
@@ -2236,8 +2204,8 @@
       "remark": "SGD-M24-007",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KIM_6331",
@@ -2250,8 +2218,8 @@
       "remark": "SGD-M24-007",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KIM_2682",
@@ -2264,8 +2232,8 @@
       "remark": "SGD-M24-007",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDA_9960",
@@ -2278,8 +2246,8 @@
       "remark": "SGD-M24-008",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDA_9367",
@@ -2292,8 +2260,8 @@
       "remark": "SGD-M24-008",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDA_9241",
@@ -2306,8 +2274,8 @@
       "remark": "SGD-M24-008",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDA_8246",
@@ -2334,8 +2302,8 @@
       "remark": "SGD-M24-008",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDA_1052",
@@ -2348,8 +2316,8 @@
       "remark": "SGD-M24-008",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDA_0965",
@@ -2362,8 +2330,8 @@
       "remark": "SGD-M24-008",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDA_0943",
@@ -2376,8 +2344,8 @@
       "remark": "SGD-M24-008",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDA_0641",
@@ -2390,8 +2358,8 @@
       "remark": "SGD-M24-008",
       "brand": "M24SG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDA_0621",
@@ -2518,7 +2486,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WPLUS_8521",
       "user_name": "W+ plus",
-      "profile_hint": "Elsa",
+      "profile_hint": "F",
       "remark": "wealth",
       "currency": "WPLUS",
       "sheet_status": "Ready",
@@ -2796,7 +2764,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WALLACE_2358",
       "user_name": "Wallace",
-      "profile_hint": "stella",
+      "profile_hint": "Stella",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
       "currency": "MYR",
@@ -2828,8 +2796,8 @@
       "remark": "SGD-WB-009",
       "brand": "WBSG",
       "currency": "SGD",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_INDRI_9910",
@@ -2920,7 +2888,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_3835",
       "user_name": "OK188KH",
-      "profile_hint": "Dii",
+      "profile_hint": "Diii",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
       "sheet_status": "Ready",
@@ -3083,7 +3051,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_5086",
       "user_name": "OK188KH",
-      "profile_hint": "FANG A",
+      "profile_hint": "💙ហ្វាង ហ្វាង 🦄FANG A",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
@@ -3097,7 +3065,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_0331",
       "user_name": "OK188KH",
-      "profile_hint": "Nimol",
+      "profile_hint": "Nimol និមល",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
@@ -3111,7 +3079,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_4926",
       "user_name": "OK188KH",
-      "profile_hint": "ChingChing",
+      "profile_hint": "Chhing​​​_Chhing",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
@@ -3139,7 +3107,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_0314",
       "user_name": "OK188KH",
-      "profile_hint": "KH778 Dalin",
+      "profile_hint": "Dalin OK188KH",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
@@ -3153,7 +3121,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_7944",
       "user_name": "OK188KH",
-      "profile_hint": "Kh778 Ounya",
+      "profile_hint": "OunYa OK188KH",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
@@ -3167,7 +3135,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_0034",
       "user_name": "OK188KH",
-      "profile_hint": "KH778 kanika",
+      "profile_hint": "Kanika OK188KH",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
@@ -3181,7 +3149,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_5024",
       "user_name": "OK188KH",
-      "profile_hint": "Kh778 Linlin",
+      "profile_hint": "LinLin OK188KH",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
@@ -3195,7 +3163,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_0354",
       "user_name": "OK188KH",
-      "profile_hint": "Kh778 Ounneath",
+      "profile_hint": "OunNeath OK188KH",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
@@ -3223,7 +3191,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_3293",
       "user_name": "OK188KH",
-      "profile_hint": "Ounheng",
+      "profile_hint": "OunHeng លីហេង",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
@@ -3237,7 +3205,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_OK188KH_6546",
       "user_name": "OK188KH",
-      "profile_hint": "Nysa",
+      "profile_hint": "នីសា​-Nysa1",
       "password": "778899",
       "remark": "USC-OK188KH-Other",
       "currency": "USC",
@@ -3281,7 +3249,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_SBKH_2988",
       "user_name": "SBKH",
-      "profile_hint": "SBKH Cashier",
+      "profile_hint": "SBKH CASHIER",
       "password": "SBKHTEAM",
       "remark": "USC-SBKH-Other",
       "currency": "USC",
@@ -3311,7 +3279,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_SBKH_8436",
       "user_name": "SBKH",
-      "profile_hint": "SBKH ADS 1",
+      "profile_hint": "SeabetKH ADS 1",
       "password": "SBKHTEAM",
       "remark": "USC-SBKH-Other",
       "currency": "USC",
@@ -3326,7 +3294,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_SBKH_8862",
       "user_name": "SBKH",
-      "profile_hint": "SBKH ADS 2",
+      "profile_hint": "SeabetKH ADS 2",
       "password": "SBKHTEAM",
       "remark": "USC-SBKH-Other",
       "currency": "USC",
@@ -3341,7 +3309,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_SBKH_4265",
       "user_name": "SBKH",
-      "profile_hint": "SBKh ADS 3",
+      "profile_hint": "SeabetKH ADS 3",
       "password": "SBKHTEAM",
       "remark": "USC-SBKH-Other",
       "currency": "USC",
@@ -3555,58 +3523,6 @@
       "sheet_status": "Ready",
       "session_friday": "Active",
       "brand": "SBKH"
-    },
-    {
-      "id": "SH_17WINKH_4380",
-      "phone": "+855964604380",
-      "owner": "17WINKH",
-      "enabled": true,
-      "session": "telegram_session/shooter/SH_17WINKH_4380",
-      "user_name": "17WINKH",
-      "profile_hint": "LiiNyy​ លីនី",
-      "remark": "USC-17WINKH-002",
-      "currency": "USC",
-      "session_friday": "Pending Login",
-      "brand": "17WINKH"
-    },
-    {
-      "id": "SH_17WINKH_5694",
-      "phone": "+855967645694",
-      "owner": "17WINKH",
-      "enabled": true,
-      "session": "telegram_session/shooter/SH_17WINKH_5694",
-      "user_name": "17WINKH",
-      "profile_hint": "អូននីន នីន",
-      "remark": "USC-17WINKH-002",
-      "currency": "USC",
-      "session_friday": "Pending Login",
-      "brand": "17WINKH"
-    },
-    {
-      "id": "SH_17WINKH_9226",
-      "phone": "+855884099226",
-      "owner": "17WINKH",
-      "enabled": true,
-      "session": "telegram_session/shooter/SH_17WINKH_9226",
-      "user_name": "17WINKH",
-      "profile_hint": "អូន សី",
-      "remark": "USC-17WINKH-002",
-      "currency": "USC",
-      "session_friday": "Pending Login",
-      "brand": "17WINKH"
-    },
-    {
-      "id": "SH_17WINKH_9991",
-      "phone": "+855967959991",
-      "owner": "17WINKH",
-      "enabled": true,
-      "session": "telegram_session/shooter/SH_17WINKH_9991",
-      "user_name": "17WINKH",
-      "profile_hint": "Juu Ying",
-      "remark": "USC-17WINKH-002",
-      "currency": "USC",
-      "session_friday": "Pending Login",
-      "brand": "17WINKH"
     },
     {
       "id": "SH_17WINKH_5279",
@@ -4024,7 +3940,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_17WINKH_6298",
       "user_name": "17WINKH",
-      "profile_hint": "Kiki",
+      "profile_hint": "Kiki_",
       "remark": "USC-17WINKH-Other",
       "brand": "17WINKH",
       "currency": "USC",

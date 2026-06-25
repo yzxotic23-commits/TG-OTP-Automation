@@ -449,7 +449,7 @@
     },
     {
       "id": "WBSG_EDDIE",
-      "profile_hint": "WBSG Eddie",
+      "profile_hint": "WBSG Jack",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855885617477",
@@ -539,9 +539,9 @@
     },
     {
       "id": "KH778KH_CS3",
-      "profile_hint": "KH778CS3",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "profile_hint": "OK188KH CS3",
+      "api_id": 31598636,
+      "api_hash": "2f3b273760973957b76d1e5a47b70006",
       "phone": "+855713398102",
       "password": "778899",
       "session": "telegram_session/KH778KH_CS3",
@@ -558,9 +558,9 @@
     },
     {
       "id": "KH778KH_CS4",
-      "profile_hint": "KH778CS4",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "profile_hint": "OK188KH CS4",
+      "api_id": 31598636,
+      "api_hash": "2f3b273760973957b76d1e5a47b70006",
       "phone": "+855967527667",
       "password": "778899",
       "session": "telegram_session/KH778KH_CS4",
@@ -577,9 +577,9 @@
     },
     {
       "id": "KH778KH_MEYLY",
-      "profile_hint": "KH778meyly",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "profile_hint": "OK188KHmeyly",
+      "api_id": 31598636,
+      "api_hash": "2f3b273760973957b76d1e5a47b70006",
       "phone": "+855963954426",
       "password": "778899",
       "session": "telegram_session/KH778KH_MEYLY",
@@ -596,9 +596,9 @@
     },
     {
       "id": "KH778KH_OUNLEAK",
-      "profile_hint": "KH778ounleak",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
+      "profile_hint": "OK188KHounleak",
+      "api_id": 31598636,
+      "api_hash": "2f3b273760973957b76d1e5a47b70006",
       "phone": "+855967529122",
       "password": "778899",
       "session": "telegram_session/KH778KH_OUNLEAK",
@@ -615,7 +615,7 @@
     },
     {
       "id": "KH888KH_GCS2",
-      "profile_hint": "KH888 GCS2",
+      "profile_hint": "OK188KH GCS2",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855314903568",
@@ -634,7 +634,7 @@
     },
     {
       "id": "KH888KH_GCS1",
-      "profile_hint": "KH888 GCS1",
+      "profile_hint": "OK188KH GCS1",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855314807143",
@@ -653,7 +653,7 @@
     },
     {
       "id": "KH888KH_GCS3",
-      "profile_hint": "KH888 GCS3",
+      "profile_hint": "OK188KH GCS3",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855314461917",
@@ -672,7 +672,7 @@
     },
     {
       "id": "CAM78KH_CS1",
-      "profile_hint": "CAM78 CS1",
+      "profile_hint": "SBKH GCS5",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855314156838",
@@ -691,7 +691,7 @@
     },
     {
       "id": "CAM78KH_CS3",
-      "profile_hint": "CAM78 CS3",
+      "profile_hint": "SBKH GCS6",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855313450514",
@@ -748,7 +748,7 @@
     },
     {
       "id": "CAM68KH_CS1",
-      "profile_hint": "CAM68 CS 1",
+      "profile_hint": "SBKH CS 1",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+85567326733",
@@ -767,7 +767,7 @@
     },
     {
       "id": "CAM68KH_CS3",
-      "profile_hint": "CAM68 CS 3",
+      "profile_hint": "SBKH CS 3",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855885479066",
@@ -786,7 +786,7 @@
     },
     {
       "id": "CAM68KH_GCS2",
-      "profile_hint": "CAM68 GCS 2",
+      "profile_hint": "SBKH GCS 2",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855962975143",
@@ -805,7 +805,7 @@
     },
     {
       "id": "CAM68KH_GCS3",
-      "profile_hint": "CAM68 GCS 3",
+      "profile_hint": "SBKH GCS 3",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855967490285",
@@ -938,7 +938,7 @@
     },
     {
       "id": "OK888KH_CS1",
-      "profile_hint": "OK888 CS1",
+      "profile_hint": "OK188 CS10",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855762306022",
@@ -957,7 +957,7 @@
     },
     {
       "id": "OK888KH_CS2",
-      "profile_hint": "OK888 CS2",
+      "profile_hint": "OK188 CS55",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855762232026",
@@ -976,7 +976,7 @@
     },
     {
       "id": "OK888KH_CS3",
-      "profile_hint": "OK888 CS3",
+      "profile_hint": "OK188 CS99",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855762304543",
@@ -1185,7 +1185,7 @@
     },
     {
       "id": "SB99KH_CS1",
-      "profile_hint": "Seabet99KH CS1",
+      "profile_hint": "SBKH CS66",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+85592910305",
@@ -1204,7 +1204,7 @@
     },
     {
       "id": "SB99KH_CS3",
-      "profile_hint": "Seabet99Kh CS3",
+      "profile_hint": "SBKH CS88",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855764911627",
@@ -1223,7 +1223,7 @@
     },
     {
       "id": "SB99KH_CS2",
-      "profile_hint": "Seabet99KH CS2",
+      "profile_hint": "SBKH CS77",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855767780375",
@@ -1279,51 +1279,6 @@
       "session_friday": "Active"
     },
     {
-      "id": "SB99KH_HUAT",
-      "profile_hint": "SB99KH HUAT",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "phone": "+85592672879",
-      "password": "SBKHTEAM",
-      "session": "telegram_session/SB99KH_HUAT",
-      "notify_account": "geri_work",
-      "peer_ids": [
-        777000
-      ],
-      "enabled": true,
-      "brand": "SBKH"
-    },
-    {
-      "id": "SB99KH_OUNNA",
-      "profile_hint": "Oun Na",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "phone": "+60167101659",
-      "password": "SBKHTEAM",
-      "session": "telegram_session/SB99KH_OUNNA",
-      "notify_account": "geri_work",
-      "peer_ids": [
-        777000
-      ],
-      "enabled": true,
-      "brand": "SBKH"
-    },
-    {
-      "id": "SB99KH_OUNRY",
-      "profile_hint": "ounry",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "phone": "+60199556563",
-      "password": "SBKHTEAM",
-      "session": "telegram_session/SB99KH_OUNRY",
-      "notify_account": "geri_work",
-      "peer_ids": [
-        777000
-      ],
-      "enabled": true,
-      "brand": "SBKH"
-    },
-    {
       "id": "SB99KH_OFFICIAL",
       "profile_hint": "Seabet99 Official",
       "api_id": 22760019,
@@ -1344,7 +1299,7 @@
     },
     {
       "id": "UW29KH_GROUP",
-      "profile_hint": "UWKH29 Group",
+      "profile_hint": "17WINKH Group",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+85561394492",
@@ -1382,7 +1337,7 @@
     },
     {
       "id": "UW29KH_FAFA",
-      "profile_hint": "UWKH29 - FaFa",
+      "profile_hint": "17WINKH VIP 12",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+85592846551",
@@ -1401,7 +1356,7 @@
     },
     {
       "id": "UW29KH_B1",
-      "profile_hint": "UWKH29 B1",
+      "profile_hint": "17WINKH VIP 11",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855762975977",
@@ -1420,7 +1375,7 @@
     },
     {
       "id": "UW29KH_CS1",
-      "profile_hint": "UWON29 CS1",
+      "profile_hint": "17WINKH VIP 8",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+85561925191",
@@ -1439,7 +1394,7 @@
     },
     {
       "id": "UW29KH_CS2",
-      "profile_hint": "UWKH29 CS2",
+      "profile_hint": "17WINKH VIP 9",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+85592319233",
@@ -1458,7 +1413,7 @@
     },
     {
       "id": "UWON33_CS4",
-      "profile_hint": "UWON33CS4",
+      "profile_hint": "17WINKH | VIP 16",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855883704862",
@@ -1515,7 +1470,7 @@
     },
     {
       "id": "UWON33_CS7",
-      "profile_hint": "UWON33CS7",
+      "profile_hint": "17WINKH | VIP 19",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855883789891",
@@ -1534,7 +1489,7 @@
     },
     {
       "id": "UWON33_CS1",
-      "profile_hint": "UWON33CS1",
+      "profile_hint": "17WINKH | VIP 13",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855962428247",
@@ -1553,7 +1508,7 @@
     },
     {
       "id": "UWON33_CS2",
-      "profile_hint": "UWON33CS2",
+      "profile_hint": "17WINKH | VIP 14",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855962424547",
@@ -1572,7 +1527,7 @@
     },
     {
       "id": "UWON33_CS3",
-      "profile_hint": "UWON33CS3",
+      "profile_hint": "17WINKH | VIP 15",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+855962442542",
@@ -1705,7 +1660,7 @@
     },
     {
       "id": "17WIN168KH_CS1",
-      "profile_hint": "17WIN168 CS 1",
+      "profile_hint": "17WINKH | VIP 6",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+85577296257",
@@ -1743,7 +1698,7 @@
     },
     {
       "id": "17WIN168KH_CS3",
-      "profile_hint": "17WIN168 CS3",
+      "profile_hint": "17WINKH | VIP 7",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+85585979278",
@@ -1781,7 +1736,7 @@
     },
     {
       "id": "17WIN168KH_CS",
-      "profile_hint": "17WIN168 CS",
+      "profile_hint": "17WINKH CS",
       "api_id": 22760019,
       "api_hash": "f8e9147732572969861ede58aa96bdc1",
       "phone": "+85592993117",
@@ -1855,58 +1810,6 @@
       "session_friday": "Pending Login"
     },
     {
-      "id": "OK188KH_OK188KH",
-      "phone": "+85567677454",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "enabled": false,
-      "session": "telegram_session/OK188KH_OK188KH",
-      "notify_account": "geri_work",
-      "user_name": "OK188KH",
-      "profile_hint": "J",
-      "device_id": "USC-OK188-001",
-      "brand": "OK188KH"
-    },
-    {
-      "id": "OK188KH_OK188KH_2",
-      "phone": "+85567996501",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "enabled": false,
-      "session": "telegram_session/OK188KH_OK188KH_2",
-      "notify_account": "geri_work",
-      "user_name": "OK188KH",
-      "profile_hint": "C",
-      "device_id": "USC-OK188-001",
-      "brand": "OK188KH"
-    },
-    {
-      "id": "OK188KH_OK188KH_3",
-      "phone": "+85567678375",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "enabled": false,
-      "session": "telegram_session/OK188KH_OK188KH_3",
-      "notify_account": "geri_work",
-      "user_name": "OK188KH",
-      "profile_hint": "D",
-      "device_id": "USC-OK188-001",
-      "brand": "OK188KH"
-    },
-    {
-      "id": "OK188KH_OK188KH_4",
-      "phone": "+85567669514",
-      "api_id": 22760019,
-      "api_hash": "f8e9147732572969861ede58aa96bdc1",
-      "enabled": false,
-      "session": "telegram_session/OK188KH_OK188KH_4",
-      "notify_account": "geri_work",
-      "user_name": "OK188KH",
-      "profile_hint": "P",
-      "device_id": "USC-OK188-001",
-      "brand": "OK188KH"
-    },
-    {
       "id": "OK188KH_OK188KH_12",
       "phone": "+601139776569",
       "api_id": 22760019,
@@ -1915,7 +1818,7 @@
       "session": "telegram_session/OK188KH_OK188KH_12",
       "notify_account": "geri_work",
       "user_name": "OK188KH",
-      "profile_hint": "OK888 ADS",
+      "profile_hint": "OK188 ADS official",
       "device_id": "USC-OK188KH-Main",
       "brand": "OK188KH",
       "password": "778899",
@@ -1963,7 +1866,7 @@
       "session": "telegram_session/SBKH_SBKH",
       "notify_account": "geri_work",
       "user_name": "SBKH",
-      "profile_hint": "SeabetCS99",
+      "profile_hint": "+SEABETCS99",
       "password": "WFHWFH88",
       "device_id": "USC-SBKH-Main",
       "brand": "SBKH",
@@ -2011,7 +1914,7 @@
       "session": "telegram_session/SBKH_SBKH_4",
       "notify_account": "geri_work",
       "user_name": "SBKH",
-      "profile_hint": "Povvvvvv_",
+      "profile_hint": "Povvvvvvv_",
       "password": "WFHWFH88",
       "device_id": "USC-SBKH-Main",
       "brand": "SBKH",
@@ -2176,8 +2079,7 @@
       "chat_id": "8652491745",
       "label": "Zero Logic",
       "telegram_username": "zero_logic666",
-      "telegram_user_id": "8652491745",
-      "shooter_owner": "RIZKYR"
+      "telegram_user_id": "8652491745"
     },
     {
       "id": "karen",
@@ -2340,6 +2242,20 @@
       "label": "Annaworkkk",
       "role": "admin",
       "telegram_username": "Annaworkkk"
+    },
+    {
+      "id": "xxxgrcs",
+      "label": "Xxxgrcs",
+      "role": "admin",
+      "telegram_username": "Xxxgrcs"
+    },
+    {
+      "id": "jk961196",
+      "label": "JK",
+      "role": "admin",
+      "telegram_user_id": "5602443328",
+      "chat_id": "5602443328",
+      "telegram_username": "JK961196"
     }
   ]
 }

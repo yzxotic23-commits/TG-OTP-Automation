@@ -806,6 +806,11 @@ def ensure_staff_linked(user: Any) -> bool:
     label = (getattr(user, "full_name", None) or aid).strip()
     tg_id = str(getattr(user, "id", "") or "").strip()
     chat_id = tg_id or str(row.get("chat_id", "")).strip()
+    uname = str(getattr(user, "username", "") or "").strip().lstrip("@").lower()
+    if tg_id and str(row.get("telegram_user_id") or "").strip() == tg_id:
+        stored_un = str(row.get("telegram_username") or "").strip().lstrip("@").lower()
+        if not uname or stored_un == uname:
+            return True
 
     def writer(data: dict[str, Any]) -> None:
         rows = data.get("accounts")
@@ -1158,7 +1163,7 @@ def build_shooter_owners_list_html(shooter_rows: list[dict[str, Any]], currency:
     if usc:
         lines.append("<i>/other &lt;BRAND&gt;</i>  ·  <code>/other OK188KH</code>")
     else:
-        lines.append("<i>/other &lt;USER&gt;</i>  ·  <code>/other KAREN</code>")
+        lines.append("<i>/other &lt;USER&gt;</i>  ·  <code>/other Geri</code>")
     return "\n".join(lines)
 
 
@@ -1210,7 +1215,7 @@ def build_shooter_user_not_found_html(
     preview = ", ".join(f"<code>{html.escape(o)}</code>" for o in known[:16])
     more = f" … +{len(known) - 16}" if len(known) > 16 else ""
     group = "Brands" if usc else "Users"
-    example = "<code>/other OK188KH</code>" if usc else "<code>/other KAREN</code>"
+    example = "<code>/other OK188KH</code>" if usc else "<code>/other Geri</code>"
     return (
         accounts_header_html("⚠️ <b>Shooter User Not Found</b>")
         + f"\n\nNo shooter accounts for <code>{html.escape(owner)}</code>.\n\n"
@@ -1291,14 +1296,169 @@ def build_login_not_found_html(raw_key: str) -> str:
             + f"\n\n<code>{key_esc}</code> is not registered in "
             "<code>accounts.json</code> or <code>shooteraccounts.json</code>.\n\n"
             "Use the exact number from the list, or login by id "
-            "(e.g. <code>/login SH_KAREN_05</code>)."
+            "(e.g. <code>/login SH_GERI_01</code>)."
         )
     return (
         accounts_header_html("⚠️ <b>Not Found</b>")
         + f"\n\n<code>{key_esc}</code> not found in GCS or Shooter.\n\n"
         "GCS: <code>/login STMY_CS01</code> · "
-        "Shooter: <code>/login SH_KAREN_05</code> or <code>/login +60...</code>"
+        "Shooter: <code>/login SH_GERI_01</code> or <code>/login +60...</code>"
     )
+
+
+def _bot_qr_login_enabled() -> bool:
+    return os.environ.get("TELEGRAM_BOT_QR_LOGIN", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
+def _bot_qr_login_admin_ids() -> set[str]:
+    raw = os.environ.get("TELEGRAM_BOT_QR_LOGIN_ADMINS", "geri_work").strip()
+    return {x.strip().lower() for x in raw.split(",") if x.strip()}
+
+
+def _bot_qr_login_allowed(user: Any) -> bool:
+    allowed = _bot_qr_login_admin_ids()
+    for row in find_staff_rows_for_user(user):
+        sid = str(row.get("id") or "").strip().lower()
+        if sid and sid in allowed:
+            return True
+    return False
+
+
+def build_login_qr_denied_html() -> str:
+    return (
+        accounts_header_html("⛔ <b>QR Login — Not Allowed</b>")
+        + "\n\nHanya admin yang bisa pakai <code>/login qr</code>."
+    )
+
+
+def build_login_qr_started_html(acc_id: str, phone: str, profile: str) -> str:
+    return (
+        accounts_header_html("📷 <b>QR Login Started</b>")
+        + "\n\n"
+        + f"<b>Account</b>  ·  <code>{html.escape(acc_id)}</code>\n"
+        + f"<b>Profile</b>  ·  {html.escape(profile)}\n"
+        + f"<b>Phone</b>    ·  <code>{html.escape(phone)}</code>\n\n"
+        + "QR akan dikirim ke chat ini.\n"
+        + "HP: <b>Settings → Devices → Link Desktop Device</b> → scan.\n"
+        + "Nomor HP harus sama dengan akun di atas."
+    )
+
+
+def build_login_qr_success_html(acc_id: str, profile: str) -> str:
+    return (
+        accounts_header_html("✅ <b>QR Login OK</b>")
+        + "\n\n"
+        + f"<b>{html.escape(profile)}</b> · <code>{html.escape(acc_id)}</code>\n"
+        + "Session <b>FRIDAY_BO</b> siap — LISTEN hot-reload ~45s."
+    )
+
+
+def build_login_qr_failed_html(acc_id: str, detail: str) -> str:
+    return (
+        accounts_header_html("❌ <b>QR Login Failed</b>")
+        + "\n\n"
+        + f"<code>{html.escape(acc_id)}</code>\n"
+        + f"{html.escape(detail or 'unknown error')}"
+    )
+
+
+_bot_qr_login_busy: set[str] = set()
+
+
+async def _bot_send_qr_photo(
+    bot: Any,
+    chat_id: int,
+    thread_id: int | None,
+    acc_id: str,
+    phone: str,
+    png_path: Path,
+    *,
+    renewed: bool = False,
+) -> None:
+    title = "↻ QR baru (scan sebelum expired)" if renewed else "Scan QR — Link Desktop Device"
+    caption = (
+        f"<b>{html.escape(title)}</b>\n"
+        f"<code>{html.escape(acc_id)}</code> · <code>{html.escape(phone)}</code>\n"
+        "Telegram → Settings → Devices → Link Desktop Device"
+    )
+    with open(png_path, "rb") as f:
+        await bot.send_photo(
+            chat_id=chat_id,
+            photo=f,
+            caption=caption,
+            parse_mode="HTML",
+            message_thread_id=thread_id,
+        )
+
+
+async def _bot_qr_login_task(
+    bot: Any,
+    chat_id: int,
+    thread_id: int | None,
+    acc: dict[str, Any],
+    json_key: str,
+    label: str,
+) -> None:
+    acc_id = str(acc.get("id") or "?")
+    phone = str(acc.get("phone") or "-")
+    profile = str(acc.get("profile_hint") or acc_id)
+    loop = asyncio.get_running_loop()
+    qr_count = [0]
+
+    def on_qr_png(path: Path) -> None:
+        qr_count[0] += 1
+        asyncio.run_coroutine_threadsafe(
+            _bot_send_qr_photo(
+                bot,
+                chat_id,
+                thread_id,
+                acc_id,
+                phone,
+                path,
+                renewed=(qr_count[0] > 1),
+            ),
+            loop,
+        )
+
+    try:
+        ok, err = await asyncio.to_thread(
+            _login_single_account,
+            acc,
+            json_key,
+            label,
+            use_qr=True,
+            quiet=True,
+            qr_png_callback=on_qr_png,
+            open_qr_on_mac=False,
+        )
+        if ok:
+            await bot.send_message(
+                chat_id=chat_id,
+                text=build_login_qr_success_html(acc_id, profile),
+                parse_mode="HTML",
+                message_thread_id=thread_id,
+            )
+        else:
+            await bot.send_message(
+                chat_id=chat_id,
+                text=build_login_qr_failed_html(acc_id, err or "login failed"),
+                parse_mode="HTML",
+                message_thread_id=thread_id,
+            )
+    except Exception as e:
+        await bot.send_message(
+            chat_id=chat_id,
+            text=build_login_qr_failed_html(acc_id, f"{type(e).__name__}: {e}"),
+            parse_mode="HTML",
+            message_thread_id=thread_id,
+        )
+    finally:
+        _bot_qr_login_busy.discard(acc_id)
 
 
 def build_forum_topic_error_html(topic_currency: str, account_currency: str) -> str:
@@ -1449,6 +1609,15 @@ def build_live_login_event_html(
     ]
     if detail.strip():
         lines.append(f"Detail: <b>{html.escape(detail.strip())}</b>")
+    elif event == "sms":
+        lines.append(
+            "Detail: <b>Cek Telegram app (Service notifications) di HP — salin 5 digit "
+            "ke kolom OTP di Sheet (bukan ke chat bot)</b>"
+        )
+    elif event == "waiting":
+        lines.append(
+            "Detail: <b>Menunggu kolom OTP di Sheet diisi (5 digit)</b>"
+        )
     return "\n".join(lines)
 
 
@@ -1555,6 +1724,79 @@ def _auth_active_age_sec(date_active: Any) -> float | None:
         return max(0.0, time.time() - dt.timestamp())
     except (TypeError, ValueError, OSError):
         return None
+
+
+def _authorization_snapshot(auth: Any) -> dict[str, Any]:
+    return {
+        "hash": int(getattr(auth, "hash", 0) or 0),
+        "device": str(getattr(auth, "device_model", "") or "?"),
+        "platform": str(getattr(auth, "platform", "") or "?"),
+        "app_name": str(getattr(auth, "app_name", "") or "?"),
+        "app_version": str(getattr(auth, "app_version", "") or "?"),
+        "ip": str(getattr(auth, "ip", "") or "?"),
+        "country": str(getattr(auth, "country", "") or ""),
+        "region": str(getattr(auth, "region", "") or ""),
+        "date_active": getattr(auth, "date_active", None),
+        "current": bool(getattr(auth, "current", False)),
+    }
+
+
+def _pick_newest_authorization(auths: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Return authorization with latest date_active (smallest age)."""
+    if not auths:
+        return None
+    best: dict[str, Any] | None = None
+    best_age: float | None = None
+    for auth in auths:
+        age = _auth_active_age_sec(auth.get("date_active"))
+        if age is None:
+            if best is None:
+                best = auth
+            continue
+        if best_age is None or age < best_age:
+            best_age = age
+            best = auth
+    return best
+
+
+def _collect_friday_authorizations_sync(
+    client: Any,
+    *,
+    keep_device: str | None = None,
+) -> list[dict[str, Any]]:
+    """All FRIDAY_BO (or keep-device) sessions — including current and stale duplicates."""
+    from telethon.tl.functions.account import GetAuthorizationsRequest
+
+    keep = (keep_device or _listen_keep_device_label()).lower()
+    result = client(GetAuthorizationsRequest())
+    out: list[dict[str, Any]] = []
+    for auth in result.authorizations:
+        device = str(getattr(auth, "device_model", "") or "")
+        if keep and keep not in device.lower():
+            continue
+        out.append(_authorization_snapshot(auth))
+    return out
+
+
+def _probe_friday_session_status_sync(
+    client: Any,
+    *,
+    keep_device: str | None = None,
+) -> str:
+    """
+    Session Friday from newest FRIDAY_BO authorization on the account.
+    Older FRIDAY_BO sessions still listed in Telegram Devices are ignored.
+    """
+    try:
+        friday_auths = _collect_friday_authorizations_sync(client, keep_device=keep_device)
+    except Exception:
+        return "Disconnected"
+    if not friday_auths:
+        return "Expired"
+    newest = _pick_newest_authorization(friday_auths)
+    if not newest:
+        return "Expired"
+    return "Active"
 
 
 def _manual_login_account_fields(
@@ -1939,37 +2181,69 @@ _disconnect_batch_lock: asyncio.Lock | None = None
 _disconnect_batch_flush_task: asyncio.Task[None] | None = None
 
 
-def _disconnect_watch_config() -> tuple[int, int, int, int, int]:
+def _disconnect_watch_config() -> tuple[int, int, int, int, int, int]:
+    """grace=alert suppress window, attempts/delay=exponential reconnect base."""
     grace = _env_int("TELEGRAM_DISCONNECT_GRACE_SEC", 90, minimum=0)
-    attempts = _env_int("TELEGRAM_DISCONNECT_RECONNECT_ATTEMPTS", 5, minimum=1)
-    delay = _env_int("TELEGRAM_DISCONNECT_RECONNECT_DELAY_SEC", 15, minimum=3)
+    attempts = _env_int("TELEGRAM_DISCONNECT_RECONNECT_ATTEMPTS", 8, minimum=1)
+    delay = _env_int("TELEGRAM_DISCONNECT_RECONNECT_DELAY_SEC", 3, minimum=1)
+    max_delay = _env_int("TELEGRAM_DISCONNECT_RECONNECT_MAX_DELAY_SEC", 45, minimum=5)
     cooldown = _env_int("TELEGRAM_DISCONNECT_ALERT_COOLDOWN_SEC", 900, minimum=60)
     batch_min = _env_int("TELEGRAM_DISCONNECT_BATCH_MIN", 3, minimum=2)
-    return grace, attempts, delay, cooldown, batch_min
+    return grace, attempts, delay, max_delay, cooldown, batch_min
+
+
+def _reconnect_stagger_sec(acc_id: str) -> float:
+    """Spread reconnects — kurangi errno 49 saat ratusan akun putus bersamaan."""
+    ms = _env_int("TELEGRAM_DISCONNECT_STAGGER_MS", 2500, minimum=0)
+    if ms <= 0:
+        return 0.0
+    bucket = sum(ord(c) for c in str(acc_id or "")) % 1000
+    return (bucket / 1000.0) * (ms / 1000.0)
 
 
 async def _try_reconnect_listener_client(
     cl: TelegramClient,
     attempts: int,
     delay_sec: int,
+    max_delay_sec: int,
     tag: str,
     acc_id: str,
 ) -> bool:
+    import random
+
+    try:
+        import sheets_sync as _ss
+    except Exception:
+        _ss = None
+
+    stagger = _reconnect_stagger_sec(acc_id)
+    if stagger > 0:
+        await asyncio.sleep(stagger)
+
     for attempt in range(attempts):
         try:
             if not cl.is_connected():
                 await cl.connect()
+            me = await asyncio.wait_for(cl.get_me(), timeout=45)
+            if me:
+                return True
             if not await cl.is_user_authorized():
                 return False
-            await asyncio.wait_for(cl.get_me(), timeout=45)
-            return True
         except Exception as e:
+            if _ss and _ss.is_auth_terminal_error(e):
+                return False
+            if _ss and _ss.is_transient_network_error(e):
+                err_kind = "network"
+            else:
+                err_kind = type(e).__name__
             print(
-                f"  [{tag}] {acc_id} reconnect {attempt + 1}/{attempts}: {type(e).__name__}: {e}",
+                f"  [{tag}] {acc_id} reconnect {attempt + 1}/{attempts}: {err_kind}: {e}",
                 flush=True,
             )
         if attempt + 1 < attempts:
-            await asyncio.sleep(delay_sec)
+            wait = min(delay_sec * (2**attempt), max_delay_sec)
+            wait += random.uniform(0, max(0.5, wait * 0.15))
+            await asyncio.sleep(wait)
     return False
 
 
@@ -2498,6 +2772,8 @@ def load_otp_accounts(raw: dict[str, Any], root: Path, default_peers: list[int])
                     "peer_ids": parse_peer_ids(row.get("peer_ids"), default_peers),
                     "brand": str(row.get("brand") or "").strip() or None,
                     "device_id": str(row.get("device_id") or "").strip() or None,
+                    "sheet_status": str(row.get("sheet_status") or "").strip() or None,
+                    "session_friday": str(row.get("session_friday") or "").strip() or None,
                     "pool": "gcs",
                 }
             )
@@ -2607,6 +2883,8 @@ def load_shooter_accounts(raw: dict[str, Any]) -> list[dict[str, Any]]:
                 "brand": brand_raw.upper() if brand_raw else None,
                 "remark": str(row.get("remark") or "").strip() or None,
                 "currency": str(row.get("currency") or raw.get("shooter_currency") or "MYR").strip().upper(),
+                "sheet_status": str(row.get("sheet_status") or "").strip() or None,
+                "session_friday": str(row.get("session_friday") or "").strip() or None,
             }
         )
     return out
@@ -3152,6 +3430,22 @@ def filter_shooter_by_list_key(
     return filter_shooter_by_owner(shooter_rows, k)
 
 
+def _queue_sheet_fields_for_account(
+    acc: dict[str, Any], *, pool: str
+) -> tuple[str, str]:
+    try:
+        import sheets_sync
+
+        phone = sheets_sync.norm_phone(str(acc.get("phone") or ""))
+        if not phone:
+            return "", ""
+        return sheets_sync.queue_status_fields_for_account(
+            project_root(), phone, pool=pool
+        )
+    except Exception:
+        return "", ""
+
+
 def _shooter_display_row_session_ready(row: dict[str, Any]) -> bool:
     """True if shooter .session exists on disk (for bot list fallback without Sheet)."""
     root = project_root()
@@ -3171,21 +3465,31 @@ def _filter_bot_list_accounts(
     *,
     pool: str,
 ) -> list[dict[str, Any]]:
-    """Drop Pending Login / Pending (Sheet) and accounts without valid session from bot lists."""
+    """Drop Pending / Expired / Banned / Disconnected and session-less accounts from bot lists."""
     import sheets_sync
 
-    use_sheet = bool(os.environ.get("GOOGLE_SHEET_ID", "").strip()) and sheets_sync.use_telegram_acc_format()
+    # JSON sheet_status can lag Sheet (pending-only pull skips existing rows) — always
+    # cross-check hidden phones from Sheet (cached; no force=True on bot hot path).
+    sheet_configured = (
+        bool(os.environ.get("GOOGLE_SHEET_ID", "").strip())
+        and sheets_sync.use_telegram_acc_format()
+    )
     hidden_phones: set[str] = set()
-    if use_sheet:
+    if sheet_configured:
         hidden_phones = sheets_sync.fetch_phones_hidden_from_bot_list(
-            root, pool=pool, force=True
+            root, pool=pool, force=False
         )
     out: list[dict[str, Any]] = []
     for row in rows:
         phone = sheets_sync.norm_phone(str(row.get("phone") or ""))
-        if use_sheet and phone and phone in hidden_phones:
-            continue
         if sheets_sync.json_row_hidden_from_bot_list(row):
+            continue
+        q_su, q_sf = _queue_sheet_fields_for_account(row, pool=pool)
+        if sheets_sync.json_row_hidden_from_bot_list(
+            {"sheet_status": q_su, "session_friday": q_sf}
+        ):
+            continue
+        if sheet_configured and phone and phone in hidden_phones:
             continue
         if pool == "shooter":
             if not _shooter_display_row_session_ready(row):
@@ -4121,7 +4425,7 @@ def assign_staff_shooter_owner(owner: str, hint: str) -> tuple[bool, str]:
     if not owner_key:
         return False, (
             accounts_header_html("⚠️ <b>Invalid Owner</b>")
-            + "\n\nShooter owner name is required (e.g. <code>VENNUS</code>, <code>KAREN</code>)."
+            + "\n\nShooter owner name is required (e.g. <code>Geri</code>)."
         )
     staff_hint = str(hint or "").strip()
     if not staff_hint:
@@ -4413,15 +4717,15 @@ def build_staff_admin_usage_html() -> str:
         accounts_header_html("ℹ️ <b>Staff Management</b>")
         + "\n\n"
         + "<b>Admin (bot owner only):</b>\n"
-        + "◦ <code>/add admin jun</code>\n"
-        + "◦ <code>/add admin @JunWork16</code>\n"
-        + "◦ <code>/remove jun</code>\n"
-        + "◦ <code>/remove @JunWork16</code>\n\n"
+        + "◦ <code>/add admin staffid</code>\n"
+        + "◦ <code>/add admin @username</code>\n"
+        + "◦ <code>/remove staffid</code>\n"
+        + "◦ <code>/remove @username</code>\n\n"
         + "<b>Shooter owner (bot owner only):</b>\n"
-        + "◦ <code>/add shooter VENNUS zoey</code>\n"
-        + "◦ <code>/add shooter VENNUS 7443459642</code>\n"
-        + "◦ <code>/add shooter 7443459642 VENNUS</code>\n"
-        + "◦ <code>/remove shooter zoey</code>\n\n"
+        + "◦ <code>/add shooter Geri staffid</code>\n"
+        + "◦ <code>/add shooter Geri 7443459642</code>\n"
+        + "◦ <code>/add shooter 7443459642 Geri</code>\n"
+        + "◦ <code>/remove shooter staffid</code>\n\n"
         + "<i>User ID / @username: auto-fills JSON if staff already opened bot.</i>\n"
         + "<i>New @username: slot + admin created instantly — staff DM</i> <code>/start</code> <i>to link.</i>"
         + (f"\n\n<i>Known owners:</i> {owner_sample}" if owner_sample else "")
@@ -4663,7 +4967,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
     elif update.effective_chat.type == ChatType.PRIVATE and staff_require_allowlist():
         hint_tip = (
-            "\n\nTry: <code>/start YourShooterName</code>  e.g. <code>/start Vennus</code>" if not name_hint else
+            "\n\nTry: <code>/start YourShooterName</code>  e.g. <code>/start Geri</code>" if not name_hint else
             "\n\nName not found in the staff list. Ask admin for your shooter name."
         )
         welcome = build_staff_not_allowlisted_html(update.effective_user) + hint_tip
@@ -5044,12 +5348,15 @@ async def cmd_login(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             accounts_header_html("ℹ️ <b>Login Usage</b>")
             + "\n\n"
             "<code>/login &lt;id or phone number&gt;</code>\n\n"
+            "<b>Admin — session baru (QR, tanpa OTP chat):</b>\n"
+            "· <code>/login qr +855713398102</code>\n"
+            "· <code>/login qr KH778KH_CS3</code>\n\n"
             "<b>GCS</b> — use the topic that matches the brand (SGD, MYR, USC, …):\n"
             "· <code>/login STMY_CS01</code>\n"
             "· <code>/login +60123456789</code>\n\n"
             "<b>Shooter (Other)</b> — same currency topic (MYR / SGD / USC).\n"
             "<b>WPLUS</b> — separate: <code>/main WPLUS</code> in USC topic.\n"
-            "· <code>/login SH_VENAN_01</code>\n"
+            "· <code>/login SH_GERI_01</code>\n"
             "· <code>/login +60123456789</code> <i>(registered phone number)</i>",
             parse_mode="HTML",
         )
@@ -5059,6 +5366,77 @@ async def cmd_login(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await em.reply_text(denied, parse_mode="HTML")
         return
     ensure_staff_linked(update.effective_user)
+
+    # /login qr <phone|id> — admin only: buat session FRIDAY_BO via QR (bukan OTP forward)
+    if len(context.args) >= 2 and str(context.args[0]).lower() == "qr":
+        if not _bot_qr_login_enabled():
+            await em.reply_text(
+                accounts_header_html("ℹ️ <b>QR Login</b>")
+                + "\n\nBot QR login disabled. Set <code>TELEGRAM_BOT_QR_LOGIN=1</code> di .env.",
+                parse_mode="HTML",
+            )
+            return
+        if not _bot_qr_login_allowed(update.effective_user):
+            await em.reply_text(build_login_qr_denied_html(), parse_mode="HTML")
+            return
+        raw_key = " ".join(str(a) for a in context.args[1:]).strip()
+        resolved = _resolve_login_account(raw_key)
+        if not resolved:
+            await em.reply_text(
+                build_login_not_found_html(raw_key),
+                parse_mode="HTML",
+            )
+            return
+        acc, json_key, label = resolved
+        thread_id = getattr(em, "message_thread_id", None)
+        raw_doc = load_json(accounts_json_path())
+        brands_cfg = load_brands_config(raw_doc)
+        currency = account_currency_for_request(acc, brands_cfg)
+        topic_err = validate_forum_topic(update.effective_chat.id, thread_id, currency, raw_doc)
+        if topic_err:
+            await em.reply_text(topic_err, parse_mode="HTML")
+            return
+        if account_pool(acc) == "shooter":
+            denied_owner = validate_shooter_owner_access(
+                update, str(acc.get("owner") or "")
+            )
+            if denied_owner:
+                await em.reply_text(denied_owner, parse_mode="HTML")
+                return
+        acc_id = str(acc.get("id") or "?")
+        if _session_working(acc):
+            await em.reply_text(
+                accounts_header_html("ℹ️ <b>Already Logged In</b>")
+                + f"\n\n<code>{html.escape(acc_id)}</code> sudah punya session aktif.",
+                parse_mode="HTML",
+            )
+            return
+        if acc_id in _bot_qr_login_busy:
+            await em.reply_text(
+                accounts_header_html("⏳ <b>QR Login In Progress</b>")
+                + f"\n\n<code>{html.escape(acc_id)}</code> — tunggu scan QR yang sedang jalan.",
+                parse_mode="HTML",
+            )
+            return
+        phone = str(acc.get("phone") or "").strip() or "-"
+        profile = str(acc.get("profile_hint") or acc_id)
+        _bot_qr_login_busy.add(acc_id)
+        context.application.create_task(
+            _bot_qr_login_task(
+                context.bot,
+                update.effective_chat.id,
+                thread_id,
+                acc,
+                json_key,
+                label,
+            )
+        )
+        await em.reply_text(
+            build_login_qr_started_html(acc_id, phone, profile),
+            parse_mode="HTML",
+        )
+        return
+
     raw_key = " ".join(str(a) for a in context.args).strip()
     row = resolve_listen_account(raw_key)
     if not row:
@@ -5074,7 +5452,7 @@ async def cmd_login(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             if n > 1:
                 owner_hint = (
                     f"\n\n<code>{html.escape(owner_u)}</code> has <b>{n}</b> shooter account(s) — "
-                    "use the account id (<code>SH_KAREN_05</code>) or phone number, not just the owner name."
+                    "use the account id (<code>SH_GERI_01</code>) or phone number, not just the owner name."
                 )
         await em.reply_text(
             build_login_not_found_html(raw_key) + owner_hint,
@@ -5689,7 +6067,7 @@ def run_terminate_other_sessions(pool: str, target_id: str) -> int:
     """
     Terminate all Telegram sessions EXCEPT the current one for a specific account.
     pool  : 'gcs' | 'shooter' | 'all'
-    target_id : account id (SH_VENAN_01 / STMY_CS01 / etc.) or 'all' to do every account
+    target_id : account id (SH_GERI_01 / STMY_CS01 / etc.) or 'all' to do every account
     """
     from telethon.tl.functions.account import GetAuthorizationsRequest, ResetAuthorizationRequest
 
@@ -5805,6 +6183,16 @@ def _login_sheet_code_enabled() -> bool:
     )
 
 
+def _login_use_qr() -> bool:
+    """QR scan di HP — bypass OTP chat 777000 (TELEGRAM_LOGIN_USE_QR=1)."""
+    return os.environ.get("TELEGRAM_LOGIN_USE_QR", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
 def _sheet_clear_code_after_login() -> bool:
     return os.environ.get("TELEGRAM_SHEET_CLEAR_CODE_AFTER_LOGIN", "1").strip().lower() not in (
         "0",
@@ -5823,12 +6211,20 @@ def _make_login_code_callback(
     preset_code: str = "",
     quiet: bool = False,
     on_wrong_code: Callable[[int, int], None] | None = None,
-) -> Callable[[], str]:
-    """Wait for OTP column (L) in Google Sheet; optional terminal fallback."""
+    telethon_client_holder: list[Any] | None = None,
+) -> Callable[[], Any]:
+    """Wait for OTP column in Google Sheet; optional terminal fallback."""
     otp_attempt = [0]
     use_sheet = _login_sheet_code_enabled() and not preset_code
     wait_sec = _env_int("TELEGRAM_SHEET_LOGIN_WAIT_SEC", 180, minimum=30)
     poll_sec = max(1.0, float(os.environ.get("TELEGRAM_SHEET_LOGIN_POLL_SEC", "2").strip() or "2"))
+    midwait_resend = os.environ.get("TELEGRAM_LOGIN_OTP_MIDWAIT_RESEND", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+    resend_polls = max(10, int(45 / poll_sec))
     fallback_tty = os.environ.get("TELEGRAM_LOGIN_SHEET_FALLBACK_TTY", "0").strip().lower() in (
         "1",
         "true",
@@ -5836,12 +6232,76 @@ def _make_login_code_callback(
         "on",
     )
 
-    def _cb() -> str:
+    async def _poll_sheet_async() -> str:
+        import asyncio
+        import sheets_sync
+
+        np = sheets_sync.norm_phone(phone)
+        if otp_attempt[0] > 1 and np:
+            sheets_sync.clear_login_code_in_sheet(root, np)
+            print(
+                f"  ↻ OTP column cleared for {account_id} — isi kode BARU dari Service notifications",
+                flush=True,
+            )
+        sheets_sync.pin_login_otp_cell(root, phone)
+        if not quiet:
+            print(
+                f"  Waiting for OTP in Sheet ({account_id} | {phone}) "
+                f"up to {wait_sec}s...",
+                flush=True,
+            )
+        else:
+            print(
+                f"  · tunggu kode BARU di Service notifications → isi kolom OTP Sheet "
+                f"({account_id} | {phone}), max {wait_sec}s",
+                flush=True,
+            )
+        deadline = time.time() + wait_sec
+        poll_n = 0
+        while time.time() < deadline:
+            code = sheets_sync.fetch_login_code_for_phone(root, phone, force=True)
+            if code:
+                if not quiet:
+                    print(f"  ✓ Sheet OTP received for {account_id}", flush=True)
+                else:
+                    print(f"  ✓ Sheet OTP received for {account_id} → logging in…", flush=True)
+                if _sheet_clear_code_after_login() and np:
+                    sheets_sync.clear_login_code_in_sheet(root, np)
+                return code
+            poll_n += 1
+            if (
+                midwait_resend
+                and telethon_client_holder
+                and telethon_client_holder[0] is not None
+                and poll_n > 0
+                and poll_n % resend_polls == 0
+            ):
+                left = max(0, int(deadline - time.time()))
+                print(
+                    f"  ↻ Belum ada OTP di Sheet — push resend ke HP ({left}s left) …",
+                    flush=True,
+                )
+                await _telethon_resend_login_code(
+                    telethon_client_holder[0], phone, acc_id=account_id
+                )
+            if quiet and (poll_n == 1 or poll_n % 10 == 0):
+                left = max(0, int(deadline - time.time()))
+                print(
+                    f"  · waiting OTP in Sheet for {account_id} ({left}s left) …",
+                    flush=True,
+                )
+            await asyncio.sleep(poll_sec)
+        sheets_sync.clear_login_otp_cell_pin(phone)
+        raise RuntimeError(
+            f"Sheet OTP timeout ({wait_sec}s) — fill OTP column in Google Sheet"
+        )
+
+    def _cb() -> Any:
         otp_attempt[0] += 1
         if otp_attempt[0] > 1:
             print(
                 f"  ⚠ Wrong code, retry {otp_attempt[0]}/{max_otp_retries} "
-                f"(update OTP column in Sheet)...",
+                f"(paste NEW code from Service notifications into Sheet OTP column)...",
                 flush=True,
             )
             if on_wrong_code:
@@ -5853,39 +6313,7 @@ def _make_login_code_callback(
             return preset_code
 
         if use_sheet:
-            import sheets_sync
-
-            np = sheets_sync.norm_phone(phone)
-            if not quiet:
-                print(
-                    f"  Waiting for OTP in Sheet ({account_id} | {phone}) "
-                    f"up to {wait_sec}s...",
-                    flush=True,
-                )
-            deadline = time.time() + wait_sec
-            poll_n = 0
-            while time.time() < deadline:
-                codes = sheets_sync.fetch_login_codes_by_phone(root, force=True)
-                code = codes.get(np, "") if np else ""
-                if code:
-                    if not quiet:
-                        print(f"  ✓ Sheet OTP received for {account_id}", flush=True)
-                    if _sheet_clear_code_after_login() and np:
-                        sheets_sync.clear_login_code_in_sheet(root, np)
-                    return code
-                poll_n += 1
-                if quiet and poll_n % 15 == 0:
-                    left = max(0, int(deadline - time.time()))
-                    print(
-                        f"  · waiting OTP in Sheet for {account_id} ({left}s left) …",
-                        flush=True,
-                    )
-                time.sleep(poll_sec)
-            if fallback_tty:
-                return input(f"[OTP {account_id} | {phone}] Enter code: ")
-            raise RuntimeError(
-                f"Sheet OTP timeout ({wait_sec}s) — fill OTP column in Google Sheet"
-            )
+            return _poll_sheet_async()
 
         return input(f"[OTP {account_id} | {phone}] Enter code: ")
 
@@ -5963,6 +6391,292 @@ def _make_login_password_callback(
     return _cb
 
 
+def _otp_delivery_hint(sent_type: Any) -> str:
+    """Human hint for where Telegram delivered the login code."""
+    name = type(sent_type).__name__
+    if name == "SentCodeTypeApp":
+        return (
+            "OTP dikirim ke Telegram app (Service notifications / chat 777000) — "
+            "bukan inbox SMS HP"
+        )
+    if name == "SentCodeTypeSms":
+        return "OTP dikirim via SMS ke nomor HP"
+    if name == "SentCodeTypeCall":
+        return "OTP akan dibacakan lewat telepon"
+    return f"OTP dikirim via {name}"
+
+
+_last_send_code_at: dict[str, float] = {}
+
+
+def _send_code_min_interval_sec() -> int:
+    return _env_int("TELEGRAM_LOGIN_SEND_CODE_MIN_INTERVAL_SEC", 120, minimum=0)
+
+
+async def _telethon_send_login_code(
+    client: TelegramClient, phone: str, *, acc_id: str = ""
+) -> Any:
+    """Single SendCode — Telegram may return OK without a new push if requested too often."""
+    from telethon import errors
+
+    tag = f"{acc_id} — " if acc_id else ""
+    np = phone
+    try:
+        import sheets_sync
+
+        np = sheets_sync.norm_phone(phone) or phone
+    except Exception:
+        pass
+
+    min_iv = _send_code_min_interval_sec()
+    last = _last_send_code_at.get(np, 0.0)
+    since = time.time() - last
+    if min_iv > 0 and last > 0 and since < min_iv:
+        wait_left = int(min_iv - since)
+        print(
+            f"  ⚠ {tag}SendCode ditunda — request terlalu cepat ({wait_left}s lagi). "
+            "Telegram sering tidak push pesan baru kalau spam request.",
+            file=sys.stderr,
+            flush=True,
+        )
+        raise RuntimeError(
+            f"SendCode cooldown ({wait_left}s) — tunggu sebelum request OTP baru"
+        )
+
+    sent = await client.send_code_request(phone)
+    _last_send_code_at[np] = time.time()
+    nt = getattr(sent, "next_type", None)
+    next_hint = f" | next={type(nt).__name__}" if nt else ""
+    timeout = getattr(sent, "timeout", None)
+    timeout_hint = f" | resend SMS/call setelah {timeout}s" if timeout else ""
+    print(
+        f"  ✓ {tag}Code request OK — {_otp_delivery_hint(sent.type)}{next_hint}{timeout_hint}",
+        flush=True,
+    )
+    if type(sent.type).__name__ == "SentCodeTypeApp":
+        print(
+            f"  · {tag}Cek chat Telegram (777000) di SEMUA device yang login nomor ini "
+            f"(desktop + HP). Kalau kosong → tunggu {max(timeout or 60, 60)}s atau pakai: login-qr {acc_id or ''}".strip(),
+            flush=True,
+        )
+    return sent
+
+
+def _save_qr_png(url: str, acc_id: str) -> Path | None:
+    safe_id = re.sub(r"[^\w.-]+", "_", acc_id or "account")
+    png_path = project_root() / f"login_qr_{safe_id}.png"
+    try:
+        import qrcode
+
+        qrcode.make(url).save(png_path)
+        return png_path
+    except Exception:
+        return None
+
+
+def _print_qr_for_login(
+    url: str,
+    phone: str,
+    *,
+    acc_id: str = "",
+    on_png_saved: Callable[[Path], None] | None = None,
+    open_on_mac: bool = True,
+) -> Path | None:
+    print("\n  QR LOGIN — tidak perlu OTP di chat Telegram (777000)", flush=True)
+    print(f"  HP harus login nomor: {phone}", flush=True)
+    print("  Telegram → Settings → Devices → Link Desktop Device → scan QR\n", flush=True)
+    png_path = _save_qr_png(url, acc_id)
+    if png_path:
+        print(f"  ✓ QR PNG: {png_path}", flush=True)
+        if on_png_saved:
+            on_png_saved(png_path)
+        if open_on_mac and sys.platform == "darwin":
+            import subprocess
+
+            subprocess.run(["open", str(png_path)], check=False)
+            print("  · PNG dibuka di Mac — arahkan kamera HP ke layar", flush=True)
+        try:
+            import qrcode
+
+            qr = qrcode.QRCode(border=1)
+            qr.add_data(url)
+            qr.make(fit=True)
+            qr.print_tty(invert=True)
+        except Exception:
+            pass
+        return png_path
+    print(f"  tg:// URL (alternatif): {url}", flush=True)
+    print("  Install: .venv/bin/pip install 'qrcode>=7.4,<9'", flush=True)
+    return None
+
+
+async def _telethon_qr_login(
+    client: TelegramClient,
+    *,
+    phone: str,
+    password: Any = None,
+    acc_id: str = "",
+    max_attempts: int = 3,
+    on_qr_png: Callable[[Path], None] | None = None,
+    open_qr_on_mac: bool = True,
+) -> None:
+    """QR login — bypasses SentCodeTypeApp delivery when OTP tidak muncul di HP/desktop."""
+    from telethon import errors
+    import inspect
+
+    if not client.is_connected():
+        await client.connect()
+    if await client.get_me() is not None:
+        return
+
+    tag = f"{acc_id} — " if acc_id else ""
+    import asyncio
+
+    while True:
+        qr = await client.qr_login()
+        _print_qr_for_login(
+            qr.url,
+            phone,
+            acc_id=acc_id,
+            on_png_saved=on_qr_png,
+            open_on_mac=open_qr_on_mac,
+        )
+        print(f"  · {tag}Menunggu scan QR… (tutup terminal = batal)", flush=True)
+        try:
+            await qr.wait()
+            print(f"  ✓ {tag}QR login OK", flush=True)
+            return
+        except errors.SessionPasswordNeededError:
+            print(f"  · {tag}2FA diperlukan setelah QR…", flush=True)
+            break
+        except asyncio.TimeoutError:
+            print(f"  ↻ {tag}QR expired — generate QR baru…", flush=True)
+            continue
+        except Exception as e:
+            raise RuntimeError(f"QR login gagal: {type(e).__name__}: {e}") from e
+
+    if not password:
+        raise ValueError("2FA enabled — isi kolom 2FA di Sheet atau password di accounts.json")
+    for _ in range(max_attempts):
+        try:
+            value = password()
+            if inspect.isawaitable(value):
+                value = await value
+            await client.sign_in(password=value)
+            print(f"  ✓ {tag}2FA OK", flush=True)
+            return
+        except errors.PasswordHashInvalidError:
+            print("Invalid password. Please try again.", file=sys.stderr)
+    raise RuntimeError(f"{max_attempts} consecutive password attempts failed. Aborting")
+
+
+async def _telethon_resend_login_code(client: TelegramClient, phone: str, *, acc_id: str = "") -> None:
+    """Fresh SendCode after wrong/expired code — clears hash so Telegram issues a new code."""
+    tag = f"{acc_id} — " if acc_id else ""
+    client._phone_code_hash.pop(phone, None)
+    try:
+        import sheets_sync
+
+        np = sheets_sync.norm_phone(phone) or phone
+        client._phone_code_hash.pop(np, None)
+    except Exception:
+        pass
+    try:
+        await _telethon_send_login_code(client, phone, acc_id=acc_id)
+    except Exception as e:
+        print(f"  ⚠ {tag}Resend code gagal: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
+
+
+async def _telethon_start_with_delivery_log(
+    client: TelegramClient,
+    *,
+    phone: str,
+    code_callback: Callable[[], str],
+    password: Any = None,
+    max_attempts: int = 3,
+    quiet: bool = False,
+    acc_id: str = "",
+    root: Path | None = None,
+) -> None:
+    """Like Telethon client.start() but logs OTP delivery channel after send_code_request."""
+    from telethon import errors
+    import inspect
+
+    if not client.is_connected():
+        await client.connect()
+
+    me = await client.get_me()
+    if me is not None:
+        return
+
+    if root is not None and _login_sheet_code_enabled():
+        try:
+            import sheets_sync
+
+            if sheets_sync.prepare_login_otp_cell(root, phone):
+                print(
+                    f"  ↻ {acc_id} — kolom OTP Sheet dikosongkan (hapus kode lama sebelum request baru)",
+                    flush=True,
+                )
+        except Exception:
+            pass
+
+    await _telethon_send_login_code(client, phone, acc_id=acc_id)
+
+    attempts = 0
+    two_step_detected = False
+    while attempts < max_attempts:
+        try:
+            value = code_callback()
+            if inspect.isawaitable(value):
+                value = await value
+            if not value:
+                raise errors.PhoneCodeEmptyError(request=None)
+            await client.sign_in(phone, code=value)
+            break
+        except errors.SessionPasswordNeededError:
+            two_step_detected = True
+            break
+        except (
+            errors.PhoneCodeEmptyError,
+            errors.PhoneCodeExpiredError,
+            errors.PhoneCodeHashEmptyError,
+            errors.PhoneCodeInvalidError,
+        ):
+            print("Invalid code. Please try again.", file=sys.stderr)
+            if attempts + 1 < max_attempts:
+                if root is not None and _login_sheet_code_enabled():
+                    try:
+                        import sheets_sync
+
+                        sheets_sync.clear_login_code_in_sheet(root, phone)
+                    except Exception:
+                        pass
+                await _telethon_resend_login_code(client, phone, acc_id=acc_id)
+
+        attempts += 1
+    else:
+        raise RuntimeError(f"{max_attempts} consecutive sign-in attempts failed. Aborting")
+
+    if two_step_detected:
+        if not password:
+            raise ValueError(
+                "Two-step verification is enabled for this account. "
+                "Please provide the 'password' argument to 'start()'."
+            )
+        for _ in range(max_attempts):
+            try:
+                value = password()
+                if inspect.isawaitable(value):
+                    value = await value
+                await client.sign_in(password=value)
+                break
+            except errors.PasswordHashInvalidError:
+                print("Invalid password. Please try again.", file=sys.stderr)
+        else:
+            raise RuntimeError(f"{max_attempts} consecutive password attempts failed. Aborting")
+
+
 def _login_single_account(
     acc: dict[str, Any],
     json_list_key: str,
@@ -5971,8 +6685,11 @@ def _login_single_account(
     preset_code: str = "",
     quiet: bool = False,
     live_notify: bool = False,
+    use_qr: bool = False,
+    qr_png_callback: Callable[[Path], None] | None = None,
+    open_qr_on_mac: bool = True,
 ) -> tuple[bool, str]:
-    """Telethon login for one account; code from Sheet (poll) or preset_code."""
+    """Telethon login for one account; code from Sheet (poll), QR scan, or preset_code."""
     root = project_root()
     logging.getLogger("telethon").setLevel(logging.WARNING)
     json_path = _json_path_for_list_key(json_list_key)
@@ -5980,6 +6697,15 @@ def _login_single_account(
 
     acc_id = str(acc.get("id") or "?")
     acc_phone = str(acc.get("phone") or "-")
+
+    def _clear_login_pin() -> None:
+        try:
+            import sheets_sync
+
+            sheets_sync.clear_login_otp_cell_pin(acc_phone)
+        except Exception:
+            pass
+
     session_path: Path = acc["session"]
     session_path.parent.mkdir(parents=True, exist_ok=True)
     session_file = _session_file_path(acc)
@@ -6011,6 +6737,7 @@ def _login_single_account(
         kw["password"] = sheet_pw
 
     max_otp_retries = _env_int("TELEGRAM_LOGIN_OTP_RETRIES", 3, minimum=1)
+    telethon_client_holder: list[Any] = [None]
 
     def _on_wrong_code(attempt: int, max_r: int) -> None:
         if live_notify:
@@ -6029,8 +6756,10 @@ def _login_single_account(
         preset_code=preset_code.strip(),
         quiet=quiet,
         on_wrong_code=_on_wrong_code if live_notify else None,
+        telethon_client_holder=telethon_client_holder,
     )
 
+    password_cb = kw.get("password")
     conn_retries = _env_int("TELETHON_CONNECTION_RETRIES", 5, minimum=1)
     req_retries = _env_int("TELETHON_REQUEST_RETRIES", 5, minimum=1)
     sqlite_retries = _env_int("TELEGRAM_LOGIN_SQLITE_RETRIES", 12, minimum=1)
@@ -6056,7 +6785,7 @@ def _login_single_account(
             time.sleep(0.4 * (attempt + 1))
         if not quiet:
             hint = " (temp session)" if login_tmp_dir else ""
-            print(f"  Connecting to Telegram (SMS may be sent){hint}...", flush=True)
+            print(f"  Connecting to Telegram{hint}...", flush=True)
         client = TelegramClient(
             telethon_session_base,
             acc["api_id"],
@@ -6066,8 +6795,37 @@ def _login_single_account(
             request_retries=req_retries,
         )
         _apply_telethon_session_tuning(client, save_entities=False)
+        telethon_client_holder[0] = client
         try:
-            client.start(**kw) if kw else client.start()
+            phone = str(kw.get("phone") or acc_phone or "").strip()
+            code_cb = kw.get("code_callback")
+            if use_qr and phone:
+                client.loop.run_until_complete(
+                    _telethon_qr_login(
+                        client,
+                        phone=phone,
+                        password=password_cb,
+                        acc_id=acc_id,
+                        max_attempts=_env_int("TELEGRAM_LOGIN_OTP_RETRIES", 3, minimum=1),
+                        on_qr_png=qr_png_callback,
+                        open_qr_on_mac=open_qr_on_mac,
+                    )
+                )
+            elif phone and code_cb:
+                client.loop.run_until_complete(
+                    _telethon_start_with_delivery_log(
+                        client,
+                        phone=phone,
+                        code_callback=code_cb,
+                        password=password_cb,
+                        max_attempts=_env_int("TELEGRAM_LOGIN_OTP_RETRIES", 3, minimum=1),
+                        quiet=quiet,
+                        acc_id=acc_id,
+                        root=root,
+                    )
+                )
+            else:
+                client.start(**kw) if kw else client.start()
             login_ok = True
             break
         except sqlite3.OperationalError as e:
@@ -6182,6 +6940,7 @@ def _login_single_account(
             _run_sync_push_delta(project_root(), verbose=False)
     elif not fail_reason:
         fail_reason = "Telegram login did not complete"
+    _clear_login_pin()
     return ok, fail_reason
 
 
@@ -6346,6 +7105,68 @@ def run_login_all() -> int:
     default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
     accounts = load_otp_accounts(raw, root, default_peers)
     return _run_login_all(accounts, "otp_accounts", "GCS")
+
+
+def _resolve_login_account(ref: str) -> tuple[dict[str, Any], str, str] | None:
+    """Find GCS or Shooter account by id or phone. Returns (acc, json_list_key, label)."""
+    key = (ref or "").strip()
+    if not key:
+        return None
+
+    if _looks_like_shooter_id(key):
+        acc = get_shooter_listen_account_by_id(key)
+        if acc:
+            return acc, "shooter_accounts", "Shooter"
+
+    if _looks_like_phone(key):
+        acc = get_shooter_listen_account_by_phone(key)
+        if acc:
+            return acc, "shooter_accounts", "Shooter"
+        acc = get_otp_account_by_phone(key)
+        if acc:
+            return acc, "otp_accounts", "GCS"
+
+    acc = get_shooter_listen_account_by_id(key)
+    if acc:
+        return acc, "shooter_accounts", "Shooter"
+
+    acc = get_otp_account_by_id_exact(key)
+    if acc:
+        return acc, "otp_accounts", "GCS"
+
+    acc = get_otp_account_by_profile_hint(key)
+    if acc:
+        return acc, "otp_accounts", "GCS"
+
+    return None
+
+
+def run_login_qr(account_ref: str) -> int:
+    """Login satu akun via QR scan (HP) — by account id atau nomor HP."""
+    ref = (account_ref or "").strip()
+    if not ref:
+        print(
+            "Usage: login-qr PHONE_OR_ID\n"
+            "  e.g. login-qr +855713398102\n"
+            "  e.g. login-qr 85568743306\n"
+            "  e.g. login-qr SH_OK188KH_3306",
+            file=sys.stderr,
+        )
+        return 2
+    resolved = _resolve_login_account(ref)
+    if not resolved:
+        print(f"Account not found: {ref}", file=sys.stderr)
+        print("Hint: pakai nomor HP (+855…) atau id persis dari JSON.", file=sys.stderr)
+        return 2
+    acc, json_key, label = resolved
+    acc_id = str(acc.get("id") or "?")
+    print(f"\n[QR Login] {acc_id} ({acc.get('phone')}) [{label}]")
+    ok, err = _login_single_account(acc, json_key, label, use_qr=True)
+    if ok:
+        print(f"\n✓ {acc_id} session ready — LISTEN hot-reload will pick it up.")
+        return 0
+    print(f"\n✗ {acc_id} failed — {err or 'unknown'}", file=sys.stderr)
+    return 1
 
 
 def run_login_all_shooter() -> int:
@@ -6547,6 +7368,25 @@ async def _listen_start_account(
             except Exception:
                 pass
             return
+        try:
+            import sheets_sync as _ss
+
+            if _ss.is_transient_network_error(e):
+                if not quiet:
+                    print(
+                        f"  [{tag}] ↻ {acc_id} — network glitch (retry in {_listen_network_retry_sec()}s)",
+                        flush=True,
+                    )
+                else:
+                    logger.info("[%s] %s network glitch — retry later", tag, acc_id)
+                _listen_mark_network_retry(acc_id)
+                try:
+                    await client.disconnect()
+                except Exception:
+                    pass
+                return
+        except Exception:
+            pass
         user_st = _classify_account_sheet_status(e)
         profile_hint = str(acc.get("profile_hint") or acc_id)
         if user_st == "Frozen":
@@ -6578,13 +7418,25 @@ async def _listen_start_account(
 
     verified = False
     me = None
-    for _attempt in range(2):
+    last_me_err: BaseException | None = None
+    for _attempt in range(4):
         try:
             me = await client.get_me()
             if me:
                 verified = True
                 break
-        except Exception:
+        except Exception as e:
+            last_me_err = e
+            try:
+                import sheets_sync as _ss
+
+                if _ss.is_transient_network_error(e) and _attempt < 3:
+                    await asyncio.sleep(1.5 * (_attempt + 1))
+                    if not client.is_connected():
+                        await client.connect()
+                    continue
+            except Exception:
+                pass
             if _attempt == 0:
                 try:
                     await client.disconnect()
@@ -6598,6 +7450,25 @@ async def _listen_start_account(
 
     if not verified:
         profile_hint = str(acc.get("profile_hint") or acc_id)
+        try:
+            import sheets_sync as _ss
+
+            if last_me_err and _ss.is_transient_network_error(last_me_err):
+                if not quiet:
+                    print(
+                        f"  [{tag}] ↻ {acc_id} — get_me network glitch (retry later)",
+                        flush=True,
+                    )
+                else:
+                    logger.info("[%s] %s get_me network glitch — retry later", tag, acc_id)
+                _listen_mark_network_retry(acc_id)
+                try:
+                    await client.disconnect()
+                except Exception:
+                    pass
+                return
+        except Exception:
+            pass
         expired.append(listener_account_display_name(acc, acc_id, profile_hint))
         if not quiet:
             print(f"  [{tag}] ✗ {acc_id} — get_me() failed", flush=True)
@@ -6805,6 +7676,10 @@ def _listen_failed_retry_sec() -> int:
     return _env_int("TELEGRAM_LISTEN_FAILED_RETRY_SEC", 300, minimum=60)
 
 
+def _listen_network_retry_sec() -> int:
+    return _env_int("TELEGRAM_LISTEN_NETWORK_RETRY_SEC", 90, minimum=15)
+
+
 def _listen_hot_reload_interval_sec() -> int:
     return _env_int("TELEGRAM_LISTEN_RELOAD_INTERVAL_SEC", 45, minimum=15)
 
@@ -6813,6 +7688,12 @@ def _listen_mark_login_wait(acc_id: str) -> None:
     aid = str(acc_id or "").strip()
     if aid:
         _listen_failed_cooldown_until[aid] = time.time() + _listen_failed_retry_sec()
+
+
+def _listen_mark_network_retry(acc_id: str) -> None:
+    aid = str(acc_id or "").strip()
+    if aid:
+        _listen_failed_cooldown_until[aid] = time.time() + _listen_network_retry_sec()
 
 
 def _listen_failed_cooldown_active(acc_id: str) -> bool:
@@ -6997,7 +7878,9 @@ async def _watch_client_loop(
     profile = str(acc_info.get("detected_profile") or acc_info.get("profile_hint") or acc_id)
     pool_name = "shooter" if account_pool(acc_info) == "shooter" else "gcs"
     tag = "SHOOTER" if pool_name == "shooter" else "GCS"
-    grace, reconnect_attempts, reconnect_delay, alert_cooldown, batch_min = _disconnect_watch_config()
+    grace, reconnect_attempts, reconnect_delay, reconnect_max_delay, alert_cooldown, batch_min = (
+        _disconnect_watch_config()
+    )
     suppress_alerts = os.environ.get("TELEGRAM_DISCONNECT_ALERT", "1").strip().lower() in (
         "0",
         "false",
@@ -7013,20 +7896,31 @@ async def _watch_client_loop(
         except Exception:
             pass
 
+        lost_at = time.time()
         print(f"  [{tag}] {acc_id} — connection lost, reconnecting...", flush=True)
 
-        if grace > 0:
-            await asyncio.sleep(grace)
-
         if await _try_reconnect_listener_client(
-            cl, reconnect_attempts, reconnect_delay, tag, acc_id
+            cl,
+            reconnect_attempts,
+            reconnect_delay,
+            reconnect_max_delay,
+            tag,
+            acc_id,
         ):
-            print(f"  [{tag}] ✓ {acc_id} — back online", flush=True)
+            down_sec = int(time.time() - lost_at)
+            if down_sec <= grace:
+                print(
+                    f"  [{tag}] ✓ {acc_id} — back online ({down_sec}s, no alert)",
+                    flush=True,
+                )
+            else:
+                print(f"  [{tag}] ✓ {acc_id} — back online ({down_sec}s)", flush=True)
             continue
 
-        print(f"⚠ [{tag}] DISCONNECTED: {acc_id} ({profile})", flush=True)
+        down_sec = int(time.time() - lost_at)
+        print(f"⚠ [{tag}] DISCONNECTED: {acc_id} ({profile}) — down {down_sec}s", flush=True)
 
-        if not suppress_alerts:
+        if not suppress_alerts and down_sec >= grace:
             now = time.time()
             last = _disconnect_last_alert.get(acc_id, 0.0)
             if now - last >= alert_cooldown:
@@ -7040,8 +7934,13 @@ async def _watch_client_loop(
                     f"  [{tag}] {acc_id} — alert skipped (cooldown {left}s)",
                     flush=True,
                 )
+        elif not suppress_alerts and grace > 0:
+            print(
+                f"  [{tag}] {acc_id} — alert skipped (outage < {grace}s grace)",
+                flush=True,
+            )
 
-        await asyncio.sleep(reconnect_delay)
+        await asyncio.sleep(min(reconnect_delay, 10))
 
 
 async def run_listener_async() -> int:
@@ -7223,14 +8122,17 @@ async def run_listener_async() -> int:
     _disconnect_batch_lock = asyncio.Lock()
     _disconnect_batch_flush_task = None
     _disconnect_batch_queue.clear()
-    grace, reconnect_attempts, reconnect_delay, alert_cooldown, batch_min = _disconnect_watch_config()
+    grace, reconnect_attempts, reconnect_delay, reconnect_max_delay, alert_cooldown, batch_min = (
+        _disconnect_watch_config()
+    )
     print(
         f"  Sheet status: queue only from LISTEN — LIVE-STATUS bulk-pushes to Google Sheet",
         flush=True,
     )
     print(
-        f"  Disconnect policy: grace {grace}s · reconnect {reconnect_attempts}x/"
-        f"{reconnect_delay}s · alert cooldown {alert_cooldown}s · batch ≥{batch_min}",
+        f"  Disconnect policy: reconnect {reconnect_attempts}x exp-backoff "
+        f"{reconnect_delay}-{reconnect_max_delay}s · alert after {grace}s outage · "
+        f"cooldown {alert_cooldown}s · batch ≥{batch_min}",
         flush=True,
     )
     if _listen_save_entities_enabled():
@@ -7509,33 +8411,48 @@ def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str, bool]:
     client, tmp_dir = _make_telethon_client_temp(acc)
     user_st = "Unknown"
     friday_st = "Active"
+    friday_probed = False
     frozen_confirmed = False
     try:
         client.connect()
-        if not client.is_user_authorized():
-            return "Expired", "Expired", False
+        me = None
         try:
             me = client.get_me()
-            user_st = account_status_from_me(me)
-            if user_st == "Frozen":
-                frozen_confirmed = True
-            elif user_st == "Active":
-                # UI freeze (popup read-only) often keeps get_me().restricted=False.
-                # Confirm via @SpamBot strict reply and/or Saved Messages probe.
-                if frozen_spambot_probe_enabled():
-                    sb = sync_probe_spambot_frozen(client)
-                    if sb is True:
-                        user_st = "Frozen"
-                        frozen_confirmed = True
-                if user_st == "Active" and frozen_ui_probe_enabled():
-                    ui = sync_probe_frozen_ui(client)
-                    if ui is True:
-                        user_st = "Frozen"
-                        frozen_confirmed = True
-            friday_st = _session_friday_for_account_status(user_st)
         except Exception as e:
+            if client.is_user_authorized():
+                user_st = _classify_account_sheet_status(e)
+                friday_st = _session_friday_for_account_status(user_st)
+                return user_st, friday_st, False
             user_st = _classify_account_sheet_status(e)
+            return user_st, _session_friday_for_account_status(user_st), False
+        if not me:
+            if not client.is_user_authorized():
+                return "Expired", "Expired", False
+            try:
+                me = client.get_me()
+            except Exception as e:
+                user_st = _classify_account_sheet_status(e)
+                return user_st, _session_friday_for_account_status(user_st), False
+        user_st = account_status_from_me(me)
+        if user_st == "Frozen":
+            frozen_confirmed = True
+        elif user_st == "Active":
+            if frozen_spambot_probe_enabled():
+                sb = sync_probe_spambot_frozen(client)
+                if sb is True:
+                    user_st = "Frozen"
+                    frozen_confirmed = True
+            if user_st == "Active" and frozen_ui_probe_enabled():
+                ui = sync_probe_frozen_ui(client)
+                if ui is True:
+                    user_st = "Frozen"
+                    frozen_confirmed = True
+        if user_st == "Active":
+            friday_st = _probe_friday_session_status_sync(client)
+            friday_probed = True
+        else:
             friday_st = _session_friday_for_account_status(user_st)
+            friday_probed = True
     except Exception as e:
         user_st = _classify_account_sheet_status(e)
         friday_st = _session_friday_for_account_status(user_st, no_session=True)
@@ -7554,10 +8471,12 @@ def _health_check_one_account(acc: dict[str, Any]) -> tuple[str, str, bool]:
             _shutil.rmtree(tmp_dir, ignore_errors=True)
         except Exception:
             pass
-    # Never push "Unknown" to Sheet during sync health.
     if str(user_st).strip().lower() == "unknown":
         user_st = "Disconnected"
-    friday_st = _session_friday_for_account_status(user_st)
+    if not friday_probed:
+        friday_st = _session_friday_for_account_status(user_st)
+    elif user_st != "Active":
+        friday_st = _session_friday_for_account_status(user_st)
     return user_st, friday_st, frozen_confirmed
 
 
@@ -7625,6 +8544,14 @@ def _health_check_print_section(
 ) -> dict[str, int]:
     """Print one GCS or Shooter block; return status counts."""
     counts: dict[str, int] = {}
+    root = project_root()
+    live_sheet_status: dict[str, str] = {}
+    try:
+        import sheets_sync
+
+        live_sheet_status = sheets_sync.fetch_status_by_phone_pool(root, pool=pool_name)
+    except Exception:
+        pass
     if not quiet:
         print(f"\n{'=' * 44}")
         print(f"  {title}  ({len(accounts)} account(s))")
@@ -7645,28 +8572,64 @@ def _health_check_print_section(
             print(f"      Account Status : {user_st}")
             print(f"      Session Friday : {friday_st}")
         if user_st == "Active" and friday_st == "Active":
+            try:
+                import sheets_sync as _ss
+
+                live_st = str(
+                    live_sheet_status.get(_ss.norm_phone(phone), "") or ""
+                ).strip().lower()
+            except Exception:
+                live_st = ""
+            if live_st in ("banned", "frozen"):
+                continue
             prev_st = _known_account_status(acc)
-            if prev_st.lower() in ("frozen", "expired", "disconnected"):
+            sheet_st = str(acc.get("sheet_status") or "").strip().lower()
+            terminal = ("expired", "disconnected")
+            if (
+                prev_st.lower() in terminal
+                or sheet_st in terminal
+                or live_st in terminal
+            ):
                 try:
                     import sheets_sync
 
-                    sheet_st = sheets_sync.sheet_status_after_login_value()
+                    sheet_st_val = sheets_sync.sheet_status_after_login_value()
                 except Exception:
-                    sheet_st = "Ready"
+                    sheet_st_val = "Ready"
+                recover_from = live_st or sheet_st or prev_st or "Expired"
                 _mark_account_status_known(acc, "Active")
                 _queue_sheet_status(
                     acc_id,
                     pool_name,
-                    sheet_st.lower(),
-                    f"recovered from {prev_st}",
+                    sheet_st_val.lower(),
+                    f"recovered from {recover_from}",
                     phone=phone,
-                    session_user=sheet_st,
+                    session_user=sheet_st_val,
                     session_friday="Active",
-                    allow_instant=False,
                     force_queue=True,
                 )
-                if not quiet:
-                    print(f"      ↺ recovered {acc_id}: {prev_st} → {sheet_st}/Active", flush=True)
+                try:
+                    import sheets_sync
+
+                    if phone and sheets_sync.push_status_instant(
+                        root, phone, sheet_st_val, "Active", pool=pool_name
+                    ):
+                        if not quiet:
+                            print(
+                                f"      ↺ Sheet updated {acc_id}: {recover_from} → {sheet_st_val}",
+                                flush=True,
+                            )
+                    elif not quiet:
+                        print(
+                            f"      ↺ recovered {acc_id}: {recover_from} → {sheet_st_val}/Active (queued)",
+                            flush=True,
+                        )
+                except Exception:
+                    if not quiet:
+                        print(
+                            f"      ↺ recovered {acc_id}: {recover_from} → {sheet_st_val}/Active (queued)",
+                            flush=True,
+                        )
             continue
         if not user_st and friday_st == "Active":
             continue
@@ -8219,11 +9182,15 @@ def run_sync_live_login() -> int:
     otp_poll = _live_login_otp_poll_sec()
 
     trigger = os.environ.get("TELEGRAM_SHEET_LOGIN_TRIGGER_STATUS", "Pending").strip() or "Pending"
+    use_qr = _login_use_qr()
     print("=" * 56)
     print("  LIVE LOGIN — Sheet-triggered (no terminal login-all)")
     print(f"  OTP poll: {otp_poll}s (5-digit in Sheet) | idle: {interval_idle}s")
     print(f"  Trigger: Status = {trigger!r}")
-    print("  Flow: one row at a time — Pending -> SMS -> OTP -> success/fail -> next")
+    if use_qr:
+        print("  Mode: QR scan (TELEGRAM_LOGIN_USE_QR=1) — tidak perlu OTP di Sheet")
+    else:
+        print("  Flow: one row at a time — Pending -> SMS -> OTP -> success/fail -> next")
     print("=" * 56)
 
     cycle = 0
@@ -8284,6 +9251,7 @@ def run_sync_live_login() -> int:
             picked: tuple[str, dict[str, Any], str] | None = None
             preset = ""
             action = ""
+            use_qr = _login_use_qr()
 
             # 1) Session already OK → finalize Sheet only
             for json_key, acc, pool in pending:
@@ -8296,13 +9264,15 @@ def run_sync_live_login() -> int:
                     action = "finalize"
                     break
 
-            # 2) OTP (5 digits) in Sheet → login immediately
-            if not picked:
+            # 2) OTP in Sheet → login only after send_code already ran (ignore stale OTP)
+            if not picked and not use_qr:
                 for json_key, acc, pool in pending:
                     acc_id = str(acc.get("id") or "")
                     if not acc_id or now < _login_fail_cooldown_until.get(acc_id, 0.0):
                         continue
                     if _session_working(acc):
+                        continue
+                    if acc_id not in _login_awaiting_otp:
                         continue
                     phone = sheets_sync.norm_phone(str(acc.get("phone") or ""))
                     code = codes.get(phone, "") if phone else ""
@@ -8312,7 +9282,7 @@ def run_sync_live_login() -> int:
                         action = "otp"
                         break
 
-            # 3) No OTP yet → send SMS once per account, then wait quietly
+            # 3) Pending → QR login or send SMS once, then wait
             if not picked:
                 for json_key, acc, pool in pending:
                     acc_id = str(acc.get("id") or "")
@@ -8320,15 +9290,15 @@ def run_sync_live_login() -> int:
                         continue
                     if _session_working(acc):
                         continue
-                    if acc_id in _login_awaiting_otp:
+                    if not use_qr and acc_id in _login_awaiting_otp:
                         continue
                     picked = (json_key, acc, pool)
                     preset = ""
-                    action = "sms"
+                    action = "qr" if use_qr else "sms"
                     break
 
             # 4) Already waiting for OTP — silent poll (log at most every 90s)
-            if not picked:
+            if not picked and not use_qr:
                 waiting_ids = [
                     str(acc.get("id") or "")
                     for _, acc, _ in pending
@@ -8371,9 +9341,17 @@ def run_sync_live_login() -> int:
             if action == "otp":
                 print(f"\n[Live Login] {ts} -> OTP detected → login {acc_id} ({label})", flush=True)
                 notify_live_login_event(acc, "otp", label=label)
+            elif action == "qr":
+                print(
+                    f"\n[Live Login] {ts} -> QR login {acc_id} ({label}) — "
+                    f"scan dari HP {phone}",
+                    flush=True,
+                )
+                notify_live_login_event(acc, "sms", label=label, detail="QR login — scan di HP")
             elif action == "sms":
                 print(
-                    f"\n[Live Login] {ts} -> SMS request {acc_id} ({label}) — fill OTP column when received",
+                    f"\n[Live Login] {ts} -> code request {acc_id} ({label}) — "
+                    "cek Service notifications di HP, isi kolom OTP di Sheet",
                     flush=True,
                 )
                 _login_awaiting_otp[acc_id] = now
@@ -8388,6 +9366,7 @@ def run_sync_live_login() -> int:
                     preset_code=preset,
                     quiet=(action == "sms"),
                     live_notify=True,
+                    use_qr=(action == "qr"),
                 )
             except Exception as e:
                 ok = False
@@ -8749,6 +9728,14 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("bot", help="Run bot polling (/start, /ping).")
     sub.add_parser("login-all", help="Bootstrap login for all otp_accounts (GCS).")
     sub.add_parser("login-all-shooter", help="Login shooter_accounts + sync profile_hint from Telegram.")
+    p_qr = sub.add_parser(
+        "login-qr",
+        help="Login satu akun via QR scan di HP (tanpa OTP chat 777000).",
+    )
+    p_qr.add_argument(
+        "account_id",
+        help="Nomor HP (+855… / 855…) atau account id (KH778KH_CS3, SH_OK188KH_3306)",
+    )
     sub.add_parser(
         "listen",
         help="OTP listener for GCS + Shooter (separate logs; per currency topic).",
@@ -8764,7 +9751,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_term.add_argument(
         "account_id",
-        help="Account id (e.g. SH_VENAN_01, STMY_CS01) or 'all' for every account.",
+        help="Account id (e.g. SH_GERI_01, STMY_CS01) or 'all' for every account.",
     )
     p_term.add_argument(
         "--pool", choices=["gcs", "shooter", "all"], default="all",
@@ -8777,7 +9764,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_ls.add_argument(
         "--id", dest="account_id", default="all",
-        help="Account id, label, or name (e.g. STMY_LINA, stmy, Venan) or 'all'.",
+        help="Account id, label, or name (e.g. STMY_LINA, stmy, Geri) or 'all'.",
     )
     p_ls.add_argument(
         "--pool", choices=["gcs", "shooter", "all"], default="all",
@@ -8795,7 +9782,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_ts.add_argument(
         "--id", dest="account_id", required=True,
-        help="Account id, label, or name (e.g. SH_VENAN_01, venan).",
+        help="Account id, label, or name (e.g. SH_GERI_01, geri).",
     )
     p_ts.add_argument(
         "--session", dest="session_ref", required=True,
@@ -8823,6 +9810,7 @@ def main() -> int:
     # Listener has its own reconnect; detailed logs here are just noise.
     logging.getLogger("telethon.network.mtprotosender").setLevel(logging.CRITICAL)
     logging.getLogger("telethon.extensions.binaryreader").setLevel(logging.CRITICAL)
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
     load_dotenv(project_root() / ".env")
     if sys.platform == "win32" and sys.version_info < (3, 14):
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -8841,6 +9829,8 @@ def main() -> int:
         return run_login_all()
     if args.command == "login-all-shooter":
         return run_login_all_shooter()
+    if args.command == "login-qr":
+        return run_login_qr(args.account_id)
     if args.command == "listen":
         return asyncio.run(run_listener_async())
     if args.command == "notify":
