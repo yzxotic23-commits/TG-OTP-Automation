@@ -1641,11 +1641,6 @@ def build_live_login_event_html(
     ]
     if detail.strip():
         lines.append(f"Detail: <b>{html.escape(detail.strip())}</b>")
-    elif event == "sms":
-        lines.append(
-            "Detail: <b>Cek Telegram app (Service notifications) di HP — salin 5 digit "
-            "ke kolom OTP di Sheet (bukan ke chat bot)</b>"
-        )
     elif event == "waiting":
         lines.append(
             "Detail: <b>Menunggu kolom OTP di Sheet diisi (5 digit)</b>"
@@ -9313,7 +9308,7 @@ def run_sync_once(
     if step == "all":
         print(
             "\n✓ Sync complete (pull + login + health + push). "
-            "Restart `listen` once if new accounts were added."
+            "LISTEN hot-reload picks up new accounts within ~45s — no restart needed."
         )
     elif step == "health":
         print("\n✓ Health-check + push to Sheet complete.")

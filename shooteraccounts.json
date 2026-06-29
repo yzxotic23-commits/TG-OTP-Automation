@@ -499,8 +499,8 @@
       "remark": "MYR-ST-002",
       "brand": "STMY",
       "currency": "MYR",
-      "sheet_status": "Using",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_INDRI_04",
@@ -513,8 +513,8 @@
       "remark": "MYR-ST-002",
       "brand": "STMY",
       "currency": "MYR",
-      "sheet_status": "Using",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_INDRI_05",
@@ -527,8 +527,8 @@
       "remark": "MYR-ST-002",
       "brand": "STMY",
       "currency": "MYR",
-      "sheet_status": "Using",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_WIDYA_01",
@@ -617,7 +617,7 @@
       "brand": "STMY",
       "currency": "MYR",
       "sheet_status": "Ready",
-      "session_friday": "Pending Login"
+      "session_friday": "Active"
     },
     {
       "id": "SH_RINTO_02",
@@ -631,7 +631,7 @@
       "brand": "STMY",
       "currency": "MYR",
       "sheet_status": "Ready",
-      "session_friday": "Pending Login"
+      "session_friday": "Active"
     },
     {
       "id": "SH_RINTO_03",
@@ -645,7 +645,7 @@
       "brand": "STMY",
       "currency": "MYR",
       "sheet_status": "Ready",
-      "session_friday": "Pending Login"
+      "session_friday": "Active"
     },
     {
       "id": "SH_RINTO_04",
@@ -659,7 +659,7 @@
       "brand": "STMY",
       "currency": "MYR",
       "sheet_status": "Ready",
-      "session_friday": "Pending Login"
+      "session_friday": "Active"
     },
     {
       "id": "SH_RINTO_05",
@@ -673,7 +673,7 @@
       "brand": "STMY",
       "currency": "MYR",
       "sheet_status": "Ready",
-      "session_friday": "Pending Login"
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDO_01",
@@ -687,7 +687,7 @@
       "brand": "STMY",
       "currency": "MYR",
       "sheet_status": "Ready",
-      "session_friday": "Pending Login"
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDO_02",
@@ -701,7 +701,7 @@
       "brand": "STMY",
       "currency": "MYR",
       "sheet_status": "Ready",
-      "session_friday": "Pending Login"
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDO_03",
@@ -715,7 +715,7 @@
       "brand": "STMY",
       "currency": "MYR",
       "sheet_status": "Ready",
-      "session_friday": "Pending Login"
+      "session_friday": "Active"
     },
     {
       "id": "SH_ALDO_04",
@@ -729,21 +729,21 @@
       "brand": "STMY",
       "currency": "MYR",
       "sheet_status": "Ready",
-      "session_friday": "Pending Login"
+      "session_friday": "Active"
     },
     {
       "id": "SH_KAREN_01",
       "owner": "KAREN",
       "phone": "+60135394613",
-      "profile_hint": "Gina",
+      "profile_hint": "gina",
       "session": "telegram_session/shooter/SH_KAREN_01",
       "enabled": true,
       "user_name": "Karen",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR",
-      "sheet_status": "Using",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KAREN_02",
@@ -758,21 +758,21 @@
       "currency": "MYR",
       "password": "0000",
       "sheet_status": "Ready",
-      "session_friday": "Pending Login"
+      "session_friday": "Active"
     },
     {
       "id": "SH_KAREN_03",
       "owner": "KAREN",
       "phone": "+60164066937",
-      "profile_hint": "H",
+      "profile_hint": "laurent",
       "session": "telegram_session/shooter/SH_KAREN_03",
       "enabled": true,
       "user_name": "Karen",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR",
-      "sheet_status": "Using",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KAREN_04",
@@ -890,57 +890,57 @@
       "id": "SH_VENAN_02",
       "owner": "VENAN",
       "phone": "+601162276788",
-      "profile_hint": "G",
+      "profile_hint": "Steven",
       "session": "telegram_session/shooter/SH_VENAN_02",
       "enabled": true,
       "user_name": "Venan",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
       "currency": "MYR",
-      "sheet_status": "Expired",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VENAN_03",
       "owner": "VENAN",
       "phone": "+601162276079",
-      "profile_hint": "H",
+      "profile_hint": "Haris",
       "session": "telegram_session/shooter/SH_VENAN_03",
       "enabled": true,
       "user_name": "Venan",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
       "currency": "MYR",
-      "sheet_status": "Expired",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VENAN_04",
       "owner": "VENAN",
       "phone": "+601162276188",
-      "profile_hint": "Fuq",
+      "profile_hint": "Tika",
       "session": "telegram_session/shooter/SH_VENAN_04",
       "enabled": true,
       "user_name": "Venan",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
       "currency": "MYR",
-      "sheet_status": "Expired",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_VENAN_05",
       "owner": "VENAN",
       "phone": "+601162276233",
-      "profile_hint": "G",
+      "profile_hint": "Ronald",
       "session": "telegram_session/shooter/SH_VENAN_05",
       "enabled": true,
       "user_name": "Venan",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
       "currency": "MYR",
-      "sheet_status": "Expired",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_INDRI_9268",
@@ -983,8 +983,8 @@
       "remark": "MYR-ST-002",
       "brand": "STMY",
       "currency": "MYR",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_INDRI_8737",
@@ -993,7 +993,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_INDRI_8737",
       "user_name": "Indri",
-      "profile_hint": "J",
+      "profile_hint": "Lina",
       "remark": "MYR-ST-002",
       "brand": "STMY",
       "currency": "MYR",
@@ -1023,7 +1023,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WIDYA_2711",
       "user_name": "Widya",
-      "profile_hint": "R",
+      "profile_hint": "milka",
       "remark": "MYR-ST-003",
       "brand": "STMY",
       "currency": "MYR",
@@ -1038,7 +1038,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WIDYA_8303",
       "user_name": "Widya",
-      "profile_hint": "H",
+      "profile_hint": "Pricillia",
       "remark": "MYR-ST-003",
       "brand": "STMY",
       "currency": "MYR",
@@ -1053,7 +1053,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WIDYA_5762",
       "user_name": "Widya",
-      "profile_hint": "d",
+      "profile_hint": "adilla",
       "remark": "MYR-ST-003",
       "brand": "STMY",
       "currency": "MYR",
@@ -1068,22 +1068,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WIDYA_5354",
       "user_name": "Widya",
-      "profile_hint": "d",
-      "remark": "MYR-ST-003",
-      "brand": "STMY",
-      "currency": "MYR",
-      "password": "0000",
-      "sheet_status": "Ready",
-      "session_friday": "Active"
-    },
-    {
-      "id": "SH_WIDYA_0127",
-      "phone": "+60196930127",
-      "owner": "WIDYA",
-      "enabled": true,
-      "session": "telegram_session/shooter/SH_WIDYA_0127",
-      "user_name": "Widya",
-      "profile_hint": "Denis",
+      "profile_hint": "Leya",
       "remark": "MYR-ST-003",
       "brand": "STMY",
       "currency": "MYR",
@@ -1233,7 +1218,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_KAREN_4862",
       "user_name": "Karen",
-      "profile_hint": "D",
+      "profile_hint": "cayes",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR",
@@ -1263,13 +1248,13 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_KAREN_8521",
       "user_name": "Karen",
-      "profile_hint": "F",
+      "profile_hint": "clara",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR",
       "password": "0000",
       "sheet_status": "Ready",
-      "session_friday": "Pending Login"
+      "session_friday": "Active"
     },
     {
       "id": "SH_KAREN_2275",
@@ -1278,12 +1263,12 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_KAREN_2275",
       "user_name": "Karen",
-      "profile_hint": "L",
+      "profile_hint": "linzy",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR",
-      "sheet_status": "Pending Login",
-      "session_friday": "Pending Login"
+      "sheet_status": "Ready",
+      "session_friday": "Active"
     },
     {
       "id": "SH_KAREN_8761",
@@ -1292,7 +1277,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_KAREN_8761",
       "user_name": "Karen",
-      "profile_hint": "B",
+      "profile_hint": "bian",
       "remark": "MYR-JM-002",
       "brand": "JMMY",
       "currency": "MYR",
@@ -1312,8 +1297,8 @@
       "brand": "JMMY",
       "currency": "MYR",
       "password": "0000",
-      "sheet_status": "Expired",
-      "session_friday": "Active"
+      "sheet_status": "Disconnected",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_RIZKYR_3160",
@@ -1327,8 +1312,8 @@
       "brand": "JMMY",
       "currency": "MYR",
       "password": "0000",
-      "sheet_status": "Expired",
-      "session_friday": "Active"
+      "sheet_status": "Disconnected",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_RIZKYR_5400",
@@ -1342,8 +1327,8 @@
       "brand": "JMMY",
       "currency": "MYR",
       "password": "0000",
-      "sheet_status": "Expired",
-      "session_friday": "Active"
+      "sheet_status": "Disconnected",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_RIZKYR_2549",
@@ -1357,8 +1342,8 @@
       "brand": "JMMY",
       "currency": "MYR",
       "password": "0000",
-      "sheet_status": "Expired",
-      "session_friday": "Active"
+      "sheet_status": "Disconnected",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_RIZKYR_3984",
@@ -1372,8 +1357,8 @@
       "brand": "JMMY",
       "currency": "MYR",
       "password": "0000",
-      "sheet_status": "Expired",
-      "session_friday": "Active"
+      "sheet_status": "Disconnected",
+      "session_friday": "Pending Login"
     },
     {
       "id": "SH_VENAN_6501",
@@ -1442,7 +1427,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_VENAN_6843",
       "user_name": "Venan",
-      "profile_hint": "F",
+      "profile_hint": "Farah",
       "remark": "MYR-JM-004",
       "brand": "JMMY",
       "currency": "MYR",
@@ -2486,7 +2471,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WPLUS_8521",
       "user_name": "W+ plus",
-      "profile_hint": "F",
+      "profile_hint": "clara",
       "remark": "wealth",
       "currency": "WPLUS",
       "sheet_status": "Ready",
@@ -2722,7 +2707,7 @@
       "enabled": true,
       "session": "telegram_session/shooter/SH_WALLACE_5214",
       "user_name": "Wallace",
-      "profile_hint": "Charles",
+      "profile_hint": "SBMY Charles",
       "remark": "MYR-SB-014",
       "brand": "SBMY",
       "currency": "MYR",
