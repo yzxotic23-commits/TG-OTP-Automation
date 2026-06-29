@@ -50,6 +50,18 @@ shopt -u nullglob
 
 ulimit -n 65536 2>/dev/null || ulimit -n 10240 2>/dev/null || true
 
+# Railway injects Variables ke container env — tulis ke /app/.env untuk semua proses Python
+printenv | LC_ALL=C grep -E '^(TELEGRAM_|GOOGLE_)' > "$APP/.env" || true
+env_count="$(grep -c '=' "$APP/.env" 2>/dev/null || echo 0)"
+echo "Env vars loaded: $env_count (TELEGRAM_/GOOGLE_)"
+if [[ -z "${TELEGRAM_BOT_TOKEN:-}" ]]; then
+  echo "ERROR: TELEGRAM_BOT_TOKEN kosong — set di Railway → service TG-OTP-Automation → Variables"
+  echo "       (bukan project shared saja; harus terlihat di tab Variables service)"
+fi
+if [[ -z "${GOOGLE_SHEET_ID:-}" ]]; then
+  echo "ERROR: GOOGLE_SHEET_ID kosong — tambahkan di Railway Variables"
+fi
+
 echo "========================================"
 echo "  Telegram OTP — Railway (5 processes)"
 echo "  Data volume: $DATA"

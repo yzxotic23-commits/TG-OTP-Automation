@@ -15,7 +15,7 @@ COPY telegram_otp_allinone.py sheets_sync.py ./
 COPY accounts.json shooteraccounts.json ./
 COPY railway/ /railway/
 
-RUN chmod +x /railway/entrypoint.sh
+RUN chmod +x /railway/entrypoint.sh /railway/run-with-env.sh
 
 ENV PYTHONUNBUFFERED=1
 ENV RAILWAY_DATA_DIR=/data

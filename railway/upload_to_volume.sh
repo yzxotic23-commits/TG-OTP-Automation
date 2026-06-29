@@ -23,8 +23,9 @@ if [[ -z "$VOLUME" ]]; then
 fi
 
 STAGING="$(mktemp -d)"
-ARCHIVE="$STAGING/otp-data.tgz"
-trap 'rm -rf "$STAGING"' EXIT
+ARCHIVE="$(mktemp -t otp-data-XXXXXX).tgz"
+cleanup() { rm -rf "$STAGING" "$ARCHIVE"; }
+trap cleanup EXIT
 
 mkdir -p "$STAGING/telegram_session/shooter"
 
@@ -49,16 +50,39 @@ archive_mb="$(du -sm "$ARCHIVE" | awk '{print $1}')"
 
 echo ""
 echo "Volume  : $VOLUME"
-echo "Sessions: $session_count (.session saja — ~${archive_mb} MB normal)"
+echo "Sessions: $session_count (~${archive_mb} MB compressed — normal)"
 echo ""
-echo "Upload otp-data.tgz ..."
-railway volume files --volume "$VOLUME" upload "$ARCHIVE" /otp-data.tgz --overwrite
+echo "Upload otp-data.tgz (retry otomatis kalau timeout)..."
+echo ""
+
+upload_ok=0
+for attempt in 1 2 3 4 5; do
+  if railway volume files --volume "$VOLUME" upload "$ARCHIVE" /otp-data.tgz --overwrite; then
+    upload_ok=1
+    break
+  fi
+  if [[ "$attempt" -lt 5 ]]; then
+    wait=$((attempt * 15))
+    echo ""
+    echo "Upload gagal (attempt $attempt/5). Coba lagi dalam ${wait}s..."
+    echo "  Tip: cek WiFi / VPN off / Railway dashboard service Running"
+    sleep "$wait"
+  fi
+done
+
+if [[ "$upload_ok" -ne 1 ]]; then
+  echo ""
+  echo "ERROR: Upload gagal setelah 5x (SFTP timeout)."
+  echo "  Coba lagi: bash railway/upload_to_volume.sh"
+  echo "  Atau upload manual: railway volume files --volume $VOLUME upload \"$ARCHIVE\" /otp-data.tgz --overwrite"
+  exit 1
+fi
 
 echo ""
 echo "Selesai upload."
 echo ""
 echo "Langkah berikutnya:"
-echo "  1. Push entrypoint terbaru ke Git (kalau belum) + Redeploy Railway"
-echo "  2. Container akan extract otp-data.tgz otomatis → Sessions on volume: $session_count"
+echo "  1. Redeploy service di Railway (pull commit terbaru)"
+echo "  2. Log harus: Extract otp-data.tgz + Sessions on volume: $session_count"
 echo "  3. Matikan production Mac"
 echo ""
