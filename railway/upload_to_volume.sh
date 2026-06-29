@@ -1,9 +1,10 @@
 #!/bin/bash
-# Upload session + secrets dari Mac ke Railway volume (sekali setup).
-# Butuh: railway CLI (npm i -g @railway/cli) + sudah railway login + link project.
+# Upload session + secrets ke Railway volume.
+# Archive di-extract otomatis saat container start (entrypoint.sh).
 #
 #   cd "/Users/geri/Telegram-BOT-OTP"
 #   bash railway/upload_to_volume.sh
+#   # lalu Redeploy di Railway dashboard
 #
 set -euo pipefail
 
@@ -11,29 +12,53 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 if ! command -v railway >/dev/null 2>&1; then
-  echo "Install Railway CLI (pilih salah satu):"
-  echo "  brew install railway          # Mac — recommended"
-  echo "  bash <(curl -fsSL railway.com/install.sh) -y"
-  echo "Lalu: railway login && railway link"
+  echo "Install: brew install railway"
+  exit 1
+fi
+
+VOLUME="$(railway volume list 2>/dev/null | awk '/^Volume: /{print $2; exit}')"
+if [[ -z "$VOLUME" ]]; then
+  echo "ERROR: Volume tidak ditemukan."
   exit 1
 fi
 
 STAGING="$(mktemp -d)"
+ARCHIVE="$STAGING/otp-data.tgz"
 trap 'rm -rf "$STAGING"' EXIT
 
-mkdir -p "$STAGING/telegram_session"
-cp -a telegram_session/. "$STAGING/telegram_session/" 2>/dev/null || true
+mkdir -p "$STAGING/telegram_session/shooter"
+
+echo "Menyiapkan archive..."
+find telegram_session -name '*.session' -type f ! -name '._*' | while IFS= read -r f; do
+  rel="${f#telegram_session/}"
+  mkdir -p "$STAGING/telegram_session/$(dirname "$rel")"
+  cp -a "$f" "$STAGING/telegram_session/$rel"
+done
+
 cp -a accounts.json shooteraccounts.json "$STAGING/" 2>/dev/null || true
 cp -a state.json "$STAGING/" 2>/dev/null || true
-cp -a tg-otp-automation-*.json "$STAGING/" 2>/dev/null || true
+shopt -s nullglob
+for f in tg-otp-automation-*.json google-credentials.json; do
+  cp -a "$f" "$STAGING/" 2>/dev/null || true
+done
+shopt -u nullglob
 
-echo "Upload ke /data di Railway volume..."
-echo "(Proses ini bisa beberapa menit — banyak file .session)"
+tar -czf "$ARCHIVE" -C "$STAGING" .
+session_count="$(find "$STAGING/telegram_session" -name '*.session' -type f | wc -l | tr -d ' ')"
+archive_mb="$(du -sm "$ARCHIVE" | awk '{print $1}')"
+
 echo ""
-
-# Pack + extract di container via railway run
-tar -C "$STAGING" -czf - . | railway run bash -c 'mkdir -p /data && tar -xzf - -C /data'
+echo "Volume  : $VOLUME"
+echo "Sessions: $session_count (.session saja — ~${archive_mb} MB normal)"
+echo ""
+echo "Upload otp-data.tgz ..."
+railway volume files --volume "$VOLUME" upload "$ARCHIVE" /otp-data.tgz --overwrite
 
 echo ""
-echo "Selesai. Redeploy service atau restart container di Railway dashboard."
-echo "Env vars (.env) tetap set manual di Railway → Variables (jangan commit)."
+echo "Selesai upload."
+echo ""
+echo "Langkah berikutnya:"
+echo "  1. Push entrypoint terbaru ke Git (kalau belum) + Redeploy Railway"
+echo "  2. Container akan extract otp-data.tgz otomatis → Sessions on volume: $session_count"
+echo "  3. Matikan production Mac"
+echo ""

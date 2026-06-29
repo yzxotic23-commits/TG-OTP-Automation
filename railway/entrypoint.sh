@@ -8,6 +8,14 @@ PY="$APP/.venv/bin/python"
 
 mkdir -p "$DATA/telegram_session/shooter"
 
+# Sekali upload: bash railway/upload_to_volume.sh → otp-data.tgz di /data → extract otomatis
+if [[ -f "$DATA/otp-data.tgz" ]]; then
+  echo "Extract otp-data.tgz ke $DATA ..."
+  tar xzf "$DATA/otp-data.tgz" -C "$DATA"
+  rm -f "$DATA/otp-data.tgz"
+  echo "Extract selesai."
+fi
+
 link_dir() {
   local name="$1"
   mkdir -p "$DATA/$name"
