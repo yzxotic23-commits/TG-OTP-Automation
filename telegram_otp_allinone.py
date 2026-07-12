@@ -178,8 +178,19 @@ def _raise_process_fd_limit(*, minimum_soft: int = 8192) -> int:
         return -1
 
 
+def _json_realpath(path: Path) -> Path:
+    """Follow symlink so atomic writes update the volume target, not replace the link."""
+    try:
+        if path.is_symlink() or path.exists():
+            return path.resolve()
+    except OSError:
+        pass
+    return path
+
+
 def _json_lock(path: Path) -> FileLock:
-    lockfile = path.parent / (path.name + ".lock")
+    real = _json_realpath(path)
+    lockfile = real.parent / (real.name + ".lock")
     timeout = _env_int("TELEGRAM_JSON_LOCK_TIMEOUT_SEC", 20, minimum=1)
     return FileLock(str(lockfile), timeout=timeout)
 
@@ -193,9 +204,13 @@ def _mutate_json_file(path: Path, writer: Callable[[dict[str, Any]], None]) -> b
             if not ok:
                 return False
             writer(data)
-            tmp = path.with_suffix(path.suffix + ".tmp")
+            # Path.replace() on a symlink replaces the link itself with a new file
+            # (breaks /app → /data on Railway). Always write through to the real path.
+            target = _json_realpath(path)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            tmp = target.with_suffix(target.suffix + ".tmp")
             tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-            tmp.replace(path)
+            os.replace(tmp, target)
     except FileLockTimeout:
         logger.error("JSON file lock timeout (another process holding it?): %s", path)
         return False

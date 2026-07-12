@@ -50,8 +50,14 @@ shopt -u nullglob
 
 ulimit -n 65536 2>/dev/null || ulimit -n 10240 2>/dev/null || true
 
-# Railway injects Variables ke container env — tulis ke /app/.env untuk semua proses Python
-printenv | LC_ALL=C grep -E '^(TELEGRAM_|GOOGLE_)' > "$APP/.env" || true
+# Railway injects Variables ke container env — tulis ke /app/.env (quoted) untuk semua proses Python
+# Nilai seperti APP_VERSION=10.14.5 (48959) harus di-quote agar `source` tidak error.
+python3 - <<'PY' > "$APP/.env" || true
+import os, shlex
+for key, val in sorted(os.environ.items()):
+    if key.startswith("TELEGRAM_") or key.startswith("GOOGLE_"):
+        print(f"{key}={shlex.quote(val)}")
+PY
 env_count="$(grep -c '=' "$APP/.env" 2>/dev/null || echo 0)"
 echo "Env vars loaded: $env_count (TELEGRAM_/GOOGLE_)"
 if [[ -z "${TELEGRAM_BOT_TOKEN:-}" ]]; then
