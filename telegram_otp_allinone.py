@@ -2254,9 +2254,21 @@ def build_sessions_disconnected_batch_html(
 
 
 _disconnect_last_alert: dict[str, float] = {}
+# Acc IDs already notified for the current down-episode; cleared on successful reconnect.
+_disconnect_alerted_once: set[str] = set()
 _disconnect_batch_queue: list[dict[str, Any]] = []
 _disconnect_batch_lock: asyncio.Lock | None = None
 _disconnect_batch_flush_task: asyncio.Task[None] | None = None
+
+
+def _disconnect_alert_once_enabled() -> bool:
+    """Default ON: one Telegram notify per disconnect episode (no repeat while still down)."""
+    return os.environ.get("TELEGRAM_DISCONNECT_ALERT_ONCE", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
 
 
 def _disconnect_watch_config() -> tuple[int, int, int, int, int, int]:
@@ -2265,7 +2277,8 @@ def _disconnect_watch_config() -> tuple[int, int, int, int, int, int]:
     attempts = _env_int("TELEGRAM_DISCONNECT_RECONNECT_ATTEMPTS", 8, minimum=1)
     delay = _env_int("TELEGRAM_DISCONNECT_RECONNECT_DELAY_SEC", 3, minimum=1)
     max_delay = _env_int("TELEGRAM_DISCONNECT_RECONNECT_MAX_DELAY_SEC", 45, minimum=5)
-    cooldown = _env_int("TELEGRAM_DISCONNECT_ALERT_COOLDOWN_SEC", 900, minimum=60)
+    # Legacy fallback when TELEGRAM_DISCONNECT_ALERT_ONCE=0
+    cooldown = _env_int("TELEGRAM_DISCONNECT_ALERT_COOLDOWN_SEC", 86400, minimum=60)
     batch_min = _env_int("TELEGRAM_DISCONNECT_BATCH_MIN", 3, minimum=2)
     return grace, attempts, delay, max_delay, cooldown, batch_min
 
@@ -8140,6 +8153,7 @@ async def _watch_client_loop(
             acc_id,
         ):
             down_sec = int(time.time() - lost_at)
+            _disconnect_alerted_once.discard(acc_id)
             if down_sec <= grace:
                 print(
                     f"  [{tag}] ✓ {acc_id} — back online ({down_sec}s, no alert)",
@@ -8152,25 +8166,65 @@ async def _watch_client_loop(
         down_sec = int(time.time() - lost_at)
         print(f"⚠ [{tag}] DISCONNECTED: {acc_id} ({profile}) — down {down_sec}s", flush=True)
 
+        # Session revoked / not logged in — one Sheet update, stop reconnect spam.
+        terminal = False
+        try:
+            if not cl.is_connected():
+                await cl.connect()
+            if not await cl.is_user_authorized():
+                terminal = True
+        except Exception as e:
+            try:
+                import sheets_sync as _ss
+
+                if _ss.is_auth_terminal_error(e):
+                    terminal = True
+            except Exception:
+                pass
+
         if not suppress_alerts and down_sec >= grace:
+            once = _disconnect_alert_once_enabled()
             now = time.time()
-            last = _disconnect_last_alert.get(acc_id, 0.0)
-            if now - last >= alert_cooldown:
-                _disconnect_last_alert[acc_id] = now
-                await _enqueue_disconnect_alert(
-                    acc_info, profile, tag, token, accounts_doc, pool_name
+            if once and acc_id in _disconnect_alerted_once:
+                print(
+                    f"  [{tag}] {acc_id} — alert skipped (already notified while down)",
+                    flush=True,
                 )
-            else:
-                left = int(alert_cooldown - (now - last))
+            elif (not once) and (now - _disconnect_last_alert.get(acc_id, 0.0) < alert_cooldown):
+                left = int(alert_cooldown - (now - _disconnect_last_alert.get(acc_id, 0.0)))
                 print(
                     f"  [{tag}] {acc_id} — alert skipped (cooldown {left}s)",
                     flush=True,
+                )
+            else:
+                _disconnect_last_alert[acc_id] = now
+                _disconnect_alerted_once.add(acc_id)
+                await _enqueue_disconnect_alert(
+                    acc_info, profile, tag, token, accounts_doc, pool_name
                 )
         elif not suppress_alerts and grace > 0:
             print(
                 f"  [{tag}] {acc_id} — alert skipped (outage < {grace}s grace)",
                 flush=True,
             )
+
+        if terminal:
+            print(
+                f"  [{tag}] {acc_id} — session not authorized, stop reconnect watch",
+                flush=True,
+            )
+            _publish_account_status(
+                acc_info,
+                pool_name,
+                "Expired",
+                token=token,
+                accounts_doc=accounts_doc,
+                profile=profile,
+                note="session not authorized",
+                notify=False,
+                from_listen=True,
+            )
+            return
 
         await asyncio.sleep(min(reconnect_delay, 10))
 
