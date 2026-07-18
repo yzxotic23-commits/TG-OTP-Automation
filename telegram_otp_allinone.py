@@ -6609,7 +6609,12 @@ def _save_qr_png(url: str, acc_id: str) -> Path | None:
 
         qrcode.make(url).save(png_path)
         return png_path
-    except Exception:
+    except Exception as e:
+        print(
+            f"  ⚠ QR PNG gagal ({type(e).__name__}: {e}) — "
+            "butuh Pillow: .venv/bin/pip install 'Pillow>=10,<12'",
+            flush=True,
+        )
         return None
 
 
