@@ -1336,7 +1336,13 @@ def _bot_qr_login_admin_ids() -> set[str]:
 
 
 def _bot_qr_login_allowed(user: Any) -> bool:
+    # Creator (default geri_work) is excluded from find_staff_rows_for_user —
+    # still allow QR when they match TELEGRAM_BOT_QR_LOGIN_ADMINS / creator id.
+    if is_creator_user(user):
+        return True
     allowed = _bot_qr_login_admin_ids()
+    if account_id_from_user(user).strip().lower() in allowed:
+        return True
     for row in find_staff_rows_for_user(user):
         sid = str(row.get("id") or "").strip().lower()
         if sid and sid in allowed:
