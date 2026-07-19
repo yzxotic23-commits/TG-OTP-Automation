@@ -1067,6 +1067,13 @@ def enrich_account_meta_fields(
         if str(acc.get("brand") or "").strip().upper() != bu:
             acc["brand"] = bu
             changed = True
+        # If Device ID empty, still learn currency from brands config when possible
+        if not str(acc.get("currency") or "").strip() and brands_cfg:
+            bcfg = brands_cfg.get(bu) or {}
+            bcur = str(bcfg.get("currency") or "").strip().upper()
+            if bcur:
+                acc["currency"] = bcur
+                changed = True
 
     if pl == "shooter":
         row_user = str(row.get("user") or row.get("owner") or "").strip()
@@ -1079,6 +1086,23 @@ def enrich_account_meta_fields(
             if owner and not is_currency_code(owner):
                 acc["brand"] = canonical_brand(owner)
                 changed = True
+                if not str(acc.get("currency") or "").strip() and brands_cfg:
+                    bcfg = brands_cfg.get(str(acc.get("brand") or "").upper()) or {}
+                    bcur = str(bcfg.get("currency") or "").strip().upper()
+                    if bcur:
+                        acc["currency"] = bcur
+                        changed = True
+        # Shooter + Sheet Group=Other without Device ID: if still no currency, keep brand at least
+        if row and not str(acc.get("currency") or "").strip():
+            if _pool_from_group(row.get("group", "")) == "shooter":
+                # last resort from owner brand config
+                bu = str(acc.get("brand") or acc.get("owner") or "").strip().upper()
+                if bu and brands_cfg:
+                    bcfg = brands_cfg.get(canonical_brand(bu)) or brands_cfg.get(bu) or {}
+                    bcur = str(bcfg.get("currency") or "").strip().upper()
+                    if bcur:
+                        acc["currency"] = bcur
+                        changed = True
 
     return changed
 
