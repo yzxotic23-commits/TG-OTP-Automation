@@ -8028,6 +8028,51 @@ async def _listen_sync_accounts(
     removed_count = 0
     clients: list[tuple[TelegramClient, dict[str, Any]]] = listen_kw["clients"]
 
+    # Opportunistic local meta repair (remark/owner → brand/currency) — no Sheet API.
+    try:
+        import sheets_sync as _ss
+
+        if listen_shooter:
+            sh_path = shooter_accounts_json_path()
+            sh_raw = load_json(sh_path)
+            sh_lst = sh_raw.get("shooter_accounts")
+            if isinstance(sh_lst, list):
+                probe = [dict(r) if isinstance(r, dict) else r for r in sh_lst]
+                n_sh = _ss.repair_json_meta_fields(probe, pool="shooter", root=root)
+                if n_sh:
+
+                    def _repair_shooter(data: dict[str, Any]) -> None:
+                        lst = data.get("shooter_accounts")
+                        if isinstance(lst, list):
+                            _ss.repair_json_meta_fields(lst, pool="shooter", root=root)
+
+                    if _mutate_json_file(sh_path, _repair_shooter):
+                        print(
+                            f"  [Hot-reload] repaired brand/currency on {n_sh} shooter row(s)",
+                            flush=True,
+                        )
+
+        gcs_path = accounts_json_path()
+        gcs_raw = load_json(gcs_path)
+        gcs_lst = gcs_raw.get("otp_accounts")
+        if isinstance(gcs_lst, list):
+            probe_g = [dict(r) if isinstance(r, dict) else r for r in gcs_lst]
+            n_g = _ss.repair_json_meta_fields(probe_g, pool="gcs", root=root)
+            if n_g:
+
+                def _repair_gcs(data: dict[str, Any]) -> None:
+                    lst = data.get("otp_accounts")
+                    if isinstance(lst, list):
+                        _ss.repair_json_meta_fields(lst, pool="gcs", root=root)
+
+                if _mutate_json_file(gcs_path, _repair_gcs):
+                    print(
+                        f"  [Hot-reload] repaired brand/currency on {n_g} GCS row(s)",
+                        flush=True,
+                    )
+    except Exception as e:
+        print(f"  [Hot-reload] meta repair skipped: {e}", flush=True)
+
     try:
         candidates, json_ids = _listen_load_candidates(
             root=root,
@@ -8821,6 +8866,11 @@ def _after_login_sync_status(acc: dict[str, Any], pool: str) -> tuple[str, str]:
             else:
                 sheets_sync.update_sheet_status_column(root, phone, sheet_status)
             sheets_sync.clear_login_code_in_sheet(root, phone)
+            # Keep /main|/other accurate after login (brand, currency, remark, pool fields)
+            if sheets_sync.enrich_one_account_in_json(
+                root, phone=phone, pool=pool, account_id=acc_id
+            ):
+                print(f"  ✓ JSON meta synced (brand/currency) for {acc_id}", flush=True)
     except Exception:
         pass
     print(

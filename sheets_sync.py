@@ -1007,6 +1007,227 @@ def _apply_sheet_list_fields(out: dict[str, Any], row: dict[str, str]) -> None:
         out["session_friday"] = sf
 
 
+def enrich_account_meta_fields(
+    acc: dict[str, Any],
+    *,
+    pool: str,
+    sheet_row: dict[str, str] | None = None,
+    brands_cfg: dict[str, dict[str, Any]] | None = None,
+) -> bool:
+    """
+    Ensure remark / currency / brand are accurate for bot lists (/main, /other).
+    Prefers Sheet Device ID; falls back to existing remark + shooter owner.
+    Returns True if any field changed.
+    """
+    if not isinstance(acc, dict):
+        return False
+    changed = False
+    row = sheet_row or {}
+    pl = str(pool or "").strip().lower()
+
+    if row:
+        _before_st = str(acc.get("sheet_status") or "")
+        _before_sf = str(acc.get("session_friday") or "")
+        _apply_sheet_list_fields(acc, row)
+        if str(acc.get("sheet_status") or "") != _before_st or str(acc.get("session_friday") or "") != _before_sf:
+            changed = True
+
+    device_id = str(row.get("device_id") or acc.get("remark") or "").strip()
+    if device_id and str(acc.get("remark") or "").strip() != device_id:
+        acc["remark"] = device_id
+        changed = True
+
+    currency, _code = parse_device_id(device_id)
+    if currency:
+        cur_u = currency.strip().upper()
+        if str(acc.get("currency") or "").strip().upper() != cur_u:
+            acc["currency"] = cur_u
+            changed = True
+
+    acc_name = str(
+        row.get("account_name")
+        or row.get("name")
+        or row.get("profile_hint")
+        or acc.get("profile_hint")
+        or ""
+    ).strip()
+    brand = infer_gcs_brand(
+        device_id=device_id,
+        acc_name=acc_name,
+        account_id=str(acc.get("id") or ""),
+        brand=str(acc.get("brand") or ""),
+        brands_cfg=brands_cfg,
+    )
+    if pl == "shooter" and not brand:
+        owner = str(acc.get("owner") or row.get("user") or row.get("owner") or "").strip().upper()
+        if owner and not is_currency_code(owner):
+            brand = canonical_brand(owner)
+    if brand:
+        bu = str(brand).strip().upper()
+        if str(acc.get("brand") or "").strip().upper() != bu:
+            acc["brand"] = bu
+            changed = True
+
+    if pl == "shooter":
+        row_user = str(row.get("user") or row.get("owner") or "").strip()
+        if row_user and not str(acc.get("owner") or "").strip():
+            acc["owner"] = row_user.upper()
+            changed = True
+        # Keep USC list grouping stable: brand default = owner when still empty
+        if not str(acc.get("brand") or "").strip():
+            owner = str(acc.get("owner") or "").strip().upper()
+            if owner and not is_currency_code(owner):
+                acc["brand"] = canonical_brand(owner)
+                changed = True
+
+    return changed
+
+
+def _load_brands_cfg_from_root(root: Path | None) -> dict[str, dict[str, Any]]:
+    if not root:
+        return {}
+    try:
+        import json as _json
+
+        path = root / "accounts.json"
+        if not path.is_file():
+            return {}
+        raw = _json.loads(path.read_text(encoding="utf-8"))
+        return {
+            str(k).strip().upper(): v
+            for k, v in (raw.get("brands") or {}).items()
+            if isinstance(v, dict)
+        }
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
+def repair_json_meta_fields(
+    accounts: list[dict[str, Any]],
+    *,
+    pool: str,
+    headers: list[str] | None = None,
+    lines: list[list[Any]] | None = None,
+    brands_cfg: dict[str, dict[str, Any]] | None = None,
+    root: Path | None = None,
+) -> int:
+    """
+    Backfill brand/currency/remark on JSON rows (Sheet Device ID when available).
+    Safe to run on pending-only pulls and after login.
+    """
+    if not isinstance(accounts, list):
+        return 0
+    cfg = brands_cfg if brands_cfg is not None else _load_brands_cfg_from_root(root)
+    phone_to_row: dict[str, dict[str, str]] = {}
+    pl = str(pool or "").strip().lower()
+    if headers is not None and lines is not None:
+        for line in lines:
+            if not any(str(c).strip() for c in line):
+                continue
+            row = _row_dict(headers, line)
+            if pl in ("gcs", "shooter") and _pool_from_group(row.get("group", "")) != pl:
+                continue
+            p = norm_phone(row.get("phone", ""))
+            if p:
+                phone_to_row[p] = row
+
+    updated = 0
+    for i, r in enumerate(accounts):
+        if not isinstance(r, dict):
+            continue
+        p = norm_phone(str(r.get("phone") or ""))
+        sheet_row = phone_to_row.get(p) if p else None
+        merged = dict(r)
+        if enrich_account_meta_fields(merged, pool=pl, sheet_row=sheet_row, brands_cfg=cfg):
+            accounts[i] = merged
+            updated += 1
+    return updated
+
+
+def enrich_one_account_in_json(
+    root: Path,
+    *,
+    phone: str,
+    pool: str,
+    account_id: str = "",
+) -> bool:
+    """Patch one GCS/shooter JSON row after login so /main|/other stay accurate."""
+    pl = str(pool or "").strip().lower()
+    np = norm_phone(phone)
+    if not np or pl not in ("gcs", "shooter"):
+        return False
+    path = root / ("accounts.json" if pl == "gcs" else "shooteraccounts.json")
+    list_key = "otp_accounts" if pl == "gcs" else "shooter_accounts"
+    if not path.is_file():
+        return False
+
+    sheet_row: dict[str, str] | None = None
+    try:
+        headers, lines = read_telegram_acc_tab(root, force=True)
+        for line in lines or []:
+            if not any(str(c).strip() for c in line):
+                continue
+            row = _row_dict(headers, line)
+            if _pool_from_group(row.get("group", "")) != pl:
+                continue
+            if norm_phone(row.get("phone", "")) == np:
+                sheet_row = row
+                break
+    except Exception:
+        sheet_row = None
+
+    brands_cfg = _load_brands_cfg_from_root(root)
+    try:
+        import json as _json
+
+        doc = _json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    lst = doc.get(list_key)
+    if not isinstance(lst, list):
+        return False
+    aid = str(account_id or "").strip()
+    touched = False
+    for i, r in enumerate(lst):
+        if not isinstance(r, dict):
+            continue
+        if aid and str(r.get("id") or "").strip() != aid:
+            if norm_phone(str(r.get("phone") or "")) != np:
+                continue
+        elif norm_phone(str(r.get("phone") or "")) != np:
+            continue
+        merged = dict(r)
+        if enrich_account_meta_fields(merged, pool=pl, sheet_row=sheet_row, brands_cfg=brands_cfg):
+            lst[i] = merged
+            touched = True
+        break
+    if not touched:
+        return False
+    try:
+        path.write_text(_json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    except OSError:
+        return False
+    return True
+
+
+def _refresh_json_sheet_list_fields(
+    accounts: list[dict[str, Any]],
+    *,
+    headers: list[str],
+    lines: list[list[Any]],
+    pool: str,
+    root: Path | None = None,
+) -> int:
+    """Sync Status/Session Friday + brand/currency/remark from Sheet → JSON."""
+    return repair_json_meta_fields(
+        accounts,
+        pool=pool,
+        headers=headers,
+        lines=lines,
+        root=root,
+    )
+
+
 def fetch_status_by_phone_pool(
     root: Path, *, pool: str, force: bool = False
 ) -> dict[str, str]:
@@ -2110,44 +2331,6 @@ def repair_session_paths(
     return stats
 
 
-def _refresh_json_sheet_list_fields(
-    accounts: list[dict[str, Any]],
-    *,
-    headers: list[str],
-    lines: list[list[str]],
-    pool: str,
-) -> int:
-    """Sync sheet_status + session_friday from Sheet → JSON (even on pending-only pull)."""
-    phone_to_row: dict[str, dict[str, str]] = {}
-    for line in lines:
-        if not any(str(c).strip() for c in line):
-            continue
-        row = _row_dict(headers, line)
-        if _pool_from_group(row.get("group", "")) != pool:
-            continue
-        p = norm_phone(row.get("phone", ""))
-        if p:
-            phone_to_row[p] = row
-    updated = 0
-    for i, r in enumerate(accounts):
-        if not isinstance(r, dict):
-            continue
-        p = norm_phone(str(r.get("phone") or ""))
-        if not p or p not in phone_to_row:
-            continue
-        merged = dict(r)
-        old_st = str(merged.get("sheet_status") or "")
-        old_sf = str(merged.get("session_friday") or "")
-        _apply_sheet_list_fields(merged, phone_to_row[p])
-        if (
-            str(merged.get("sheet_status") or "") != old_st
-            or str(merged.get("session_friday") or "") != old_sf
-        ):
-            accounts[i] = merged
-            updated += 1
-    return updated
-
-
 def _pull_telegram_acc(
     wb,
     mutate_accounts: Callable[[dict[str, Any]], bool],
@@ -2265,7 +2448,7 @@ def _pull_telegram_acc(
             keep_pool="gcs",
         )
         stats["gcs_sheet_fields_refreshed"] = _refresh_json_sheet_list_fields(
-            lst, headers=headers, lines=lines, pool="gcs"
+            lst, headers=headers, lines=lines, pool="gcs", root=root
         )
 
     def _apply_shooter(data: dict[str, Any]) -> None:
@@ -2364,7 +2547,7 @@ def _pull_telegram_acc(
             keep_pool="shooter",
         )
         stats["shooter_sheet_fields_refreshed"] = _refresh_json_sheet_list_fields(
-            lst, headers=headers, lines=lines, pool="shooter"
+            lst, headers=headers, lines=lines, pool="shooter", root=root
         )
 
     if not mutate_accounts(_apply_gcs):
