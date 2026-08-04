@@ -322,18 +322,51 @@ def umbrella_family_brand(
     )
 
 
+# Ids like MAIN_180896 / GCS_3926 are placeholders — not real brands for /main grouping.
+_PLACEHOLDER_BRAND_PREFIXES = frozenset({"MAIN", "GCS", "OTP", "ACC", "TG", "SH", "UNKNOWN"})
+
+
+def _is_placeholder_brand(name: str) -> bool:
+    n = canonical_brand(str(name or "").strip())
+    return (not n) or is_currency_code(n) or n in _PLACEHOLDER_BRAND_PREFIXES
+
+
+def _brand_from_acc_name(
+    acc_name: str,
+    brands_cfg: dict[str, dict[str, Any]] | None = None,
+) -> str | None:
+    """SBMY Lily / STMY Rina → SBMY / STMY when that key exists in brands config."""
+    name_u = str(acc_name or "").strip().upper()
+    if not name_u or not brands_cfg:
+        return None
+    best = ""
+    for bk in brands_cfg:
+        bu = str(bk).strip().upper()
+        if _is_placeholder_brand(bu) or len(bu) < 3:
+            continue
+        if (
+            name_u == bu
+            or name_u.startswith(f"{bu} ")
+            or name_u.startswith(f"{bu}_")
+            or name_u.startswith(bu)
+        ):
+            if len(bu) > len(best):
+                best = bu
+    return canonical_brand(best) if best else None
+
+
 def resolve_brand_from_id(
     account_id: str,
     brands_cfg: dict[str, dict[str, Any]] | None = None,
 ) -> str | None:
     """Resolve brand from account id prefix; prefer full keys in brands_cfg."""
     aid = str(account_id or "").strip().upper()
-    if not aid or aid in ("GCS", "SH", "UNKNOWN"):
+    if not aid or aid in _PLACEHOLDER_BRAND_PREFIXES:
         return None
     pref = aid.split("_", 1)[0] if "_" in aid else aid
     pref = _ID_PREFIX_BRAND_ALIASES.get(pref, pref)
     pref = canonical_brand(pref)
-    if is_currency_code(pref):
+    if _is_placeholder_brand(pref):
         return None
     if brands_cfg:
         if pref in brands_cfg:
@@ -364,10 +397,11 @@ def infer_gcs_brand(
     brands_cfg: dict[str, dict[str, Any]] | None = None,
 ) -> str | None:
     """
-    Brand for GCS — Device ID (MYR-SB → SBMY) for new rows; id/brand for existing.
+    Brand for GCS — Device ID (MYR-SB → SBMY), Acc Name (SBMY Lily), then id/brand.
+    Placeholder brands (MAIN/GCS) are ignored so /main topic filters stay correct.
     """
     b = str(brand or "").strip().upper()
-    if b and not is_currency_code(b):
+    if b and not _is_placeholder_brand(b):
         b = canonical_brand(b)
         if not brands_cfg or b in brands_cfg:
             return b
@@ -379,10 +413,6 @@ def infer_gcs_brand(
     )
     if family:
         return family
-
-    resolved = resolve_brand_from_id(account_id, brands_cfg)
-    if resolved:
-        return canonical_brand(resolved)
 
     currency, code = parse_device_id(device_id)
     if code and currency:
@@ -401,6 +431,14 @@ def infer_gcs_brand(
                     continue
                 if bu == code_u or bu.startswith(f"{code_u}") or code_u.startswith(bu):
                     return canonical_brand(bu)
+
+    from_name = _brand_from_acc_name(acc_name, brands_cfg)
+    if from_name:
+        return from_name
+
+    resolved = resolve_brand_from_id(account_id, brands_cfg)
+    if resolved and not _is_placeholder_brand(resolved):
+        return canonical_brand(resolved)
     return None
 
 
@@ -1032,10 +1070,19 @@ def enrich_account_meta_fields(
         if str(acc.get("sheet_status") or "") != _before_st or str(acc.get("session_friday") or "") != _before_sf:
             changed = True
 
-    device_id = str(row.get("device_id") or acc.get("remark") or "").strip()
-    if device_id and str(acc.get("remark") or "").strip() != device_id:
-        acc["remark"] = device_id
-        changed = True
+    device_id = str(
+        row.get("device_id")
+        or acc.get("device_id")
+        or acc.get("remark")
+        or ""
+    ).strip()
+    if device_id:
+        if str(acc.get("device_id") or "").strip() != device_id:
+            acc["device_id"] = device_id
+            changed = True
+        if str(acc.get("remark") or "").strip() != device_id:
+            acc["remark"] = device_id
+            changed = True
 
     currency, _code = parse_device_id(device_id)
     if currency:
@@ -1045,17 +1092,19 @@ def enrich_account_meta_fields(
             changed = True
 
     acc_name = str(
-        row.get("account_name")
+        row.get("acc_name")
+        or row.get("account_name")
         or row.get("name")
         or row.get("profile_hint")
         or acc.get("profile_hint")
         or ""
     ).strip()
+    raw_brand = str(acc.get("brand") or "").strip()
     brand = infer_gcs_brand(
         device_id=device_id,
         acc_name=acc_name,
         account_id=str(acc.get("id") or ""),
-        brand=str(acc.get("brand") or ""),
+        brand="" if _is_placeholder_brand(raw_brand) else raw_brand,
         brands_cfg=brands_cfg,
     )
     if pl == "shooter" and not brand:

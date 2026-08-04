@@ -2930,14 +2930,26 @@ def derive_otp_brand(
             if inferred:
                 return sheets_sync.canonical_brand(inferred)
 
-    if aid and aid.upper() not in ("GCS", "SH", "UNKNOWN"):
+    if aid and aid.upper() not in ("GCS", "SH", "UNKNOWN", "MAIN", "OTP", "ACC", "TG"):
         bare = aid.split("_", 1)[0].upper() if "_" in aid else aid.upper()
         if sheets_sync is not None:
             bare = sheets_sync.canonical_brand(bare)
-            if not sheets_sync.is_currency_code(bare) and len(bare) >= 3:
+            if (
+                not sheets_sync.is_currency_code(bare)
+                and len(bare) >= 3
+                and bare not in ("MAIN", "GCS", "OTP", "ACC", "TG")
+            ):
                 return bare
-        elif bare not in ("MYR", "SGD", "USD", "USC", "KHR") and len(bare) >= 3:
+        elif bare not in ("MYR", "SGD", "USD", "USC", "KHR", "MAIN") and len(bare) >= 3:
             return bare
+    # Last resort: Acc Name / profile_hint prefix (SBMY Lily → SBMY)
+    if sheets_sync is not None:
+        from_name = sheets_sync._brand_from_acc_name(  # noqa: SLF001
+            str(row.get("profile_hint") or ""),
+            brands_cfg,
+        )
+        if from_name:
+            return from_name
     return "UNKNOWN"
 
 
