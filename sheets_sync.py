@@ -1631,7 +1631,17 @@ def _new_gcs_id(
     brand_hint: str = "",
     user_name: str = "",
 ) -> str:
-    suffix = re.sub(r"\D", "", phone)[-4:] or "0000"
+    """
+    Build a new GCS account id that will NOT be wiped by _prune_excluded_gcs_accounts.
+
+    Legacy prune drops GCS_* and SBMY_/JMMY_ + exactly 4 digits (test leftovers).
+    So we never emit those shapes — otherwise Live Login registers +N then the same
+    pull deletes them → "Pending in Sheet but not in JSON" forever.
+    """
+    digits = re.sub(r"\D", "", phone)
+    suffix4 = digits[-4:] or "0000"
+    # 6+ digits avoid SBMY_1234 / JMMY_1234 exact-4 exclusion
+    suffix = digits[-6:] or suffix4
     brand = str(brand_hint or "").strip().upper()
     user_slug = re.sub(r"[^A-Za-z0-9]+", "_", str(user_name or "").strip()).strip("_").upper()
 
@@ -1640,7 +1650,11 @@ def _new_gcs_id(
     elif brand:
         base = f"{brand}_{suffix}"
     else:
-        base = f"GCS_{suffix}"
+        # Never use GCS_* — matches _EXCLUDED_GCS_ID and gets pruned immediately
+        base = f"MAIN_{suffix}"
+
+    if _EXCLUDED_GCS_ID.match(base):
+        base = f"MAIN_{suffix}"
 
     ids = {str(r.get("id") or "") for r in existing if isinstance(r, dict)}
     if base not in ids:
@@ -1648,7 +1662,10 @@ def _new_gcs_id(
     n = 2
     while f"{base}_{n}" in ids:
         n += 1
-    return f"{base}_{n}"
+    candidate = f"{base}_{n}"
+    if _EXCLUDED_GCS_ID.match(candidate):
+        candidate = f"MAIN_{suffix}_{n}"
+    return candidate
 
 
 def shooter_rename_on_owner_change() -> bool:
@@ -2446,9 +2463,31 @@ def _pull_telegram_acc(
             else:
                 _upsert_list(lst, entry, key="id")
                 stats["gcs_added"] += 1
+        phones_after_add = {
+            norm_phone(str(r.get("phone") or ""))
+            for r in lst
+            if isinstance(r, dict) and str(r.get("phone") or "").strip()
+        }
         pruned = _prune_excluded_gcs_accounts(lst)
         if pruned:
             stats["gcs_skipped"] += pruned
+            phones_after_prune = {
+                norm_phone(str(r.get("phone") or ""))
+                for r in lst
+                if isinstance(r, dict) and str(r.get("phone") or "").strip()
+            }
+            lost = sorted(p for p in (phones_after_add - phones_after_prune) if p)
+            if lost:
+                # gcs_added was counted before prune — correct the counter so logs match reality
+                stats["gcs_added"] = max(0, int(stats["gcs_added"]) - len(lost))
+                stats["gcs_pruned_excluded"] = len(lost)
+                sample = ", ".join(lost[:5])
+                extra = f" (+{len(lost) - 5} more)" if len(lost) > 5 else ""
+                print(
+                    f"  ⚠ Dropped {len(lost)} new GCS row(s) matching excluded id pattern "
+                    f"(fix Device ID / brand, or upgrade id generator): {sample}{extra}",
+                    flush=True,
+                )
         other_only = other_phones - main_phones
         if root and other_only and not pending_only:
             for row in list(lst):

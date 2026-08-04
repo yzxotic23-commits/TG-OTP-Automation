@@ -7137,23 +7137,27 @@ def _pending_trigger_phones_from_sheet(root: Path) -> set[str]:
 
 
 def _phones_registered_in_json(root: Path, phones: set[str]) -> set[str]:
-    """Subset of `phones` that exist in accounts.json or shooteraccounts.json."""
+    """Subset of `phones` that exist in accounts.json or shooteraccounts.json (raw rows)."""
     import sheets_sync
 
     if not phones:
         return set()
     found: set[str] = set()
-    default_peers = parse_peer_ids(os.environ.get("TELEGRAM_OTP_PEER_IDS", "777000"), [777000])
+
+    def _scan(rows: Any) -> None:
+        if not isinstance(rows, list):
+            return
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            p = sheets_sync.norm_phone(str(row.get("phone") or ""))
+            if p in phones:
+                found.add(p)
+
     raw_gcs = load_json(accounts_json_path())
-    for acc in load_otp_accounts(raw_gcs, root, default_peers):
-        p = sheets_sync.norm_phone(str(acc.get("phone") or ""))
-        if p in phones:
-            found.add(p)
+    _scan(raw_gcs.get("otp_accounts"))
     raw_sh = load_shooter_doc()
-    for acc in load_shooter_login_accounts(raw_sh, root, default_peers):
-        p = sheets_sync.norm_phone(str(acc.get("phone") or ""))
-        if p in phones:
-            found.add(p)
+    _scan(raw_sh.get("shooter_accounts"))
     return found
 
 
