@@ -4846,6 +4846,12 @@ def _require_primary_creator(update: Update) -> bool:
     return bool(user and is_primary_creator_user(user))
 
 
+def _require_creator_or_admin(update: Update) -> bool:
+    """Owner + staff with role admin (e.g. zaabryan) — for /add shooter."""
+    user = update.effective_user
+    return bool(user and is_creator_user(user))
+
+
 async def _reply_creator_only(em: Any) -> None:
     await em.reply_text(
         accounts_header_html("⛔ <b>Access Denied</b>")
@@ -4854,22 +4860,38 @@ async def _reply_creator_only(em: Any) -> None:
     )
 
 
+async def _reply_admin_only(em: Any) -> None:
+    await em.reply_text(
+        accounts_header_html("⛔ <b>Access Denied</b>")
+        + "\n\nThis command is for the <b>bot owner</b> or <b>admin</b> only.",
+        parse_mode="HTML",
+    )
+
+
 async def cmd_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     em = update.effective_message
     if not em:
         return
-    if not _require_primary_creator(update):
-        await _reply_creator_only(em)
-        return
     args = [str(a).strip() for a in (context.args or []) if str(a).strip()]
+    # /add admin → owner only
     if len(args) == 2 and args[0].lower() == "admin" and args[1]:
+        if not _require_primary_creator(update):
+            await _reply_creator_only(em)
+            return
         _, msg = promote_staff_to_admin(args[1])
         await em.reply_text(msg, parse_mode="HTML")
         return
+    # /add shooter → owner + admin (zaabryan, sinyee, …)
     if len(args) >= 3 and args[0].lower() == "shooter" and args[1] and args[2]:
+        if not _require_creator_or_admin(update):
+            await _reply_admin_only(em)
+            return
         owner, hint = _parse_shooter_add_args(args[1], args[2])
         _, msg = assign_staff_shooter_owner(owner, hint)
         await em.reply_text(msg, parse_mode="HTML")
+        return
+    if not _require_creator_or_admin(update):
+        await _reply_admin_only(em)
         return
     await em.reply_text(build_staff_admin_usage_html(), parse_mode="HTML")
 
@@ -4878,16 +4900,22 @@ async def cmd_remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     em = update.effective_message
     if not em:
         return
-    if not _require_primary_creator(update):
-        await _reply_creator_only(em)
-        return
     args = [str(a).strip() for a in (context.args or []) if str(a).strip()]
     if not args:
+        if not _require_creator_or_admin(update):
+            await _reply_admin_only(em)
+            return
         await em.reply_text(build_staff_admin_usage_html(), parse_mode="HTML")
         return
     if len(args) >= 2 and args[0].lower() == "shooter":
+        if not _require_creator_or_admin(update):
+            await _reply_admin_only(em)
+            return
         _, msg = remove_staff_shooter_owner(args[1])
     else:
+        if not _require_primary_creator(update):
+            await _reply_creator_only(em)
+            return
         hint = " ".join(args).strip()
         _, msg = remove_staff_admin(hint)
     await em.reply_text(msg, parse_mode="HTML")
