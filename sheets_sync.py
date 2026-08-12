@@ -1871,22 +1871,13 @@ _EXCLUDED_GCS_ID = re.compile(r"^(GCS_\w+|SBMY_\d{4}|JMMY_\d{4})$", re.I)
 
 
 def _should_skip_gcs_row(row: dict[str, str]) -> bool:
-    """Skip wealth + baris MYR-SB/JM test (bukan akun GCS asli). STMY (MYR-ST) tetap."""
-    if _should_skip_wealth_gcs_row(row):
-        return True
-    dev = str(row.get("device_id") or "").strip()
-    head = dev.split()[0] if dev else ""
-    m = _MYR_DEVICE_HEAD.match(head)
-    if not m:
-        return False
-    code = m.group(1).upper()
-    if code == "ST":
-        return False
-    brand = "SBMY" if code == "SB" else "JMMY" if code == "JM" else ""
-    if not brand:
-        return False
-    acc = str(row.get("acc_name") or row.get("profile_hint") or "").strip().upper()
-    return brand not in acc
+    """
+    Skip only non-GCS wealth rows.
+
+    Device ID (MYR-SB / MYR-JM / MYR-ST) is the source of truth for brand —
+    Acc Name is display only and must NOT block Pending → JSON registration.
+    """
+    return _should_skip_wealth_gcs_row(row)
 
 
 def _is_excluded_otp_account(row: dict[str, Any]) -> bool:
@@ -2100,12 +2091,20 @@ def _telegram_row_to_shooter(row: dict[str, str], raw: dict[str, Any], existing:
         out["password"] = row["password"]
     device_id_raw = str(row.get("device_id") or "").strip()
     if device_id_raw:
+        out["device_id"] = device_id_raw
         out["remark"] = device_id_raw
         brands_cfg = {
             str(k).strip().upper(): v
             for k, v in (raw.get("brands") or {}).items()
             if isinstance(v, dict)
         }
+        # Prefer brands from accounts.json umbrella if shooter doc has none
+        if not brands_cfg and isinstance(raw.get("brands"), dict):
+            brands_cfg = {
+                str(k).strip().upper(): v
+                for k, v in raw["brands"].items()
+                if isinstance(v, dict)
+            }
         currency, _code = parse_device_id(device_id_raw)
         brand_from_dev = infer_gcs_brand(
             device_id=device_id_raw,
@@ -2114,6 +2113,11 @@ def _telegram_row_to_shooter(row: dict[str, str], raw: dict[str, Any], existing:
         )
         if brand_from_dev:
             out["brand"] = brand_from_dev
+        elif currency:
+            # SGD-FW → FWSG even if brands map missing on shooter doc
+            mapped = resolve_device_brand_code(_code, currency=currency, brands_cfg=brands_cfg)
+            if mapped:
+                out["brand"] = mapped
         if currency:
             out["currency"] = currency
     _apply_sheet_list_fields(out, row)
