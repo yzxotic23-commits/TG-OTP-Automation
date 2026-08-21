@@ -1718,8 +1718,8 @@ def _new_gcs_id(
 
 
 def shooter_rename_on_owner_change() -> bool:
-    """Full pull: rename SH_OLD_* → SH_NEW_* when Sheet User/owner changes."""
-    v = os.environ.get("TELEGRAM_SYNC_SHOOTER_RENAME_ON_OWNER", "0").strip().lower()
+    """Rename SH_OLD_* → SH_NEW_* when Sheet User/owner changes (default ON)."""
+    v = os.environ.get("TELEGRAM_SYNC_SHOOTER_RENAME_ON_OWNER", "1").strip().lower()
     return v not in ("0", "false", "no", "off")
 
 
@@ -2584,10 +2584,11 @@ def _pull_telegram_acc(
                 if not np:
                     stats["shooter_skipped"] += 1
                     continue
-                if _find_by_phone(lst, np):
-                    stats["shooter_skipped"] += 1
-                    continue
-                if not sheet_status_is_login_trigger(effective_row_status(row)):
+                matched_early = _find_by_phone(lst, np)
+                if matched_early:
+                    # Existing phone: sync User/owner (+ optional SH_* rename). Brand from Device ID.
+                    pass
+                elif not sheet_status_is_login_trigger(effective_row_status(row)):
                     stats["shooter_skipped"] += 1
                     continue
             entry = _telegram_row_to_shooter(row, data, lst)
@@ -2600,16 +2601,32 @@ def _pull_telegram_acc(
             before = matched is not None
             old_id = str(matched.get("id") or "").strip() if matched else ""
             new_id = str(entry.get("id") or "").strip()
-            if (
-                root
-                and not pending_only
-                and old_id
-                and new_id
-                and old_id != new_id
-            ):
+            old_owner = (
+                _normalize_owner_name(str(matched.get("owner") or "")) if matched else ""
+            )
+            new_owner = _normalize_owner_name(str(entry.get("owner") or ""))
+            owner_changed = bool(matched and old_owner and new_owner and old_owner != new_owner)
+            id_changed = bool(old_id and new_id and old_id != new_id)
+            # Allow session rename on owner swap even when pull is pending-only.
+            if root and id_changed and (not pending_only or shooter_rename_on_owner_change()):
                 _migrate_shooter_session_files(root, old_id, new_id)
                 stats["shooter_renamed"] += 1
             if matched:
+                if (
+                    pending_only
+                    and not owner_changed
+                    and not id_changed
+                    and str(matched.get("device_id") or matched.get("remark") or "").strip()
+                    == str(entry.get("device_id") or entry.get("remark") or "").strip()
+                    and str(matched.get("brand") or "").strip().upper()
+                    == str(entry.get("brand") or "").strip().upper()
+                    and str(matched.get("currency") or "").strip().upper()
+                    == str(entry.get("currency") or "").strip().upper()
+                    and str(matched.get("profile_hint") or "").strip()
+                    == str(entry.get("profile_hint") or "").strip()
+                ):
+                    stats["shooter_skipped"] += 1
+                    continue
                 for i, r in enumerate(lst):
                     if not isinstance(r, dict):
                         continue
